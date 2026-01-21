@@ -43,7 +43,7 @@ export default function QuestionInput({ onSubmit, isLoading }: QuestionInputProp
               key={index}
               onClick={() => handleExampleClick(example)}
               disabled={isLoading}
-              className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
+              className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
             >
               {example}
             </button>

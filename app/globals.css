@@ -188,7 +188,187 @@ body {
 }
 
 .conversation-group:last-child {
-  margin-bottom: 0 !important;
+  margin-bottom: 2rem !important;
+}
+
+/* Glitch effect animation */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+    text-shadow: 0 0 10px var(--neon-cyan);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+    text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+    text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan);
+  }
+  60% {
+    transform: translate(2px, 2px);
+    text-shadow: -2px 0 var(--neon-cyan), 2px 0 var(--neon-magenta);
+  }
+  80% {
+    transform: translate(2px, -2px);
+    text-shadow: 2px 0 var(--neon-cyan), -2px 0 var(--neon-magenta);
+  }
+  100% {
+    transform: translate(0);
+    text-shadow: 0 0 10px var(--neon-cyan);
+  }
+}
+
+.glitch-hover:hover {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Scanline effect animation */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.scanline-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--neon-cyan) 50%,
+    transparent
+  );
+  opacity: 0.3;
+  animation: scanline 3s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Pixel shift on hover */
+@keyframes pixel-shift {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(2px, -2px);
+  }
+  50% {
+    transform: translate(-2px, 2px);
+  }
+  75% {
+    transform: translate(2px, 2px);
+  }
+}
+
+.pixel-shift-hover:hover {
+  animation: pixel-shift 0.2s ease-in-out;
+  box-shadow:
+    4px 4px 0 var(--neon-cyan),
+    0 0 20px var(--neon-cyan);
+}
+
+/* CRT screen flicker effect */
+@keyframes crt-flicker {
+  0% {
+    opacity: 0.97;
+  }
+  5% {
+    opacity: 0.95;
+  }
+  10% {
+    opacity: 0.98;
+  }
+  15% {
+    opacity: 0.93;
+  }
+  20% {
+    opacity: 0.97;
+  }
+  25% {
+    opacity: 0.96;
+  }
+  30% {
+    opacity: 0.98;
+  }
+  35% {
+    opacity: 0.94;
+  }
+  40% {
+    opacity: 0.97;
+  }
+  45% {
+    opacity: 0.96;
+  }
+  50% {
+    opacity: 0.98;
+  }
+  55% {
+    opacity: 0.95;
+  }
+  60% {
+    opacity: 0.97;
+  }
+  65% {
+    opacity: 0.96;
+  }
+  70% {
+    opacity: 0.98;
+  }
+  75% {
+    opacity: 0.94;
+  }
+  80% {
+    opacity: 0.97;
+  }
+  85% {
+    opacity: 0.96;
+  }
+  90% {
+    opacity: 0.98;
+  }
+  95% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0.97;
+  }
+}
+
+.crt-flicker {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* CRT overlay effect */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  animation: crt-flicker 0.15s infinite;
 }
 
 /* Made with Bob */

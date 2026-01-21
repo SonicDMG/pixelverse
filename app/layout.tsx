@@ -15,6 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <div className="grid-bg fixed inset-0 pointer-events-none"></div>
+        <div className="crt-overlay" aria-hidden="true"></div>
         {children}
       </body>
     </html>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -32,12 +33,37 @@ interface StockChartProps {
 }
 
 export default function StockChart({ data, symbol }: StockChartProps) {
+  const [animationProgress, setAnimationProgress] = useState(0);
+  const chartRef = useRef<ChartJS<'line'>>(null);
+
+  useEffect(() => {
+    // Progressive drawing animation
+    const duration = 1500; // 1.5 seconds
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      setAnimationProgress(progress);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    animate();
+  }, [data]);
+
+  const visibleDataCount = Math.floor(data.length * animationProgress);
+  const visibleData = data.slice(0, Math.max(1, visibleDataCount));
+
   const chartData = {
-    labels: data.map(d => d.date),
+    labels: visibleData.map(d => d.date),
     datasets: [
       {
         label: symbol ? `${symbol} Stock Price` : 'Stock Price',
-        data: data.map(d => d.price),
+        data: visibleData.map(d => d.price),
         borderColor: '#00ff9f',
         backgroundColor: 'rgba(0, 255, 159, 0.1)',
         borderWidth: 3,
@@ -55,6 +81,9 @@ export default function StockChart({ data, symbol }: StockChartProps) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 0, // Disable default animation since we're doing custom
+    },
     plugins: {
       legend: {
         display: true,
@@ -123,7 +152,7 @@ export default function StockChart({ data, symbol }: StockChartProps) {
 
   return (
     <div className="w-full h-[400px] p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border">
-      <Line data={chartData} options={options} />
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

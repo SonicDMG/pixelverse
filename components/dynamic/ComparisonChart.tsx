@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -39,13 +40,38 @@ interface ComparisonChartProps {
 const COLORS = ['#00ff9f', '#ff00ff', '#00d4ff', '#ffff00'];
 
 export default function ComparisonChart({ title, datasets }: ComparisonChartProps) {
-  const labels = datasets[0]?.data.map(d => d.date) || [];
+  const [animationProgress, setAnimationProgress] = useState(0);
+  const chartRef = useRef<ChartJS<'line'>>(null);
+
+  useEffect(() => {
+    // Progressive drawing animation
+    const duration = 1500; // 1.5 seconds
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      setAnimationProgress(progress);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    animate();
+  }, [datasets]);
+
+  const dataLength = datasets[0]?.data.length || 0;
+  const visibleDataCount = Math.floor(dataLength * animationProgress);
+  
+  const labels = datasets[0]?.data.slice(0, Math.max(1, visibleDataCount)).map(d => d.date) || [];
 
   const chartData = {
     labels,
     datasets: datasets.map((dataset, index) => ({
       label: dataset.label,
-      data: dataset.data.map(d => d.value),
+      data: dataset.data.slice(0, Math.max(1, visibleDataCount)).map(d => d.value),
       borderColor: dataset.color || COLORS[index % COLORS.length],
       backgroundColor: `${dataset.color || COLORS[index % COLORS.length]}20`,
       borderWidth: 3,
@@ -62,6 +88,9 @@ export default function ComparisonChart({ title, datasets }: ComparisonChartProp
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 0, // Disable default animation since we're doing custom
+    },
     plugins: {
       legend: {
         display: true,
@@ -140,7 +169,7 @@ export default function ComparisonChart({ title, datasets }: ComparisonChartProp
 
   return (
     <div className="w-full h-[400px] p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border">
-      <Line data={chartData} options={options} />
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

@@ -33,10 +33,10 @@ export default function MetricCard({
   };
 
   return (
-    <div className="p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border hover:border-[#ff00ff] transition-colors">
+    <div className="p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border hover:border-[#ff00ff] transition-colors glitch-hover">
       <div className="space-y-3">
         <h4 className="text-xs font-pixel text-[#00ff9f] uppercase">{title}</h4>
-        <div className="text-2xl font-pixel text-white glow-text">
+        <div className="text-2xl font-pixel text-white glow-text glitch-hover">
           {formatValue(value)}
         </div>
         {change !== undefined && (
