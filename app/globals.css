@@ -1,8 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4 Theme Configuration */
+@theme {
+  /* Custom animations */
+  --animate-loading-bar: loading-bar 2s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.5s ease-in-out;
+  
+  /* Font families */
+  --font-family-pixel: 'Press Start 2P', monospace;
+  
+  /* Keyframes for custom animations */
+  @keyframes loading-bar {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+  }
+  
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
 
 :root {
   --neon-cyan: #00ff9f;
