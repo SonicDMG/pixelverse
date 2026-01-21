@@ -2,32 +2,27 @@
 
 import { useState } from 'react';
 import axios from 'axios';
-import StockChart from '@/components/StockChart';
 import QuestionInput from '@/components/QuestionInput';
-import MessageHistory from '@/components/MessageHistory';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import DynamicUIRenderer from '@/components/DynamicUIRenderer';
-import { Message, StockQueryResult } from '@/types';
-import { ComponentSpec } from '@/types/ui-spec';
+import ConversationGroup from '@/components/ConversationGroup';
+import { Message, StockQueryResult, ConversationGroup as ConversationGroupType } from '@/types';
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stockDataHistory, setStockDataHistory] = useState<StockQueryResult[]>([]);
 
   const handleQuestion = async (question: string) => {
     setIsLoading(true);
     setError(null);
 
-    // Add user message
+    // Create user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: question,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMessage]);
 
     try {
       const response = await axios.post<StockQueryResult>('/api/ask-stock', {
@@ -36,7 +31,7 @@ export default function Home() {
 
       const result = response.data;
 
-      // Add assistant message
+      // Create assistant message
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -44,16 +39,19 @@ export default function Home() {
         timestamp: new Date(),
         stockData: result.stockData,
       };
-      setMessages(prev => [...prev, assistantMessage]);
 
-      // Add to stock data history for chart or components
-      if (result.components && result.components.length > 0) {
-        // Agent returned UI components
-        setStockDataHistory(prev => [...prev, result]);
-      } else if (result.stockData && result.stockData.length > 0) {
-        // Legacy: Agent returned raw stock data
-        setStockDataHistory(prev => [...prev, result]);
-      }
+      // Create conversation group with user question, assistant response, and any visualizations
+      const newGroup: ConversationGroupType = {
+        id: Date.now().toString(),
+        userMessage,
+        assistantMessage,
+        components: result.components,
+        stockData: result.stockData,
+        symbol: result.symbol,
+        timestamp: new Date(),
+      };
+
+      setConversationGroups(prev => [...prev, newGroup]);
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.error || err.message
@@ -61,14 +59,22 @@ export default function Home() {
       
       setError(errorMessage);
       
-      // Add error message
-      const errorMsg: Message = {
+      // Create error conversation group
+      const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: `Error: ${errorMessage}`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMsg]);
+
+      const errorGroup: ConversationGroupType = {
+        id: Date.now().toString(),
+        userMessage,
+        assistantMessage,
+        timestamp: new Date(),
+      };
+
+      setConversationGroups(prev => [...prev, errorGroup]);
     } finally {
       setIsLoading(false);
     }
@@ -95,34 +101,25 @@ export default function Home() {
 
         {/* Main Content - Scrollable */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="space-y-8 w-full pb-4">
+          <div className="w-full pb-4">
             {/* Error Display */}
             {error && (
-              <div className="error-message pixel-border">
+              <div className="error-message pixel-border mb-6">
                 <p>ERROR: {error}</p>
               </div>
             )}
 
-            {/* Stock Data History - All charts/components */}
-            {stockDataHistory.map((stockData, index) => (
-              <div key={index}>
-                {stockData.components && stockData.components.length > 0 ? (
-                  <div className="animate-fade-in mb-12 pb-12 border-b-4 border-[#00ff9f]/30 pixel-border">
-                    <DynamicUIRenderer components={stockData.components} />
-                  </div>
-                ) : stockData.stockData && stockData.stockData.length > 0 ? (
-                  <div className="animate-fade-in mb-12 pb-12 border-b-4 border-[#00ff9f]/30 pixel-border">
-                    <StockChart
-                      data={stockData.stockData}
-                      symbol={stockData.symbol}
-                    />
-                  </div>
-                ) : null}
-              </div>
+            {/* Conversation Groups - Each group contains user question, assistant response, and visualizations */}
+            {conversationGroups.map((group) => (
+              <ConversationGroup
+                key={group.id}
+                userMessage={group.userMessage}
+                assistantMessage={group.assistantMessage}
+                components={group.components}
+                stockData={group.stockData}
+                symbol={group.symbol}
+              />
             ))}
-
-            {/* Message History */}
-            <MessageHistory messages={messages} />
           </div>
         </main>
 

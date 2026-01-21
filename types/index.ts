@@ -14,6 +14,17 @@ export interface Message {
   stockData?: StockDataPoint[];
 }
 
+// Conversation group - pairs user question with assistant response and visualizations
+export interface ConversationGroup {
+  id: string;
+  userMessage: Message;
+  assistantMessage: Message;
+  components?: import('./ui-spec').ComponentSpec[];
+  stockData?: StockDataPoint[];
+  symbol?: string;
+  timestamp: Date;
+}
+
 // Langflow API request
 export interface LangflowRequest {
   input_value: string;

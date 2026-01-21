@@ -182,4 +182,13 @@ body {
   }
 }
 
+/* Conversation group spacing */
+.conversation-group {
+  margin-bottom: 4rem !important;
+}
+
+.conversation-group:last-child {
+  margin-bottom: 0 !important;
+}
+
 /* Made with Bob */
