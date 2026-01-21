@@ -204,7 +204,254 @@ Severity options: `"info"`, `"warning"`, `"success"`, `"error"`
 }
 ```
 
-## Example Responses
+## Complete Component Examples
+
+Below is one complete example for each UI component type, showing the exact JSON structure the agent should return:
+
+### 1. Line Chart Example
+
+```json
+{
+  "text": "IBM stock has increased 5.2% over the past 2 weeks, showing strong upward momentum.",
+  "components": [
+    {
+      "type": "line-chart",
+      "props": {
+        "title": "IBM Stock - Last 2 Weeks",
+        "data": [
+          { "date": "2024-01-08", "value": 145.20, "volume": 980000 },
+          { "date": "2024-01-09", "value": 146.50, "volume": 1020000 },
+          { "date": "2024-01-10", "value": 148.30, "volume": 1150000 },
+          { "date": "2024-01-11", "value": 147.80, "volume": 890000 },
+          { "date": "2024-01-12", "value": 149.50, "volume": 1200000 },
+          { "date": "2024-01-15", "value": 150.20, "volume": 1050000 },
+          { "date": "2024-01-16", "value": 151.80, "volume": 1180000 },
+          { "date": "2024-01-17", "value": 152.75, "volume": 1250000 }
+        ],
+        "symbol": "IBM",
+        "color": "#00ff9f",
+        "showVolume": true
+      }
+    }
+  ]
+}
+```
+
+### 2. Comparison Chart Example
+
+```json
+{
+  "text": "Apple has outperformed Google by 3.2% this month, with stronger momentum in the tech sector.",
+  "components": [
+    {
+      "type": "comparison-chart",
+      "props": {
+        "title": "AAPL vs GOOGL - Monthly Performance",
+        "datasets": [
+          {
+            "label": "Apple (AAPL)",
+            "data": [
+              { "date": "2024-01-01", "value": 175.00 },
+              { "date": "2024-01-08", "value": 178.50 },
+              { "date": "2024-01-15", "value": 182.30 },
+              { "date": "2024-01-22", "value": 185.20 }
+            ],
+            "color": "#00ff9f"
+          },
+          {
+            "label": "Google (GOOGL)",
+            "data": [
+              { "date": "2024-01-01", "value": 138.00 },
+              { "date": "2024-01-08", "value": 139.50 },
+              { "date": "2024-01-15", "value": 141.20 },
+              { "date": "2024-01-22", "value": 142.80 }
+            ],
+            "color": "#ff00ff"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### 3. Data Table Example
+
+```json
+{
+  "text": "Here's the detailed trading data for Microsoft over the past week.",
+  "components": [
+    {
+      "type": "data-table",
+      "props": {
+        "title": "MSFT Weekly Trading Data",
+        "headers": ["Date", "Open", "Close", "High", "Low", "Volume"],
+        "rows": [
+          ["2024-01-15", 380.50, 385.20, 386.50, 379.80, "25.2M"],
+          ["2024-01-16", 385.20, 388.75, 390.00, 384.50, "28.5M"],
+          ["2024-01-17", 388.75, 387.30, 391.20, 386.90, "26.8M"],
+          ["2024-01-18", 387.30, 392.50, 393.80, 387.00, "31.2M"],
+          ["2024-01-19", 392.50, 395.80, 396.50, 391.20, "29.7M"]
+        ],
+        "highlightColumn": 2
+      }
+    }
+  ]
+}
+```
+
+### 4. Comparison Table Example
+
+```json
+{
+  "text": "Here's a side-by-side comparison of Apple and Google's key financial metrics.",
+  "components": [
+    {
+      "type": "comparison-table",
+      "props": {
+        "title": "AAPL vs GOOGL Key Metrics",
+        "column1Label": "Apple (AAPL)",
+        "column2Label": "Google (GOOGL)",
+        "items": [
+          {
+            "label": "Current Price",
+            "value1": "$185.20",
+            "value2": "$142.80",
+            "change": 5.8
+          },
+          {
+            "label": "Market Cap",
+            "value1": "$2.9T",
+            "value2": "$1.8T"
+          },
+          {
+            "label": "P/E Ratio",
+            "value1": "29.5",
+            "value2": "25.8"
+          },
+          {
+            "label": "Dividend Yield",
+            "value1": "0.52%",
+            "value2": "0.00%"
+          },
+          {
+            "label": "52-Week High",
+            "value1": "$199.62",
+            "value2": "$151.55"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### 5. Metric Card Example
+
+```json
+{
+  "text": "Tesla's current stock price with today's performance.",
+  "components": [
+    {
+      "type": "metric-card",
+      "props": {
+        "title": "Tesla Stock Price",
+        "value": "$242.50",
+        "change": -2.3,
+        "changeLabel": "today",
+        "subtitle": "As of market close - Jan 22, 2024"
+      }
+    }
+  ]
+}
+```
+
+### 6. Metric Grid Example
+
+```json
+{
+  "text": "Here's a comprehensive overview of Amazon's key stock metrics.",
+  "components": [
+    {
+      "type": "metric-grid",
+      "props": {
+        "metrics": [
+          {
+            "label": "Current Price",
+            "value": "$155.80",
+            "change": 1.8,
+            "icon": "📈"
+          },
+          {
+            "label": "Volume",
+            "value": "52.3M",
+            "change": -5.2,
+            "icon": "📊"
+          },
+          {
+            "label": "Market Cap",
+            "value": "$1.6T",
+            "change": 1.8,
+            "icon": "💰"
+          },
+          {
+            "label": "P/E Ratio",
+            "value": "48.2",
+            "icon": "📉"
+          },
+          {
+            "label": "52-Week High",
+            "value": "$178.50",
+            "icon": "⬆️"
+          },
+          {
+            "label": "52-Week Low",
+            "value": "$118.35",
+            "icon": "⬇️"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### 7. Alert Box Example
+
+```json
+{
+  "text": "Important market alert regarding NVIDIA stock.",
+  "components": [
+    {
+      "type": "alert-box",
+      "props": {
+        "severity": "warning",
+        "title": "High Volatility Alert",
+        "message": "NVIDIA stock has experienced 15% volatility in the last 24 hours due to earnings announcement. Exercise caution with trading decisions."
+      }
+    }
+  ]
+}
+```
+
+### 8. Text Block Example
+
+```json
+{
+  "text": "Detailed analysis of the current market conditions.",
+  "components": [
+    {
+      "type": "text-block",
+      "props": {
+        "content": "Market Analysis Summary:\n\nThe S&P 500 has shown resilience in Q1 2024, with tech stocks leading the rally. Key factors include:\n\n• Strong earnings reports from major tech companies\n• Federal Reserve's dovish stance on interest rates\n• Increased investor confidence in AI sector\n• Stable inflation indicators\n\nInvestors should monitor upcoming economic data releases and corporate earnings for continued market direction.",
+        "format": "plain"
+      }
+    }
+  ]
+}
+```
+
+## Multi-Component Response Examples
 
 ### Example 1: Simple Stock Query
 

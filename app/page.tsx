@@ -101,7 +101,7 @@ export default function Home() {
 
         {/* Main Content - Scrollable */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="w-full pb-4">
+          <div className="w-full pb-4 space-y-8">
             {/* Error Display */}
             {error && (
               <div className="error-message pixel-border mb-6">

@@ -8,10 +8,11 @@ interface QuestionInputProps {
 }
 
 const EXAMPLE_QUESTIONS = [
-  "How has IBM's stock performed over the last 2 weeks?",
-  "What is Apple's current stock price?",
-  "Compare AAPL vs GOOGL performance",
-  "Show me Tesla stock trends",
+  "How has IBM's stock performed over the last 2 weeks?", // line-chart
+  "Compare AAPL vs GOOGL performance", // comparison-chart
+  "Show me Amazon's key stock metrics", // metric-grid
+  "Show me Microsoft's weekly trading data", // data-table
+  "Explain the current market conditions", // text-block
 ];
 
 export default function QuestionInput({ onSubmit, isLoading }: QuestionInputProps) {
@@ -32,10 +33,10 @@ export default function QuestionInput({ onSubmit, isLoading }: QuestionInputProp
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 pt-8">
       {/* Example Questions */}
       <div className="space-y-2">
-        <p className="text-[#00ff9f] text-xs font-pixel">Try these examples:</p>
+        <p className="text-[#ff00ff] text-xs font-pixel">Try these examples:</p>
         <div className="flex flex-wrap gap-2">
           {EXAMPLE_QUESTIONS.map((example, index) => (
             <button
