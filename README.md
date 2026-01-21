@@ -1,36 +1,213 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎮 PixelTicker
 
-## Getting Started
+A cyberpunk pixel art stock analysis app powered by Langflow and MCP (Model Context Protocol).
 
-First, run the development server:
+![PixelTicker](https://img.shields.io/badge/Next.js-16.1.4-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🌟 Features
+
+- **Retro Cyberpunk UI**: Pixel art design with neon cyan and magenta colors
+- **Stock Analysis**: Ask natural language questions about stock performance
+- **Interactive Charts**: Visualize stock data with pixel art styled charts
+- **Langflow Integration**: Powered by Langflow agents with MCP stock tools
+- **Real-time Updates**: Get instant responses to your stock queries
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+
+## 🏗️ Architecture
+
+```
+PixelTicker/
+├── app/
+│   ├── page.tsx              # Main UI with state management
+│   ├── layout.tsx            # Root layout with metadata
+│   ├── globals.css           # Cyberpunk pixel art theme
+│   └── api/
+│       └── ask-stock/
+│           └── route.ts      # API proxy to Langflow
+├── components/
+│   ├── StockChart.tsx        # Chart.js pixel art charts
+│   ├── QuestionInput.tsx     # Input with example questions
+│   ├── MessageHistory.tsx    # Q&A conversation display
+│   └── LoadingSpinner.tsx    # Pixel art loading animation
+├── services/
+│   └── langflow.ts           # Langflow API client
+└── types/
+    └── index.ts              # TypeScript interfaces
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+ installed
+- npm or yarn package manager
+- Langflow instance running on port 7861
+- Stock MCP server configured in Langflow
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone or navigate to the project directory:**
+   ```bash
+   cd pixelticker
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Configure environment variables:**
+   
+   The `.env.local` file is already created with:
+   ```env
+   NEXT_PUBLIC_LANGFLOW_URL=http://localhost:7861
+   LANGFLOW_API_KEY=
+   ```
+   
+   Update these values if your Langflow instance is on a different port or requires an API key.
 
-## Deploy on Vercel
+4. **Update Langflow Flow ID:**
+   
+   Open `services/langflow.ts` and replace `your-flow-id` with your actual Langflow flow ID:
+   ```typescript
+   `${LANGFLOW_URL}/api/v1/run/your-actual-flow-id`
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Running the App
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Development mode:**
+```bash
+npm run dev
+```
+
+**Production build:**
+```bash
+npm run build
+npm start
+```
+
+The app will be available at `http://localhost:3000`
+
+## 🎯 Usage
+
+1. **Start your Langflow instance** on port 7861 with the stock MCP server configured
+2. **Open PixelTicker** in your browser
+3. **Ask stock questions** like:
+   - "How has IBM's stock performed over the last 2 weeks?"
+   - "What is Apple's current stock price?"
+   - "Compare AAPL vs GOOGL performance"
+   - "Show me Tesla stock trends"
+4. **View results** in the pixel art chart and conversation history
+
+## 🎨 Design Theme
+
+- **Colors**: Neon cyan (#00ff9f) and magenta (#ff00ff) on dark backgrounds
+- **Font**: Press Start 2P (retro pixel font from Google Fonts)
+- **Style**: Cyberpunk pixel art with glowing effects
+- **Charts**: Pixelated line charts with no curves for authentic retro feel
+
+## 🔧 Configuration
+
+### Langflow Setup
+
+Your Langflow flow should:
+1. Accept text input (stock questions)
+2. Use MCP tools to fetch stock data
+3. Return responses with:
+   - Text answer
+   - Optional structured stock data (array of {date, price, volume})
+
+### Response Format
+
+The app expects Langflow responses in this format:
+```json
+{
+  "outputs": [{
+    "outputs": [{
+      "results": {
+        "message": {
+          "text": "Answer text here",
+          "data": [
+            {"date": "2024-01-01", "price": 150.25, "volume": 1000000},
+            ...
+          ]
+        }
+      }
+    }]
+  }]
+}
+```
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16.1.4 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + Custom CSS
+- **Charts**: Chart.js + react-chartjs-2
+- **HTTP Client**: Axios
+- **Font**: Press Start 2P (Google Fonts)
+
+## 📝 API Routes
+
+### POST /api/ask-stock
+
+Ask a stock-related question.
+
+**Request:**
+```json
+{
+  "question": "How has IBM's stock performed?"
+}
+```
+
+**Response:**
+```json
+{
+  "answer": "IBM stock has...",
+  "stockData": [...],
+  "symbol": "IBM"
+}
+```
+
+## 🐛 Troubleshooting
+
+### Langflow Connection Issues
+
+- Verify Langflow is running on port 7861
+- Check the flow ID in `services/langflow.ts`
+- Ensure CORS is enabled in Langflow
+
+### Chart Not Displaying
+
+- Verify stock data is in the correct format
+- Check browser console for errors
+- Ensure Chart.js is properly registered
+
+### Build Errors
+
+- Clear `.next` folder: `rm -rf .next`
+- Reinstall dependencies: `rm -rf node_modules && npm install`
+- Check TypeScript errors: `npm run build`
+
+## 🤝 Contributing
+
+This is a demo application. Feel free to fork and customize for your needs!
+
+## 📄 License
+
+MIT License - feel free to use this project for learning and development.
+
+## 🎮 Demo Queries
+
+Try these example questions:
+- "How has IBM's stock performed over the last 2 weeks?"
+- "What is Apple's current stock price?"
+- "Compare AAPL vs GOOGL performance this month"
+- "Show me Tesla stock trends for the past week"
+- "What's the volume for Microsoft stock today?"
+
+---
+
+**Built with ❤️ using Next.js, Langflow, and MCP**

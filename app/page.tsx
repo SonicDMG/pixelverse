@@ -1,65 +1,128 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import axios from 'axios';
+import StockChart from '@/components/StockChart';
+import QuestionInput from '@/components/QuestionInput';
+import MessageHistory from '@/components/MessageHistory';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { Message, StockQueryResult } from '@/types';
 
 export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentStockData, setCurrentStockData] = useState<StockQueryResult | null>(null);
+
+  const handleQuestion = async (question: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: question,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      const response = await axios.post<StockQueryResult>('/api/ask-stock', {
+        question,
+      });
+
+      const result = response.data;
+
+      // Add assistant message
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: result.answer,
+        timestamp: new Date(),
+        stockData: result.stockData,
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Update current stock data for chart
+      if (result.stockData && result.stockData.length > 0) {
+        setCurrentStockData(result);
+      }
+    } catch (err) {
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.data?.error || err.message
+        : 'An unexpected error occurred';
+      
+      setError(errorMessage);
+      
+      // Add error message
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `Error: ${errorMessage}`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen p-4 md:p-8 relative">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <header className="text-center space-y-4 py-8">
+          <h1 className="text-3xl md:text-5xl font-pixel text-[#00ff9f] glow-text">
+            PIXELTICKER
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xs md:text-sm text-[#ff00ff] font-pixel">
+            {'>'} RETRO STOCK ANALYSIS POWERED BY LANGFLOW + MCP
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        </header>
+
+        {/* Error Display */}
+        {error && (
+          <div className="error-message pixel-border">
+            <p>ERROR: {error}</p>
+          </div>
+        )}
+
+        {/* Stock Chart */}
+        {currentStockData?.stockData && currentStockData.stockData.length > 0 && (
+          <div className="animate-fade-in">
+            <StockChart 
+              data={currentStockData.stockData} 
+              symbol={currentStockData.symbol}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <LoadingSpinner />
+            <p className="text-[#00ff9f] text-xs font-pixel">ANALYZING STOCK DATA...</p>
+          </div>
+        )}
+
+        {/* Message History */}
+        <MessageHistory messages={messages} />
+
+        {/* Question Input */}
+        <div className="sticky bottom-4 bg-[#0a0e27]/95 p-4 border-4 border-[#00ff9f] pixel-border backdrop-blur-sm">
+          <QuestionInput onSubmit={handleQuestion} isLoading={isLoading} />
         </div>
-      </main>
-    </div>
+
+        {/* Footer */}
+        <footer className="text-center py-8">
+          <p className="text-xs text-gray-500 font-pixel">
+            &copy; 2026 PIXELTICKER | POWERED BY LANGFLOW
+          </p>
+        </footer>
+      </div>
+    </main>
   );
 }
+
+// Made with Bob
