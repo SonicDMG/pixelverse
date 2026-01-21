@@ -42,6 +42,7 @@ export interface StockQueryResult {
   stockData?: StockDataPoint[];
   symbol?: string;
   error?: string;
+  components?: import('./ui-spec').ComponentSpec[];
 }
 
 // Made with Bob

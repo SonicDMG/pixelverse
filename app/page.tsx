@@ -6,7 +6,9 @@ import StockChart from '@/components/StockChart';
 import QuestionInput from '@/components/QuestionInput';
 import MessageHistory from '@/components/MessageHistory';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DynamicUIRenderer from '@/components/DynamicUIRenderer';
 import { Message, StockQueryResult } from '@/types';
+import { ComponentSpec } from '@/types/ui-spec';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -44,8 +46,12 @@ export default function Home() {
       };
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Update current stock data for chart
-      if (result.stockData && result.stockData.length > 0) {
+      // Update current stock data for chart or components
+      if (result.components && result.components.length > 0) {
+        // Agent returned UI components
+        setCurrentStockData(result);
+      } else if (result.stockData && result.stockData.length > 0) {
+        // Legacy: Agent returned raw stock data
         setCurrentStockData(result);
       }
     } catch (err) {
@@ -88,15 +94,19 @@ export default function Home() {
           </div>
         )}
 
-        {/* Stock Chart */}
-        {currentStockData?.stockData && currentStockData.stockData.length > 0 && (
+        {/* Dynamic UI Components or Legacy Stock Chart */}
+        {currentStockData?.components && currentStockData.components.length > 0 ? (
           <div className="animate-fade-in">
-            <StockChart 
-              data={currentStockData.stockData} 
+            <DynamicUIRenderer components={currentStockData.components} />
+          </div>
+        ) : currentStockData?.stockData && currentStockData.stockData.length > 0 ? (
+          <div className="animate-fade-in">
+            <StockChart
+              data={currentStockData.stockData}
               symbol={currentStockData.symbol}
             />
           </div>
-        )}
+        ) : null}
 
         {/* Loading State */}
         {isLoading && (

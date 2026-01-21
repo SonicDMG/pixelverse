@@ -1,0 +1,158 @@
+'use client';
+
+import { ComponentSpec } from '@/types/ui-spec';
+import StockChart from './StockChart';
+import ComparisonChart from './dynamic/ComparisonChart';
+import DataTable from './dynamic/DataTable';
+import ComparisonTable from './dynamic/ComparisonTable';
+import MetricCard from './dynamic/MetricCard';
+import MetricGrid from './dynamic/MetricGrid';
+
+interface DynamicUIRendererProps {
+  components: ComponentSpec[];
+}
+
+/**
+ * DynamicUIRenderer - Safe component registry for rendering agent-generated UI
+ * 
+ * This component acts as a whitelist registry, only rendering pre-approved components
+ * with validated props. This prevents arbitrary code execution while allowing the
+ * Langflow agent to dynamically compose UIs from safe building blocks.
+ */
+export default function DynamicUIRenderer({ components }: DynamicUIRendererProps) {
+  const renderComponent = (spec: ComponentSpec, index: number) => {
+    const key = spec.id || `${spec.type}-${index}`;
+
+    try {
+      switch (spec.type) {
+        case 'line-chart':
+          return (
+            <StockChart
+              key={key}
+              data={spec.props.data.map((d: any) => ({
+                date: d.date,
+                price: d.value,
+                volume: d.volume,
+              }))}
+              symbol={spec.props.symbol}
+            />
+          );
+
+        case 'comparison-chart':
+          return (
+            <ComparisonChart
+              key={key}
+              title={spec.props.title}
+              datasets={spec.props.datasets}
+            />
+          );
+
+        case 'data-table':
+          return (
+            <DataTable
+              key={key}
+              title={spec.props.title}
+              headers={spec.props.headers}
+              rows={spec.props.rows}
+              highlightColumn={spec.props.highlightColumn}
+            />
+          );
+
+        case 'comparison-table':
+          return (
+            <ComparisonTable
+              key={key}
+              title={spec.props.title}
+              items={spec.props.items}
+              column1Label={spec.props.column1Label}
+              column2Label={spec.props.column2Label}
+            />
+          );
+
+        case 'metric-card':
+          return (
+            <MetricCard
+              key={key}
+              title={spec.props.title}
+              value={spec.props.value}
+              change={spec.props.change}
+              changeLabel={spec.props.changeLabel}
+              subtitle={spec.props.subtitle}
+            />
+          );
+
+        case 'metric-grid':
+          return (
+            <MetricGrid
+              key={key}
+              metrics={spec.props.metrics}
+            />
+          );
+
+        case 'alert-box':
+          const severityColors = {
+            info: 'border-[#00d4ff] text-[#00d4ff]',
+            warning: 'border-[#ffff00] text-[#ffff00]',
+            success: 'border-[#00ff9f] text-[#00ff9f]',
+            error: 'border-[#ff0000] text-[#ff0000]',
+          };
+          return (
+            <div
+              key={key}
+              className={`p-4 border-4 pixel-border ${severityColors[spec.props.severity]} bg-[#0a0e27]`}
+            >
+              {spec.props.title && (
+                <h4 className="font-pixel text-sm mb-2">{spec.props.title}</h4>
+              )}
+              <p className="font-pixel text-xs">{spec.props.message}</p>
+            </div>
+          );
+
+        case 'text-block':
+          return (
+            <div
+              key={key}
+              className="p-4 bg-[#0a0e27] border-2 border-[#00ff9f]/30 rounded pixel-border"
+            >
+              <p className="font-pixel text-xs text-white whitespace-pre-wrap leading-relaxed">
+                {spec.props.content}
+              </p>
+            </div>
+          );
+
+        default:
+          console.warn(`Unknown component type: ${(spec as any).type}`);
+          return (
+            <div
+              key={key}
+              className="p-4 border-2 border-[#ff0000] bg-[#0a0e27] pixel-border"
+            >
+              <p className="font-pixel text-xs text-[#ff0000]">
+                Unknown component type: {(spec as any).type}
+              </p>
+            </div>
+          );
+      }
+    } catch (error) {
+      console.error(`Error rendering component ${spec.type}:`, error);
+      return (
+        <div
+          key={key}
+          className="p-4 border-2 border-[#ff0000] bg-[#0a0e27] pixel-border"
+        >
+          <p className="font-pixel text-xs text-[#ff0000]">
+            Error rendering {spec.type}
+          </p>
+        </div>
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {components.map((component, index) => renderComponent(component, index))}
+    </div>
+  );
+}
+
+// Made with Bob

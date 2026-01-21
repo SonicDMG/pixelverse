@@ -2,6 +2,14 @@ import axios from 'axios';
 import { LangflowRequest, LangflowResponse, StockQueryResult, StockDataPoint } from '@/types';
 import { randomUUID } from 'crypto';
 
+/**
+ * Extract stock symbol from question
+ */
+function extractSymbol(question: string): string | undefined {
+  const symbolMatch = question.match(/\b([A-Z]{1,5})\b/);
+  return symbolMatch ? symbolMatch[1] : undefined;
+}
+
 const LANGFLOW_URL = process.env.NEXT_PUBLIC_LANGFLOW_URL || 'http://localhost:7861';
 const LANGFLOW_FLOW_ID = '97cc8b65-0fb1-4f87-8d2b-a2359082f322';
 const LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || '';
@@ -72,7 +80,7 @@ export async function queryLangflow(question: string): Promise<StockQueryResult>
       payload,
       {
         headers,
-        timeout: 30000, // 30 second timeout
+        timeout: 120000, // 120 second (2 minute) timeout for complex queries
       }
     );
 
@@ -81,12 +89,29 @@ export async function queryLangflow(question: string): Promise<StockQueryResult>
     const messageText = outputs?.message?.text || 'No response received';
     const messageData = outputs?.message?.data;
 
-    // Parse stock data if available
-    const stockData = parseStockData(messageText, messageData);
+    // Try to parse as UI specification response
+    let uiResponse: any = null;
+    try {
+      // Check if messageText is JSON with components
+      if (messageText.trim().startsWith('{')) {
+        uiResponse = JSON.parse(messageText);
+      }
+    } catch (e) {
+      // Not JSON, treat as plain text
+    }
 
-    // Extract stock symbol if mentioned
-    const symbolMatch = question.match(/\b([A-Z]{1,5})\b/);
-    const symbol = symbolMatch ? symbolMatch[1] : undefined;
+    // If we have a UI response with components, use it
+    if (uiResponse && uiResponse.components && Array.isArray(uiResponse.components)) {
+      return {
+        answer: uiResponse.text || messageText,
+        components: uiResponse.components,
+        symbol: extractSymbol(question),
+      };
+    }
+
+    // Otherwise, fall back to legacy stock data parsing
+    const stockData = parseStockData(messageText, messageData);
+    const symbol = extractSymbol(question);
 
     return {
       answer: messageText,

@@ -135,6 +135,23 @@ body {
   box-shadow: 0 0 10px var(--neon-cyan);
 }
 
+/* Loading bar animation */
+@keyframes loading-bar {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 2s ease-in-out infinite;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .font-pixel {
