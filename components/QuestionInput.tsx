@@ -65,7 +65,22 @@ export default function QuestionInput({ onSubmit, isLoading }: QuestionInputProp
           disabled={isLoading || !question.trim()}
           className="px-6 py-3 bg-[#00ff9f] border-4 border-[#00ff9f] text-[#0a0e27] font-pixel text-sm hover:bg-[#ff00ff] hover:border-[#ff00ff] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
         >
-          {isLoading ? 'LOADING...' : 'ASK'}
+          {isLoading ? (
+            <span className="inline-flex">
+              <span className="animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }}>L</span>
+              <span className="animate-bounce" style={{ animationDelay: '100ms', animationDuration: '1s' }}>O</span>
+              <span className="animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }}>A</span>
+              <span className="animate-bounce" style={{ animationDelay: '300ms', animationDuration: '1s' }}>D</span>
+              <span className="animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }}>I</span>
+              <span className="animate-bounce" style={{ animationDelay: '500ms', animationDuration: '1s' }}>N</span>
+              <span className="animate-bounce" style={{ animationDelay: '600ms', animationDuration: '1s' }}>G</span>
+              <span className="animate-bounce" style={{ animationDelay: '700ms', animationDuration: '1s' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '800ms', animationDuration: '1s' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '900ms', animationDuration: '1s' }}>.</span>
+            </span>
+          ) : (
+            'ASK'
+          )}
         </button>
       </form>
     </div>
