@@ -67,7 +67,8 @@ export function useBackgroundMusic(
     // Hardcoded list of MP3 files (in a real app, you'd fetch this from an API)
     const musicFiles = [
       'Push Thru - The Grey Room _ Golden Palms.mp3',
-      'The Fifth Quadrant - Dan _Lebo_ Lebowitz, Tone Seeker.mp3'
+      'The Fifth Quadrant - Dan _Lebo_ Lebowitz, Tone Seeker.mp3',
+      'Smooth and Cool - Nico Staf.mp3',
     ];
 
     const tracks: AudioTrack[] = [];
