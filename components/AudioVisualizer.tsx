@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { COLORS } from '@/constants/theme';
 
 interface AudioVisualizerProps {
@@ -19,11 +19,33 @@ interface AudioVisualizerProps {
 export default function AudioVisualizer({
   analyserNode,
   isPlaying,
-  width = 120,
+  width,
   height = 40,
 }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
+  const [canvasWidth, setCanvasWidth] = useState(width || 240);
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateWidth = () => {
+      const rect = container.getBoundingClientRect();
+      setCanvasWidth(width || rect.width);
+    };
+
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [width]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,13 +56,13 @@ export default function AudioVisualizer({
 
     // Set canvas resolution for crisp rendering
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
+    canvas.width = canvasWidth * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
     // Clear canvas initially
     ctx.fillStyle = '#0a0e27';
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, canvasWidth, height);
 
     if (!analyserNode || !isPlaying) {
       // Draw inactive state - flat line
@@ -48,14 +70,14 @@ export default function AudioVisualizer({
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(0, height / 2);
-      ctx.lineTo(width, height / 2);
+      ctx.lineTo(canvasWidth, height / 2);
       ctx.stroke();
       
       // Add "INACTIVE" text
       ctx.fillStyle = COLORS.neonCyan + '60';
       ctx.font = '8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('INACTIVE', width / 2, height / 2 + 3);
+      ctx.fillText('INACTIVE', canvasWidth / 2, height / 2 + 3);
       
       return;
     }
@@ -66,7 +88,7 @@ export default function AudioVisualizer({
     
     // Number of bars to display (use fewer for cleaner look)
     const barCount = 16;
-    const barWidth = width / barCount;
+    const barWidth = canvasWidth / barCount;
     const barGap = 1;
 
     const draw = (): void => {
@@ -81,7 +103,7 @@ export default function AudioVisualizer({
 
       // Clear canvas with dark background
       ctx.fillStyle = '#0a0e27';
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, canvasWidth, height);
 
       // Draw frequency bars
       for (let i = 0; i < barCount; i++) {
@@ -148,13 +170,13 @@ export default function AudioVisualizer({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [analyserNode, isPlaying, width, height]);
+  }, [analyserNode, isPlaying, canvasWidth, height]);
 
   return (
-    <div className="flex items-center">
+    <div ref={containerRef} className="flex items-center w-full">
       <canvas
         ref={canvasRef}
-        style={{ width: `${width}px`, height: `${height}px` }}
+        style={{ width: `${canvasWidth}px`, height: `${height}px` }}
       />
     </div>
   );

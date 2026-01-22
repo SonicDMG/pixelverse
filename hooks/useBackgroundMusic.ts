@@ -48,7 +48,8 @@ export function useBackgroundMusic(
   
   // Track management
   const tracksRef = useRef<AudioTrack[]>([]);
-  const currentTrackIndexRef = useRef<number>(0);
+  const playlistRef = useRef<number[]>([]); // Shuffled playlist of track indices
+  const playlistPositionRef = useRef<number>(0); // Current position in playlist
   const activeSourceRef = useRef<'A' | 'B'>('A'); // Which source is currently playing
   
   // State
@@ -59,6 +60,23 @@ export function useBackgroundMusic(
   
   // Crossfade configuration
   const CROSSFADE_DURATION = 2.5; // seconds
+
+  /**
+   * Shuffle an array using Fisher-Yates algorithm
+   * Creates a randomized playlist without modifying the original tracks array
+   */
+  const shufflePlaylist = useCallback((trackCount: number): number[] => {
+    const indices = Array.from({ length: trackCount }, (_, i) => i);
+    
+    // Fisher-Yates shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    
+    console.log('Shuffled playlist:', indices);
+    return indices;
+  }, []);
 
   /**
    * Load all MP3 files from the music directory
@@ -155,6 +173,11 @@ export function useBackgroundMusic(
         }
         
         tracksRef.current = tracks;
+        
+        // Create initial shuffled playlist
+        playlistRef.current = shufflePlaylist(tracks.length);
+        playlistPositionRef.current = 0;
+        
         console.log(`Loaded ${tracks.length} tracks`);
         setIsReady(true);
 
@@ -223,18 +246,20 @@ export function useBackgroundMusic(
    * Play a track on the specified source with crossfade
    */
   const playTrackOnSource = useCallback((
-    trackIndex: number,
+    playlistPosition: number,
     source: 'A' | 'B',
     fadeIn: boolean = false
   ) => {
     const audioContext = audioContextRef.current;
     const tracks = tracksRef.current;
+    const playlist = playlistRef.current;
     
-    if (!audioContext || !tracks || tracks.length === 0) {
+    if (!audioContext || !tracks || tracks.length === 0 || playlist.length === 0) {
       console.warn('Cannot play track: not ready');
       return;
     }
 
+    const trackIndex = playlist[playlistPosition];
     const track = tracks[trackIndex];
     const sourceRef = source === 'A' ? sourceARef : sourceBRef;
     const gainRef = source === 'A' ? gainARef : gainBRef;
@@ -272,7 +297,17 @@ export function useBackgroundMusic(
       }
 
       // Schedule next track before this one ends (for crossfade)
-      const nextTrackIndex = (trackIndex + 1) % tracks.length;
+      const nextPlaylistPosition = playlistPosition + 1;
+      
+      // Check if we need to reshuffle (reached end of playlist)
+      let actualNextPosition = nextPlaylistPosition;
+      if (nextPlaylistPosition >= playlist.length) {
+        // Reshuffle for next round
+        console.log('End of playlist reached, reshuffling...');
+        playlistRef.current = shufflePlaylist(tracks.length);
+        actualNextPosition = 0;
+      }
+      
       const crossfadeStartTime = track.buffer.duration - CROSSFADE_DURATION;
       
       bufferSource.addEventListener('ended', () => {
@@ -305,9 +340,10 @@ export function useBackgroundMusic(
         
         // Play next track with fade in
         activeSourceRef.current = nextSource;
-        currentTrackIndexRef.current = nextTrackIndex;
-        playTrackOnSource(nextTrackIndex, nextSource, true);
+        playlistPositionRef.current = actualNextPosition;
+        playTrackOnSource(actualNextPosition, nextSource, true);
         
+        const nextTrackIndex = playlistRef.current[actualNextPosition];
         console.log(`Crossfading to: ${tracks[nextTrackIndex].filename}`);
       }, crossfadeStartTime * 1000);
 
@@ -347,9 +383,9 @@ export function useBackgroundMusic(
         });
       }
 
-      // Start playing first track on source A
+      // Start playing first track from shuffled playlist on source A
       activeSourceRef.current = 'A';
-      currentTrackIndexRef.current = 0;
+      playlistPositionRef.current = 0;
       playTrackOnSource(0, 'A', false);
       
       setIsPlaying(true);

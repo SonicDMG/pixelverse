@@ -262,15 +262,12 @@ export default function Home() {
                 )}
               </div>
               
-              {/* Audio Visualizer - Below controls */}
-              <div className="flex items-center">
-                <AudioVisualizer
-                  analyserNode={analyserNode}
-                  isPlaying={isPlaying}
-                  width={240}
-                  height={40}
-                />
-              </div>
+              {/* Audio Visualizer - Below controls, matching full width */}
+              <AudioVisualizer
+                analyserNode={analyserNode}
+                isPlaying={isPlaying}
+                height={40}
+              />
             </div>
             
             {/* Center section: Title (absolutely centered) */}
