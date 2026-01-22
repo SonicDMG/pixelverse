@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import QuestionInput from '@/components/QuestionInput';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -8,10 +8,8 @@ import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
-import { useCompletionSound } from '@/hooks/useCompletionSound';
-import { useRequestSound } from '@/hooks/useRequestSound';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
-import { AUDIO } from '@/constants/theme';
+import { useCyberpunkVoice } from '@/hooks/useCyberpunkVoice';
 
 /**
  * API Error response interface
@@ -25,17 +23,38 @@ export default function Home() {
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const { playCompletionSound } = useCompletionSound({ volume: AUDIO.soundEffectsVolume, enabled: true });
-  const { playRequestSound } = useRequestSound({ volume: AUDIO.soundEffectsVolume, enabled: true });
   const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode } = useBackgroundMusic({
     volume: 0.175, // Decreased by 30% from 0.25
     autoPlay: false // Don't auto-play to respect browser policies
   });
+  const { announce, isSupported: isVoiceSupported } = useCyberpunkVoice({ audioContext });
+
+  // Initialize shared AudioContext for voice synthesis
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !audioContext) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        setAudioContext(ctx);
+      }
+    }
+
+    return () => {
+      if (audioContext) {
+        audioContext.close().catch(err => console.error('Error closing audio context:', err));
+      }
+    };
+  }, []);
 
   const handleQuestion = useCallback(async (question: string) => {
-    // Play request sound immediately when request is initiated
-    playRequestSound();
+    // Announce request submission with voice
+    if (isVoiceSupported) {
+      announce('Processing your request', 'info').catch(err =>
+        console.error('Voice announcement failed:', err)
+      );
+    }
 
     // Clear any existing timeouts
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
@@ -93,12 +112,36 @@ export default function Home() {
 
       setConversationGroups(prev => [...prev, newGroup]);
       requestSuccessful = true;
+
+      // Announce completion
+      if (isVoiceSupported) {
+        announce('Request complete', 'info').catch(err =>
+          console.error('Voice announcement failed:', err)
+        );
+      }
+
+      // Announce key information from the response
+      if (isVoiceSupported && result.stockData && result.stockData.length > 0) {
+        // Get the most recent price (last item in the array)
+        const latestData = result.stockData[result.stockData.length - 1];
+        const priceAnnouncement = `${result.symbol || 'Stock'} price: ${latestData.price} dollars`;
+        announce(priceAnnouncement, 'price').catch(err =>
+          console.error('Voice announcement failed:', err)
+        );
+      }
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.error || err.message
         : 'An unexpected error occurred';
       
       setError(errorMessage);
+
+      // Announce error with voice
+      if (isVoiceSupported) {
+        announce('Request failed. Error occurred.', 'alert').catch(err =>
+          console.error('Voice announcement failed:', err)
+        );
+      }
       
       // Create error conversation group
       const assistantMessage: Message = {
@@ -121,13 +164,8 @@ export default function Home() {
       timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
       timeoutsRef.current = [];
       setLoadingStatus(null);
-      
-      // Play completion sound only on successful requests
-      if (requestSuccessful) {
-        playCompletionSound();
-      }
     }
-  }, [playCompletionSound, playRequestSound]);
+  }, [announce, isVoiceSupported]);
 
   const handleClearConversation = useCallback(() => {
     setConversationGroups([]);
