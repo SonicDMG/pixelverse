@@ -16,30 +16,57 @@ const LANGFLOW_FLOW_ID = process.env.LANGFLOW_FLOW_ID || '97cc8b65-0fb1-4f87-8d2
 const LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || '';
 
 /**
+ * Raw stock data item from external sources
+ */
+interface RawStockDataItem {
+  date?: string;
+  timestamp?: string;
+  price?: number | string;
+  close?: number | string;
+  value?: number | string;
+  volume?: number | string;
+}
+
+/**
+ * Type guard to check if value is a RawStockDataItem
+ */
+function isRawStockDataItem(item: unknown): item is RawStockDataItem {
+  return (
+    typeof item === 'object' &&
+    item !== null &&
+    ('date' in item || 'timestamp' in item)
+  );
+}
+
+/**
  * Parse stock data from Langflow response
  * This function attempts to extract structured stock data from the response
  */
-function parseStockData(responseText: string, data?: any): StockDataPoint[] | undefined {
+function parseStockData(responseText: string, data?: unknown): StockDataPoint[] | undefined {
   try {
     // Check if data object contains stock information
-    if (data && Array.isArray(data)) {
-      return data.map((item: any) => ({
-        date: item.date || item.timestamp || '',
-        price: parseFloat(item.price || item.close || item.value || 0),
-        volume: item.volume ? parseInt(item.volume) : undefined,
-      }));
+    if (Array.isArray(data)) {
+      return data
+        .filter(isRawStockDataItem)
+        .map((item) => ({
+          date: item.date || item.timestamp || '',
+          price: parseFloat(String(item.price || item.close || item.value || 0)),
+          volume: item.volume ? parseInt(String(item.volume), 10) : undefined,
+        }));
     }
 
     // Try to parse JSON from response text
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
+      const parsed: unknown = JSON.parse(jsonMatch[0]);
       if (Array.isArray(parsed)) {
-        return parsed.map((item: any) => ({
-          date: item.date || item.timestamp || '',
-          price: parseFloat(item.price || item.close || item.value || 0),
-          volume: item.volume ? parseInt(item.volume) : undefined,
-        }));
+        return parsed
+          .filter(isRawStockDataItem)
+          .map((item) => ({
+            date: item.date || item.timestamp || '',
+            price: parseFloat(String(item.price || item.close || item.value || 0)),
+            volume: item.volume ? parseInt(String(item.volume), 10) : undefined,
+          }));
       }
     }
 

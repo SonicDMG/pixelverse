@@ -1,5 +1,3 @@
-'use client';
-
 import { Message } from '@/types';
 import { ComponentSpec } from '@/types/ui-spec';
 import DynamicUIRenderer from './DynamicUIRenderer';

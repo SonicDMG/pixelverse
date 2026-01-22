@@ -1,18 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import axios from 'axios';
 import QuestionInput from '@/components/QuestionInput';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ConversationGroup from '@/components/ConversationGroup';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType } from '@/types';
+
+/**
+ * API Error response interface
+ */
+interface ApiErrorResponse {
+  error: string;
+  details?: string;
+}
 
 export default function Home() {
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleQuestion = async (question: string) => {
+  const handleQuestion = useCallback(async (question: string) => {
     setIsLoading(true);
     setError(null);
 
@@ -78,12 +87,12 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleClearConversation = () => {
+  const handleClearConversation = useCallback(() => {
     setConversationGroups([]);
     setError(null);
-  };
+  }, []);
 
   return (
     <div className="h-screen flex items-center justify-center p-4">
@@ -133,14 +142,15 @@ export default function Home() {
 
             {/* Conversation Groups - Each group contains user question, assistant response, and visualizations */}
             {conversationGroups.map((group) => (
-              <ConversationGroup
-                key={group.id}
-                userMessage={group.userMessage}
-                assistantMessage={group.assistantMessage}
-                components={group.components}
-                stockData={group.stockData}
-                symbol={group.symbol}
-              />
+              <ErrorBoundary key={group.id}>
+                <ConversationGroup
+                  userMessage={group.userMessage}
+                  assistantMessage={group.assistantMessage}
+                  components={group.components}
+                  stockData={group.stockData}
+                  symbol={group.symbol}
+                />
+              </ErrorBoundary>
             ))}
           </div>
         </main>
