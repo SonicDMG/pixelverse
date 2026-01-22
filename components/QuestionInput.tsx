@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { LoadingStatus } from '@/types';
 
 interface QuestionInputProps {
   onSubmit: (question: string) => void;
-  isLoading: boolean;
+  loadingStatus: LoadingStatus;
 }
 
 const EXAMPLE_QUESTIONS = [
@@ -15,8 +16,9 @@ const EXAMPLE_QUESTIONS = [
   "Explain the current market conditions", // text-block
 ];
 
-export default function QuestionInput({ onSubmit, isLoading }: QuestionInputProps) {
+export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInputProps) {
   const [question, setQuestion] = useState('');
+  const isLoading = loadingStatus !== null && loadingStatus !== 'done';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

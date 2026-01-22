@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import QuestionInput from '@/components/QuestionInput';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Message, StockQueryResult, ConversationGroup as ConversationGroupType } from '@/types';
+import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
+import { useCompletionSound } from '@/hooks/useCompletionSound';
 
 /**
  * API Error response interface
@@ -18,12 +19,19 @@ interface ApiErrorResponse {
 
 export default function Home() {
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const { playCompletionSound } = useCompletionSound({ volume: 0.6, enabled: true });
 
   const handleQuestion = useCallback(async (question: string) => {
-    setIsLoading(true);
+    // Clear any existing timeouts
+    timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    timeoutsRef.current = [];
+
+    setLoadingStatus('choosing_agent');
     setError(null);
+    let requestSuccessful = false;
 
     // Create user message
     const userMessage: Message = {
@@ -32,6 +40,17 @@ export default function Home() {
       content: question,
       timestamp: new Date(),
     };
+
+    // Progress through loading states with timing
+    const timeout1 = setTimeout(() => {
+      setLoadingStatus('getting_data');
+    }, 5000); // 5s for choosing_agent
+    timeoutsRef.current.push(timeout1);
+
+    const timeout2 = setTimeout(() => {
+      setLoadingStatus('processing');
+    }, 25000); // 5s + 20s for getting_data
+    timeoutsRef.current.push(timeout2);
 
     try {
       const response = await axios.post<StockQueryResult>('/api/ask-stock', {
@@ -61,6 +80,7 @@ export default function Home() {
       };
 
       setConversationGroups(prev => [...prev, newGroup]);
+      requestSuccessful = true;
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.error || err.message
@@ -85,9 +105,17 @@ export default function Home() {
 
       setConversationGroups(prev => [...prev, errorGroup]);
     } finally {
-      setIsLoading(false);
+      // Clear all timeouts
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current = [];
+      setLoadingStatus(null);
+      
+      // Play completion sound only on successful requests
+      if (requestSuccessful) {
+        playCompletionSound();
+      }
     }
-  }, []);
+  }, [playCompletionSound]);
 
   const handleClearConversation = useCallback(() => {
     setConversationGroups([]);
@@ -113,7 +141,7 @@ export default function Home() {
               {conversationGroups.length > 0 && (
                 <button
                   onClick={handleClearConversation}
-                  disabled={isLoading}
+                  disabled={loadingStatus !== null && loadingStatus !== 'done'}
                   className="px-4 py-2 bg-[#1a1f3a] border-2 border-[#ff00ff] text-[#ff00ff] text-xs font-pixel hover:bg-[#ff00ff] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
                   title="Clear conversation history"
                 >
@@ -123,9 +151,9 @@ export default function Home() {
             </div>
           </div>
           {/* Loading State in Header */}
-          {isLoading && (
+          {loadingStatus !== null && loadingStatus !== 'done' && (
             <div className="flex flex-col items-center justify-center py-4">
-              <LoadingSpinner />
+              <LoadingSpinner status={loadingStatus} />
             </div>
           )}
         </header>
@@ -157,7 +185,7 @@ export default function Home() {
 
         {/* Question Input - Fixed above footer */}
         <div className="flex-shrink-0 bg-[#0a0e27]/95 p-4 mt-4 border-t-4 border-[#00ff9f] pixel-border backdrop-blur-sm">
-          <QuestionInput onSubmit={handleQuestion} isLoading={isLoading} />
+          <QuestionInput onSubmit={handleQuestion} loadingStatus={loadingStatus} />
         </div>
 
         {/* Footer */}

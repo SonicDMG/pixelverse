@@ -14,6 +14,16 @@ export interface Message {
   stockData?: StockDataPoint[];
 }
 
+/**
+ * Loading status for async operations in the stock query flow
+ * - 'choosing_agent': AI is selecting the appropriate agent
+ * - 'getting_data': Fetching stock data from external sources
+ * - 'processing': Processing and analyzing the data
+ * - 'done': Operation completed successfully
+ * - null: No active loading operation
+ */
+export type LoadingStatus = 'choosing_agent' | 'getting_data' | 'processing' | 'done' | null;
+
 // Conversation group - pairs user question with assistant response and visualizations
 export interface ConversationGroup {
   id: string;
