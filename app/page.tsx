@@ -8,6 +8,8 @@ import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
 import { useCompletionSound } from '@/hooks/useCompletionSound';
+import { useRequestSound } from '@/hooks/useRequestSound';
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 
 /**
  * API Error response interface
@@ -23,8 +25,16 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const { playCompletionSound } = useCompletionSound({ volume: 0.6, enabled: true });
+  const { playRequestSound } = useRequestSound({ volume: 0.5, enabled: true });
+  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady } = useBackgroundMusic({
+    volume: 0.175, // Decreased by 30% from 0.25
+    autoPlay: false // Don't auto-play to respect browser policies
+  });
 
   const handleQuestion = useCallback(async (question: string) => {
+    // Play request sound immediately when request is initiated
+    playRequestSound();
+
     // Clear any existing timeouts
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
     timeoutsRef.current = [];
@@ -115,7 +125,7 @@ export default function Home() {
         playCompletionSound();
       }
     }
-  }, [playCompletionSound]);
+  }, [playCompletionSound, playRequestSound]);
 
   const handleClearConversation = useCallback(() => {
     setConversationGroups([]);
@@ -128,7 +138,26 @@ export default function Home() {
         {/* Header */}
         <header className="text-center space-y-4 py-8 px-4 border-b-4 border-[#00ff9f]/30 pixel-border flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex-1"></div>
+            <div className="flex-1 flex justify-start gap-2">
+              {/* Background Music Controls */}
+              <button
+                onClick={togglePlayback}
+                disabled={!isReady}
+                className="px-4 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
+                title={isPlaying ? "Stop background music" : "Play background music"}
+              >
+                {isPlaying ? '⏸ MUSIC' : '▶ MUSIC'}
+              </button>
+              {isPlaying && (
+                <button
+                  onClick={toggleMute}
+                  className="px-4 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors pixel-border"
+                  title={isMuted ? "Unmute music" : "Mute music"}
+                >
+                  {isMuted ? '🔇' : '🔊'}
+                </button>
+              )}
+            </div>
             <div className="flex-1 flex flex-col items-center">
               <h1 className="text-3xl md:text-5xl font-pixel text-[#00ff9f] glow-text">
                 PIXELTICKER

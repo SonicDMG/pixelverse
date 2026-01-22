@@ -23,7 +23,7 @@ interface UseCompletionSoundReturn {
 export function useCompletionSound(
   options: UseCompletionSoundOptions = {}
 ): UseCompletionSoundReturn {
-  const { volume: initialVolume = 0.5, enabled: initialEnabled = true } = options;
+  const { volume: initialVolume = 0.25, enabled: initialEnabled = true } = options;
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
