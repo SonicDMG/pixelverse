@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { WebSpeechTTS, CyberpunkVoiceSettings, AudioEffectSettings } from '@/utils/tts-web-speech';
 
 export type AnnouncementType = 'alert' | 'info' | 'price';
@@ -12,6 +12,10 @@ interface UseCyberpunkVoiceReturn {
   stop: () => void;
   isSpeaking: boolean;
   isSupported: boolean;
+  isEnabled: boolean;
+  toggleEnabled: () => void;
+  volume: number;
+  setVolume: (volume: number) => void;
 }
 
 /**
@@ -25,6 +29,8 @@ export function useCyberpunkVoice(
   const { audioContext } = options;
   const ttsRef = useRef<WebSpeechTTS | null>(null);
   const isSpeakingRef = useRef<boolean>(false);
+  const [isEnabled, setIsEnabled] = useState(false); // Voice disabled by default
+  const [volume, setVolumeState] = useState(0.75); // Default volume from voice settings
 
   // Initialize TTS when audio context is available
   useEffect(() => {
@@ -39,6 +45,14 @@ export function useCyberpunkVoice(
   }, [audioContext]);
 
   /**
+   * Set volume level
+   */
+  const setVolume = useCallback((newVolume: number) => {
+    const clampedVolume = Math.max(0, Math.min(1, newVolume));
+    setVolumeState(clampedVolume);
+  }, []);
+
+  /**
    * Get voice settings based on announcement type
    */
   const getVoiceSettings = useCallback((type: AnnouncementType): CyberpunkVoiceSettings => {
@@ -48,7 +62,7 @@ export function useCyberpunkVoice(
         return {
           pitch: 0.7, // Lower, more serious
           rate: 1.0, // Normal speed for clarity
-          volume: 0.75, // Increased volume for better audibility
+          volume: volume, // Use current volume setting
         };
       
       case 'info':
@@ -56,7 +70,7 @@ export function useCyberpunkVoice(
         return {
           pitch: 0.8, // Slightly lower
           rate: 1.1, // Slightly faster
-          volume: 0.75, // Increased volume for better audibility
+          volume: volume, // Use current volume setting
         };
       
       case 'price':
@@ -64,17 +78,17 @@ export function useCyberpunkVoice(
         return {
           pitch: 0.75, // Lower for authority
           rate: 1.2, // Faster for efficiency
-          volume: 0.75, // Increased volume for better audibility
+          volume: volume, // Use current volume setting
         };
       
       default:
         return {
           pitch: 0.8,
           rate: 1.1,
-          volume: 0.75, // Increased volume for better audibility
+          volume: volume, // Use current volume setting
         };
     }
-  }, []);
+  }, [volume]);
 
   /**
    * Get audio effects based on announcement type
@@ -153,12 +167,24 @@ export function useCyberpunkVoice(
   }, []);
 
   /**
+   * Toggle voice enabled/disabled
+   */
+  const toggleEnabled = useCallback(() => {
+    setIsEnabled(prev => !prev);
+  }, []);
+
+  /**
    * Announce text with cyberpunk voice effects
    */
   const announce = useCallback(async (
     text: string,
     type: AnnouncementType = 'info'
   ): Promise<void> => {
+    // Don't announce if voice is disabled
+    if (!isEnabled) {
+      return;
+    }
+
     if (!ttsRef.current) {
       console.warn('TTS not initialized');
       return;
@@ -190,7 +216,7 @@ export function useCyberpunkVoice(
       isSpeakingRef.current = false;
       throw error;
     }
-  }, [preprocessText, getVoiceSettings, getAudioEffects]);
+  }, [isEnabled, preprocessText, getVoiceSettings, getAudioEffects]);
 
   /**
    * Stop any ongoing speech
@@ -217,6 +243,10 @@ export function useCyberpunkVoice(
     stop,
     isSpeaking,
     isSupported,
+    isEnabled,
+    toggleEnabled,
+    volume,
+    setVolume,
   };
 }
 

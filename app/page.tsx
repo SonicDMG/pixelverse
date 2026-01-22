@@ -24,15 +24,18 @@ export default function Home() {
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode } = useBackgroundMusic({
+  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode, volume: musicVolume, setVolume: setMusicVolume } = useBackgroundMusic({
     volume: 0.175, // Decreased by 30% from 0.25
     autoPlay: false // Don't auto-play to respect browser policies
   });
-  const { announce, isSupported: isVoiceSupported } = useCyberpunkVoice({ audioContext });
+  const { announce, isSupported: isVoiceSupported, isEnabled: isVoiceEnabled, toggleEnabled: toggleVoice, volume: voiceVolume, setVolume: setVoiceVolume } = useCyberpunkVoice({ audioContext });
 
   // Initialize shared AudioContext for voice synthesis
   useEffect(() => {
+    setIsMounted(true);
+    
     if (typeof window !== 'undefined' && !audioContext) {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioContextClass) {
@@ -178,40 +181,100 @@ export default function Home() {
         {/* Header */}
         <header className="text-center space-y-4 py-8 px-4 border-b-4 border-[#00ff9f]/30 pixel-border flex-shrink-0">
           <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-            {/* Left section: Music Controls + Visualizer */}
-            <div className="flex justify-start gap-2 items-end">
-              {/* Background Music Controls */}
-              <button
-                onClick={togglePlayback}
-                disabled={!isReady}
-                className="px-4 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
-                title={isPlaying ? "Stop background music" : "Play background music"}
-              >
-                {isPlaying ? '⏸ MUSIC' : '▶ MUSIC'}
-              </button>
-              {isPlaying && (
-                <button
-                  onClick={toggleMute}
-                  className="px-4 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors pixel-border"
-                  title={isMuted ? "Unmute music" : "Mute music"}
-                >
-                  {isMuted ? '🔇' : '🔊'}
-                </button>
-              )}
+            {/* Left section: Music & Voice Controls with Visualizer below */}
+            <div className="flex flex-col gap-2 justify-start">
+              {/* Controls Row */}
+              <div className="flex gap-4 items-start">
+                {/* Music Control with Volume */}
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={togglePlayback}
+                    disabled={!isReady}
+                    className={`px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
+                      isPlaying
+                        ? 'bg-[#1a1f3a] border-[#00ff9f] text-[#00ff9f] hover:bg-[#00ff9f] hover:text-[#0a0e27]'
+                        : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-[#00ff9f] hover:text-[#00ff9f]'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    title={isPlaying ? "Stop background music" : "Play background music"}
+                  >
+                    🎵 MUSIC
+                  </button>
+                  {/* Music Volume Slider */}
+                  <div className="flex items-center gap-1 px-1">
+                    <span className="text-[10px] text-[#00ff9f] font-pixel opacity-60">VOL</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={Math.round(musicVolume * 100)}
+                      onChange={(e) => setMusicVolume(parseInt(e.target.value) / 100)}
+                      disabled={!isReady}
+                      className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
+                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ff9f]
+                        [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
+                        [&::-moz-range-thumb]:bg-[#00ff9f] [&::-moz-range-thumb]:border-0"
+                      title={`Music volume: ${Math.round(musicVolume * 100)}%`}
+                    />
+                    <span className="text-[10px] text-[#00ff9f] font-pixel opacity-60 w-6 text-right">
+                      {Math.round(musicVolume * 100)}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Voice Control with Volume */}
+                {isMounted && (
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={toggleVoice}
+                      disabled={!isVoiceSupported}
+                      className={`px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
+                        isVoiceEnabled
+                          ? 'bg-[#1a1f3a] border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-[#0a0e27]'
+                          : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-[#ff00ff] hover:text-[#ff00ff]'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      title={isVoiceEnabled ? "Disable voice announcements" : "Enable voice announcements"}
+                    >
+                      🗣️ VOICE
+                    </button>
+                    {/* Voice Volume Slider */}
+                    <div className="flex items-center gap-1 px-1">
+                      <span className="text-[10px] text-[#ff00ff] font-pixel opacity-60">VOL</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={Math.round(voiceVolume * 100)}
+                        onChange={(e) => setVoiceVolume(parseInt(e.target.value) / 100)}
+                        disabled={!isVoiceSupported}
+                        className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
+                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#ff00ff]
+                          [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
+                          [&::-moz-range-thumb]:bg-[#ff00ff] [&::-moz-range-thumb]:border-0"
+                        title={`Voice volume: ${Math.round(voiceVolume * 100)}%`}
+                      />
+                      <span className="text-[10px] text-[#ff00ff] font-pixel opacity-60 w-6 text-right">
+                        {Math.round(voiceVolume * 100)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
               
-              {/* Audio Visualizer - Between controls and title */}
-              <div className="flex items-center ml-2">
+              {/* Audio Visualizer - Below controls */}
+              <div className="flex items-center">
                 <AudioVisualizer
                   analyserNode={analyserNode}
-                  isPlaying={isPlaying && !isMuted}
-                  width={120}
+                  isPlaying={isPlaying}
+                  width={240}
                   height={40}
                 />
               </div>
             </div>
             
             {/* Center section: Title (absolutely centered) */}
-            <div className="flex flex-col items-center justify-self-center">
+            <div className="flex flex-col items-center justify-self-center self-start">
               <h1 className="text-3xl md:text-5xl font-pixel text-[#00ff9f] glow-text whitespace-nowrap">
                 PIXELTICKER
               </h1>
@@ -221,7 +284,7 @@ export default function Home() {
             </div>
             
             {/* Right section: Clear Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-end self-start">
               {conversationGroups.length > 0 && (
                 <button
                   onClick={handleClearConversation}
