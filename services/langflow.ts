@@ -10,8 +10,9 @@ function extractSymbol(question: string): string | undefined {
   return symbolMatch ? symbolMatch[1] : undefined;
 }
 
-const LANGFLOW_URL = process.env.NEXT_PUBLIC_LANGFLOW_URL || 'http://localhost:7861';
-const LANGFLOW_FLOW_ID = '97cc8b65-0fb1-4f87-8d2b-a2359082f322';
+// Server-side only - no NEXT_PUBLIC_ prefix for security
+const LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
+const LANGFLOW_FLOW_ID = process.env.LANGFLOW_FLOW_ID || '97cc8b65-0fb1-4f87-8d2b-a2359082f322';
 const LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || '';
 
 /**

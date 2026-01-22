@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -14,6 +14,8 @@ import {
   Filler,
 } from 'chart.js';
 import { StockDataPoint } from '@/types';
+import { useChartAnimation } from '@/hooks/useChartAnimation';
+import { getBaseChartOptions, getDatasetConfig, CHART_COLORS } from '@/utils/chart-config';
 
 // Register Chart.js components
 ChartJS.register(
@@ -33,27 +35,8 @@ interface StockChartProps {
 }
 
 export default function StockChart({ data, symbol }: StockChartProps) {
-  const [animationProgress, setAnimationProgress] = useState(0);
   const chartRef = useRef<ChartJS<'line'>>(null);
-
-  useEffect(() => {
-    // Progressive drawing animation
-    const duration = 1500; // 1.5 seconds
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      setAnimationProgress(progress);
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    
-    animate();
-  }, [data]);
+  const animationProgress = useChartAnimation(data.length);
 
   const visibleDataCount = Math.floor(data.length * animationProgress);
   const visibleData = data.slice(0, Math.max(1, visibleDataCount));
@@ -61,91 +44,22 @@ export default function StockChart({ data, symbol }: StockChartProps) {
   const chartData = {
     labels: visibleData.map(d => d.date),
     datasets: [
-      {
-        label: symbol ? `${symbol} Stock Price` : 'Stock Price',
-        data: visibleData.map(d => d.price),
-        borderColor: '#00ff9f',
-        backgroundColor: 'rgba(0, 255, 159, 0.1)',
-        borderWidth: 3,
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        pointBackgroundColor: '#00ff9f',
-        pointBorderColor: '#0a0e27',
-        pointBorderWidth: 2,
-        tension: 0, // No curve for pixel art effect
-        fill: true,
-      },
+      getDatasetConfig(
+        symbol ? `${symbol} Stock Price` : 'Stock Price',
+        visibleData.map(d => d.price),
+        CHART_COLORS[0],
+        true
+      ),
     ],
   };
 
   const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: {
-      duration: 0, // Disable default animation since we're doing custom
-    },
+    ...getBaseChartOptions(),
     plugins: {
-      legend: {
-        display: true,
-        position: 'top' as const,
-        labels: {
-          color: '#00ff9f',
-          font: {
-            family: "'Press Start 2P', monospace",
-            size: 10,
-          },
-          padding: 20,
-        },
-      },
+      ...getBaseChartOptions().plugins,
       tooltip: {
-        backgroundColor: '#0a0e27',
-        titleColor: '#00ff9f',
-        bodyColor: '#ffffff',
-        borderColor: '#00ff9f',
-        borderWidth: 2,
-        padding: 12,
+        ...getBaseChartOptions().plugins.tooltip,
         displayColors: false,
-        titleFont: {
-          family: "'Press Start 2P', monospace",
-          size: 10,
-        },
-        bodyFont: {
-          family: "'Press Start 2P', monospace",
-          size: 8,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'rgba(0, 255, 159, 0.1)',
-          lineWidth: 1,
-        },
-        ticks: {
-          color: '#00ff9f',
-          font: {
-            family: "'Press Start 2P', monospace",
-            size: 8,
-          },
-          maxRotation: 45,
-          minRotation: 45,
-        },
-      },
-      y: {
-        grid: {
-          color: 'rgba(0, 255, 159, 0.1)',
-          lineWidth: 1,
-        },
-        ticks: {
-          color: '#00ff9f',
-          font: {
-            family: "'Press Start 2P', monospace",
-            size: 8,
-          },
-          callback: function(value: any) {
-            return '$' + value.toFixed(2);
-          },
-        },
       },
     },
   };
