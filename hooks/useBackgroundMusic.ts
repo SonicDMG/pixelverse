@@ -273,13 +273,18 @@ export function useBackgroundMusic(
 
       // Schedule crossfade to next track
       setTimeout(() => {
-        if (!isPlaying) return; // Don't continue if stopped
+        // Check if we should continue playing by checking the source refs
+        // If both sources are null, playback was stopped
+        if (!sourceARef.current && !sourceBRef.current) {
+          console.log('Playback stopped, not scheduling next track');
+          return;
+        }
         
         // Determine which source to use for next track
         const nextSource = source === 'A' ? 'B' : 'A';
         const currentGainNode = gainRef.current;
         
-        if (currentGainNode) {
+        if (currentGainNode && audioContext) {
           // Fade out current track
           const fadeStartTime = audioContext.currentTime;
           currentGainNode.gain.cancelScheduledValues(fadeStartTime);
@@ -303,7 +308,7 @@ export function useBackgroundMusic(
     } catch (error) {
       console.error(`Failed to play track on source ${source}:`, error);
     }
-  }, [isPlaying, CROSSFADE_DURATION]);
+  }, [CROSSFADE_DURATION]);
 
   /**
    * Start playing the background music

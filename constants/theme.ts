@@ -24,11 +24,15 @@ export const THEME = {
       slow: 1500,
     },
   },
+  audio: {
+    soundEffectsVolume: 0.125, // Default volume for sound effects (0.0 to 1.0)
+  },
 } as const;
 
 // Export individual color values for convenience
 export const COLORS = THEME.colors;
 export const FONTS = THEME.fonts;
 export const ANIMATIONS = THEME.animations;
+export const AUDIO = THEME.audio;
 
 // Made with Bob

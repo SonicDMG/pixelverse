@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { generateRequestBeep } from '@/utils/generate-request-beep';
+import { AUDIO } from '@/constants/theme';
 
 interface UseRequestSoundOptions {
   volume?: number; // 0.0 to 1.0
@@ -23,7 +24,7 @@ interface UseRequestSoundReturn {
 export function useRequestSound(
   options: UseRequestSoundOptions = {}
 ): UseRequestSoundReturn {
-  const { volume: initialVolume = 0.25, enabled: initialEnabled = true } = options;
+  const { volume: initialVolume = AUDIO.soundEffectsVolume, enabled: initialEnabled = true } = options;
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);

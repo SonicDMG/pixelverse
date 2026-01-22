@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { generateChaChing } from '@/utils/generate-cha-ching';
+import { AUDIO } from '@/constants/theme';
 
 interface UseCompletionSoundOptions {
   volume?: number; // 0.0 to 1.0
@@ -23,7 +24,7 @@ interface UseCompletionSoundReturn {
 export function useCompletionSound(
   options: UseCompletionSoundOptions = {}
 ): UseCompletionSoundReturn {
-  const { volume: initialVolume = 0.25, enabled: initialEnabled = true } = options;
+  const { volume: initialVolume = AUDIO.soundEffectsVolume, enabled: initialEnabled = true } = options;
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);

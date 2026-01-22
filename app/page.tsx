@@ -10,6 +10,7 @@ import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, 
 import { useCompletionSound } from '@/hooks/useCompletionSound';
 import { useRequestSound } from '@/hooks/useRequestSound';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
+import { AUDIO } from '@/constants/theme';
 
 /**
  * API Error response interface
@@ -24,8 +25,8 @@ export default function Home() {
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const { playCompletionSound } = useCompletionSound({ volume: 0.6, enabled: true });
-  const { playRequestSound } = useRequestSound({ volume: 0.5, enabled: true });
+  const { playCompletionSound } = useCompletionSound({ volume: AUDIO.soundEffectsVolume, enabled: true });
+  const { playRequestSound } = useRequestSound({ volume: AUDIO.soundEffectsVolume, enabled: true });
   const { isPlaying, isMuted, togglePlayback, toggleMute, isReady } = useBackgroundMusic({
     volume: 0.175, // Decreased by 30% from 0.25
     autoPlay: false // Don't auto-play to respect browser policies
