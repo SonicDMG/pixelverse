@@ -6,6 +6,7 @@ import QuestionInput from '@/components/QuestionInput';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import AudioVisualizer from '@/components/AudioVisualizer';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
 import { useCompletionSound } from '@/hooks/useCompletionSound';
 import { useRequestSound } from '@/hooks/useRequestSound';
@@ -27,7 +28,7 @@ export default function Home() {
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const { playCompletionSound } = useCompletionSound({ volume: AUDIO.soundEffectsVolume, enabled: true });
   const { playRequestSound } = useRequestSound({ volume: AUDIO.soundEffectsVolume, enabled: true });
-  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady } = useBackgroundMusic({
+  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode } = useBackgroundMusic({
     volume: 0.175, // Decreased by 30% from 0.25
     autoPlay: false // Don't auto-play to respect browser policies
   });
@@ -138,8 +139,9 @@ export default function Home() {
       <div className="h-full w-full max-w-7xl flex flex-col overflow-hidden">
         {/* Header */}
         <header className="text-center space-y-4 py-8 px-4 border-b-4 border-[#00ff9f]/30 pixel-border flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex justify-start gap-2">
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            {/* Left section: Music Controls + Visualizer */}
+            <div className="flex justify-start gap-2 items-end">
               {/* Background Music Controls */}
               <button
                 onClick={togglePlayback}
@@ -158,16 +160,30 @@ export default function Home() {
                   {isMuted ? '🔇' : '🔊'}
                 </button>
               )}
+              
+              {/* Audio Visualizer - Between controls and title */}
+              <div className="flex items-center ml-2">
+                <AudioVisualizer
+                  analyserNode={analyserNode}
+                  isPlaying={isPlaying && !isMuted}
+                  width={120}
+                  height={40}
+                />
+              </div>
             </div>
-            <div className="flex-1 flex flex-col items-center">
-              <h1 className="text-3xl md:text-5xl font-pixel text-[#00ff9f] glow-text">
+            
+            {/* Center section: Title (absolutely centered) */}
+            <div className="flex flex-col items-center justify-self-center">
+              <h1 className="text-3xl md:text-5xl font-pixel text-[#00ff9f] glow-text whitespace-nowrap">
                 PIXELTICKER
               </h1>
-              <p className="text-xs md:text-sm text-[#ff00ff] font-pixel mt-2">
+              <p className="text-xs md:text-sm text-[#ff00ff] font-pixel mt-2 whitespace-nowrap">
                 {'>'} RETRO STOCK ANALYSIS POWERED BY LANGFLOW + MCP
               </p>
             </div>
-            <div className="flex-1 flex justify-end">
+            
+            {/* Right section: Clear Button */}
+            <div className="flex justify-end">
               {conversationGroups.length > 0 && (
                 <button
                   onClick={handleClearConversation}

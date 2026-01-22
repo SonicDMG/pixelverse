@@ -15,6 +15,8 @@ interface UseBackgroundMusicReturn {
   volume: number;
   setVolume: (volume: number) => void;
   isReady: boolean;
+  audioContext: AudioContext | null;
+  analyserNode: AnalyserNode | null;
 }
 
 interface AudioTrack {
@@ -36,6 +38,7 @@ export function useBackgroundMusic(
   // Audio context and nodes
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainNodeRef = useRef<GainNode | null>(null);
+  const analyserNodeRef = useRef<AnalyserNode | null>(null);
   
   // Dual audio sources for crossfading
   const sourceARef = useRef<AudioBufferSourceNode | null>(null);
@@ -115,10 +118,17 @@ export function useBackgroundMusic(
         const audioContext = new AudioContextClass();
         audioContextRef.current = audioContext;
         
+        // Create analyser node for visualization
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256; // 128 frequency bins
+        analyser.smoothingTimeConstant = 0.8;
+        analyserNodeRef.current = analyser;
+        
         // Create master gain node for overall volume control
         const masterGain = audioContext.createGain();
         masterGain.gain.value = isMuted ? 0 : volume;
-        masterGain.connect(audioContext.destination);
+        masterGain.connect(analyser);
+        analyser.connect(audioContext.destination);
         masterGainNodeRef.current = masterGain;
         
         // Create gain nodes for each source (for crossfading)
@@ -447,6 +457,8 @@ export function useBackgroundMusic(
     volume,
     setVolume,
     isReady,
+    audioContext: audioContextRef.current,
+    analyserNode: analyserNodeRef.current,
   };
 }
 
