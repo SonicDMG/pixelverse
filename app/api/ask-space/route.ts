@@ -58,20 +58,129 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
   console.log('[Space API] Mock response - Lowercase question:', lowerQuestion);
   
   // Detect space-related topics with flexible matching
+  // Check for "planets in solar system" questions first (before "sun" check)
+  if ((lowerQuestion.includes('planets') && lowerQuestion.includes('solar system')) ||
+      lowerQuestion.includes('all planets') ||
+      lowerQuestion.includes('8 planets')) {
+    console.log('[Space API] Mock response - Matched: Solar System Planets');
+    return {
+      answer: 'Our Solar System has 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. They are divided into terrestrial planets (rocky) and gas giants.',
+      components: [
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Mercury',
+            description: 'The smallest and innermost planet, with extreme temperature variations.',
+            diameter: '4,879 km',
+            mass: '3.30 × 10²³ kg',
+            distanceFromSun: '57.9 million km',
+            orbitalPeriod: '88 Earth days',
+            moons: 0
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Venus',
+            description: 'The hottest planet with a thick, toxic atmosphere of carbon dioxide.',
+            diameter: '12,104 km',
+            mass: '4.87 × 10²⁴ kg',
+            distanceFromSun: '108.2 million km',
+            orbitalPeriod: '225 Earth days',
+            moons: 0
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Earth',
+            description: 'Our home planet, the only known world with life.',
+            diameter: '12,742 km',
+            mass: '5.97 × 10²⁴ kg',
+            distanceFromSun: '149.6 million km',
+            orbitalPeriod: '365.25 Earth days',
+            moons: 1
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Mars',
+            description: 'The Red Planet, known for its rusty color caused by iron oxide.',
+            diameter: '6,779 km',
+            mass: '6.39 × 10²³ kg',
+            distanceFromSun: '227.9 million km',
+            orbitalPeriod: '687 Earth days',
+            moons: 2
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Jupiter',
+            description: 'The largest planet, a gas giant with the Great Red Spot storm.',
+            diameter: '139,820 km',
+            mass: '1.898 × 10²⁷ kg',
+            distanceFromSun: '778.5 million km',
+            orbitalPeriod: '11.9 Earth years',
+            moons: 95
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Saturn',
+            description: 'Famous for its spectacular ring system made of ice and rock.',
+            diameter: '116,460 km',
+            mass: '5.68 × 10²⁶ kg',
+            distanceFromSun: '1.43 billion km',
+            orbitalPeriod: '29.5 Earth years',
+            moons: 146
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Uranus',
+            description: 'An ice giant that rotates on its side, giving it extreme seasons.',
+            diameter: '50,724 km',
+            mass: '8.68 × 10²⁵ kg',
+            distanceFromSun: '2.87 billion km',
+            orbitalPeriod: '84 Earth years',
+            moons: 27
+          }
+        },
+        {
+          type: 'planet-card',
+          props: {
+            name: 'Neptune',
+            description: 'The windiest planet with supersonic winds and a deep blue color.',
+            diameter: '49,244 km',
+            mass: '1.02 × 10²⁶ kg',
+            distanceFromSun: '4.50 billion km',
+            orbitalPeriod: '165 Earth years',
+            moons: 14
+          }
+        }
+      ]
+    };
+  }
+  
   if (lowerQuestion.includes('mars') || lowerQuestion.includes('red planet')) {
     console.log('[Space API] Mock response - Matched: Mars');
     return {
       answer: 'Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System. Known as the "Red Planet" due to iron oxide on its surface, Mars has a thin atmosphere and features the largest volcano in the solar system, Olympus Mons.',
       components: [
         {
-          type: 'metric-grid',
+          type: 'planet-card',
           props: {
-            metrics: [
-              { label: 'Distance from Sun', value: '227.9M km', icon: '🌍' },
-              { label: 'Diameter', value: '6,779 km', icon: '📏' },
-              { label: 'Day Length', value: '24.6 hours', icon: '⏰' },
-              { label: 'Year Length', value: '687 Earth days', icon: '📅' }
-            ]
+            name: 'Mars',
+            description: 'The Red Planet, known for its rusty color caused by iron oxide on its surface. Home to Olympus Mons, the largest volcano in the solar system.',
+            diameter: '6,779 km',
+            mass: '6.39 × 10²³ kg',
+            distanceFromSun: '227.9 million km',
+            orbitalPeriod: '687 Earth days',
+            moons: 2
           }
         }
       ]
@@ -84,12 +193,15 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
       answer: 'The Moon is Earth\'s only natural satellite. It orbits Earth at an average distance of 384,400 km and has a significant influence on Earth\'s tides and climate.',
       components: [
         {
-          type: 'metric-card',
+          type: 'planet-card',
           props: {
-            title: 'Moon Distance',
-            value: '384,400 km',
-            subtitle: 'Average distance from Earth',
-            change: 0
+            name: 'The Moon',
+            description: 'Earth\'s only natural satellite and the fifth largest moon in the solar system. Its gravitational influence produces ocean tides and stabilizes Earth\'s axial tilt.',
+            diameter: '3,474 km',
+            mass: '7.34 × 10²² kg',
+            distanceFromSun: '384,400 km from Earth',
+            orbitalPeriod: '27.3 Earth days',
+            moons: 0
           }
         }
       ]
@@ -102,16 +214,15 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
       answer: 'Jupiter is the largest planet in our Solar System, a gas giant with a mass more than twice that of all other planets combined. It features the famous Great Red Spot, a giant storm that has raged for centuries.',
       components: [
         {
-          type: 'data-table',
+          type: 'planet-card',
           props: {
-            title: 'Jupiter Facts',
-            headers: ['Property', 'Value'],
-            rows: [
-              ['Mass', '1.898 × 10²⁷ kg'],
-              ['Radius', '69,911 km'],
-              ['Moons', '95 confirmed'],
-              ['Rotation Period', '9.9 hours']
-            ]
+            name: 'Jupiter',
+            description: 'The gas giant with the Great Red Spot, a massive storm larger than Earth. Jupiter has the strongest magnetic field of any planet and acts as a cosmic vacuum cleaner, protecting inner planets.',
+            diameter: '139,820 km',
+            mass: '1.898 × 10²⁷ kg',
+            distanceFromSun: '778.5 million km',
+            orbitalPeriod: '11.9 Earth years',
+            moons: 95
           }
         }
       ]
@@ -124,13 +235,55 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
       answer: 'The Sun is the star at the center of our Solar System. It\'s a nearly perfect sphere of hot plasma, containing 99.86% of the total mass of the Solar System.',
       components: [
         {
-          type: 'metric-grid',
+          type: 'space-timeline',
           props: {
-            metrics: [
-              { label: 'Age', value: '4.6 billion years', icon: '⏳' },
-              { label: 'Temperature', value: '5,778 K', icon: '🌡️' },
-              { label: 'Diameter', value: '1.39M km', icon: '⭕' },
-              { label: 'Mass', value: '1.989 × 10³⁰ kg', icon: '⚖️' }
+            title: 'Solar Activity Timeline',
+            events: [
+              {
+                date: '4.6 billion years ago',
+                title: 'Sun Formation',
+                description: 'The Sun formed from a collapsing molecular cloud in the Milky Way galaxy',
+                type: 'discovery'
+              },
+              {
+                date: '1859',
+                title: 'Carrington Event',
+                description: 'Largest recorded solar storm in history, causing widespread telegraph system failures',
+                type: 'observation'
+              },
+              {
+                date: '2024',
+                title: 'Solar Maximum',
+                description: 'Peak of current solar cycle 25, with increased sunspot activity and solar flares',
+                type: 'observation'
+              }
+            ]
+          }
+        }
+      ]
+    };
+  }
+  
+  if (lowerQuestion.includes('orion') || lowerQuestion.includes('constellation')) {
+    console.log('[Space API] Mock response - Matched: Orion/Constellation');
+    return {
+      answer: 'Orion is one of the most recognizable constellations in the night sky. Named after a hunter in Greek mythology, it contains some of the brightest stars visible from Earth.',
+      components: [
+        {
+          type: 'constellation',
+          props: {
+            name: 'Orion',
+            abbreviation: 'Ori',
+            description: 'The Hunter constellation, one of the most prominent and recognizable patterns in the night sky. Features the famous Orion\'s Belt asterism and the Orion Nebula.',
+            brightestStar: 'Rigel (β Orionis)',
+            visibility: 'Visible worldwide, best seen December-March',
+            stars: [
+              { name: 'Rigel', magnitude: 0.13 },
+              { name: 'Betelgeuse', magnitude: 0.50 },
+              { name: 'Bellatrix', magnitude: 1.64 },
+              { name: 'Alnilam', magnitude: 1.69 },
+              { name: 'Alnitak', magnitude: 1.77 },
+              { name: 'Saiph', magnitude: 2.09 }
             ]
           }
         }

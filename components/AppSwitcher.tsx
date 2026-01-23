@@ -20,28 +20,30 @@ export default function AppSwitcher() {
   };
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-end">
       {themes.map((theme, index) => (
         <div key={theme.id} className="flex gap-2 items-center">
           <button
             onClick={() => switchApp(theme.id)}
-            className={`px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
+            className={`px-3 sm:px-4 py-2 border-2 text-xs font-pixel transition-all pixel-border min-w-[80px] sm:min-w-[100px] ${
               appMode === theme.id
                 ? 'text-[#0a0e27]'
-                : 'bg-[#0a0e27] border-gray-600 text-gray-500'
+                : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-gray-500'
             }`}
             style={appMode === theme.id ? {
               backgroundColor: theme.colors.primary,
               borderColor: theme.colors.primary,
               boxShadow: `0 0 10px ${theme.colors.primary}`,
-            } : {}}
+            } : {
+              backgroundColor: '#0a0e27',
+              borderColor: '#4a5568',
+            }}
             title={`Switch to ${theme.name}`}
           >
-            {theme.icon && <span className="mr-1">{theme.icon}</span>}
-            {theme.id.toUpperCase()}
+            {theme.icon} {theme.id.toUpperCase()}
           </button>
           {index < themes.length - 1 && (
-            <span className="text-gray-600 font-pixel text-xs">|</span>
+            <span className="text-gray-600 font-pixel text-xs hidden sm:inline">|</span>
           )}
         </div>
       ))}

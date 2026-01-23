@@ -7,6 +7,9 @@ import DataTable from './dynamic/DataTable';
 import ComparisonTable from './dynamic/ComparisonTable';
 import MetricCard from './dynamic/MetricCard';
 import MetricGrid from './dynamic/MetricGrid';
+import PlanetCard from './dynamic/PlanetCard';
+import Constellation from './dynamic/Constellation';
+import SpaceTimeline from './dynamic/SpaceTimeline';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
@@ -118,6 +121,43 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
                 {spec.props.content}
               </p>
             </div>
+          );
+
+        case 'planet-card':
+          return (
+            <PlanetCard
+              key={key}
+              name={spec.props.name}
+              description={spec.props.description}
+              diameter={spec.props.diameter}
+              mass={spec.props.mass}
+              distanceFromSun={spec.props.distanceFromSun}
+              orbitalPeriod={spec.props.orbitalPeriod}
+              moons={spec.props.moons}
+              imageUrl={spec.props.imageUrl}
+            />
+          );
+
+        case 'constellation':
+          return (
+            <Constellation
+              key={key}
+              name={spec.props.name}
+              abbreviation={spec.props.abbreviation}
+              description={spec.props.description}
+              brightestStar={spec.props.brightestStar}
+              visibility={spec.props.visibility}
+              stars={spec.props.stars}
+            />
+          );
+
+        case 'space-timeline':
+          return (
+            <SpaceTimeline
+              key={key}
+              title={spec.props.title}
+              events={spec.props.events}
+            />
           );
 
         default:

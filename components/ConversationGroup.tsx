@@ -2,6 +2,7 @@ import { Message } from '@/types';
 import { ComponentSpec } from '@/types/ui-spec';
 import DynamicUIRenderer from './DynamicUIRenderer';
 import StockChart from './StockChart';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ConversationGroupProps {
   userMessage: Message;
@@ -22,6 +23,8 @@ export default function ConversationGroup({
   stockData,
   symbol,
 }: ConversationGroupProps) {
+  const { theme } = useTheme();
+  
   return (
     <div className="conversation-group">
       {/* User Question */}
@@ -40,10 +43,10 @@ export default function ConversationGroup({
       </div>
 
       {/* Assistant Response */}
-      <div className="p-4 border-4 pixel-border bg-[#0a0e27] border-[#00CED1] mr-8 mb-6 animate-fade-in">
+      <div className="p-4 border-4 pixel-border bg-[#0a0e27] mr-8 mb-6 animate-fade-in" style={{ borderColor: theme.colors.secondary }}>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-pixel text-[#00CED1]">
-            {'>'} PIXELSPACE
+          <span className="text-xs font-pixel" style={{ color: theme.colors.secondary }}>
+            {'>'} {theme.name.toUpperCase()}
           </span>
           <span className="text-xs text-gray-500 font-pixel">
             {new Date(assistantMessage.timestamp).toLocaleTimeString()}
