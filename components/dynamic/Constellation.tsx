@@ -73,7 +73,7 @@ export default function Constellation({
               <div className="text-xs font-pixel text-[#FFD700] uppercase tracking-wide mb-1">
                 ⭐ Brightest Star
               </div>
-              <div className="text-lg font-pixel text-white glow-text">
+              <div className="text-lg font-pixel text-white">
                 {brightestStar}
               </div>
             </div>

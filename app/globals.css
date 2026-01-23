@@ -164,12 +164,17 @@ body {
     image-rendering: pixelated;
   }
 
-  /* Glowing text effect */
+  /* Glowing text effect - for main titles/headings */
   .glow-text {
     text-shadow:
+      0 0 5px var(--color-neon-cyan),
       0 0 10px var(--color-neon-cyan),
-      0 0 20px var(--color-neon-cyan),
-      0 0 30px var(--color-neon-cyan);
+      0 0 15px var(--color-neon-cyan);
+  }
+
+  /* Subtle glow for component text - prioritizes readability */
+  .glow-text-subtle {
+    text-shadow: 0 0 3px rgba(0, 255, 159, 0.3);
   }
 
   /* Animated background grid */

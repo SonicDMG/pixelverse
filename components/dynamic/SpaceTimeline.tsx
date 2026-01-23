@@ -49,7 +49,7 @@ export default function SpaceTimeline({ title, events }: SpaceTimelineProps) {
     <div className="w-full p-6 bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] border-4 border-[#4169E1] rounded-lg pixel-border scanline-container">
       {/* Timeline Title */}
       <div className="mb-6">
-        <h2 className="text-2xl font-pixel text-[#4169E1] glow-text uppercase tracking-wider flex items-center gap-3">
+        <h2 className="text-2xl font-pixel text-[#4169E1] glow-text-subtle uppercase tracking-wider flex items-center gap-3">
           <span className="text-[#00CED1]">⏱️</span>
           {title}
         </h2>
@@ -99,7 +99,7 @@ export default function SpaceTimeline({ title, events }: SpaceTimelineProps) {
                   </div>
 
                   {/* Event Title */}
-                  <h3 className="text-lg font-pixel text-white glow-text mb-2">
+                  <h3 className="text-lg font-pixel text-white mb-2">
                     {event.title}
                   </h3>
 

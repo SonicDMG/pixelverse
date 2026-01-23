@@ -63,7 +63,7 @@ export default function PlanetCard({
             <div className="text-xs font-pixel text-[#4169E1] uppercase tracking-wide">
               Diameter
             </div>
-            <div className="text-lg font-pixel text-white glow-text">
+            <div className="text-lg font-pixel text-white">
               {diameter}
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function PlanetCard({
             <div className="text-xs font-pixel text-[#4169E1] uppercase tracking-wide">
               Mass
             </div>
-            <div className="text-lg font-pixel text-white glow-text">
+            <div className="text-lg font-pixel text-white">
               {mass}
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function PlanetCard({
             <div className="text-xs font-pixel text-[#4169E1] uppercase tracking-wide">
               Distance from Sun
             </div>
-            <div className="text-lg font-pixel text-[#00CED1] glow-text">
+            <div className="text-lg font-pixel text-[#00CED1]">
               {distanceFromSun}
             </div>
           </div>
@@ -93,7 +93,7 @@ export default function PlanetCard({
             <div className="text-xs font-pixel text-[#4169E1] uppercase tracking-wide">
               Orbital Period
             </div>
-            <div className="text-lg font-pixel text-[#00CED1] glow-text">
+            <div className="text-lg font-pixel text-[#00CED1]">
               {orbitalPeriod}
             </div>
           </div>

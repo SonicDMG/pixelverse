@@ -501,8 +501,23 @@ export default function Home() {
                     height={40}
                   />
                 </div>
+              </div>
 
-                {/* Clear Button (left column on desktop) */}
+              {/* Center Column: Title */}
+              <div className="flex flex-col items-center justify-center text-center mx-auto">
+                <h1 className="text-4xl md:text-5xl font-pixel glow-text" style={{ color: theme.colors.primary }}>
+                  {theme.name.toUpperCase()}
+                </h1>
+                <p className="text-sm md:text-base font-pixel mt-2" style={{ color: theme.colors.accent }}>
+                  {'>'} {theme.tagline}
+                </p>
+              </div>
+
+              {/* Right Column: App Switcher + Clear Button */}
+              <div className="flex flex-col gap-4 items-end max-w-[240px] ml-auto">
+                <AppSwitcher />
+                
+                {/* Clear Button (right column on desktop, under app switcher) */}
                 {conversationGroups.length > 0 && (
                   <button
                     onClick={handleClearConversation}
@@ -517,21 +532,6 @@ export default function Home() {
                     CLEAR
                   </button>
                 )}
-              </div>
-
-              {/* Center Column: Title */}
-              <div className="flex flex-col items-center justify-center text-center mx-auto">
-                <h1 className="text-4xl md:text-5xl font-pixel glow-text" style={{ color: theme.colors.primary }}>
-                  {theme.name.toUpperCase()}
-                </h1>
-                <p className="text-sm md:text-base font-pixel mt-2" style={{ color: theme.colors.accent }}>
-                  {'>'} {theme.tagline}
-                </p>
-              </div>
-
-              {/* Right Column: App Switcher */}
-              <div className="flex justify-end">
-                <AppSwitcher />
               </div>
             </div>
           </div>

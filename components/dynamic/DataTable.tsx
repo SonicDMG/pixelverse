@@ -10,7 +10,7 @@ interface DataTableProps {
 export default function DataTable({ title, headers, rows, highlightColumn }: DataTableProps) {
   return (
     <div className="w-full p-6 bg-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border scanline-container">
-      <h3 className="text-lg font-pixel text-[#4169E1] mb-4 glow-text">{title}</h3>
+      <h3 className="text-lg font-pixel text-[#4169E1] mb-4 glow-text-subtle">{title}</h3>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
