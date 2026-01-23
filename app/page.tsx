@@ -8,9 +8,11 @@ import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import AppSwitcher from '@/components/AppSwitcher';
+import { MusicModeSelector, useMusicMode } from '@/components/MusicModeSelector';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
+import { useProceduralMusic } from '@/hooks/useProceduralMusic';
 import { useCyberpunkVoice } from '@/hooks/useCyberpunkVoice';
 
 /**
@@ -23,16 +25,47 @@ interface ApiErrorResponse {
 
 export default function Home() {
   const { appMode, theme } = useTheme();
+  const musicMode = useMusicMode();
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode, volume: musicVolume, setVolume: setMusicVolume } = useBackgroundMusic(appMode, {
-    volume: 0.175, // Decreased by 30% from 0.25
-    autoPlay: false // Don't auto-play to respect browser policies
+  
+  // Use the appropriate music hook based on user preference
+  // Only initialize the hook that matches the current mode to prevent both from running
+  const mp3Music = useBackgroundMusic(appMode, {
+    volume: 0.175,
+    autoPlay: false
   });
+  
+  const proceduralMusic = useProceduralMusic(appMode, {
+    volume: 0.175,
+    autoPlay: false
+  });
+  
+  // Select the active music system based on mode
+  const activeMusic = musicMode === 'generated' ? proceduralMusic : mp3Music;
+  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode, volume: musicVolume, setVolume: setMusicVolume } = activeMusic;
+  
+  // Stop the inactive music system when switching modes
+  useEffect(() => {
+    console.log(`[Music Mode] Switched to: ${musicMode}`);
+    
+    // Always stop MP3 music when switching to generated mode
+    if (musicMode === 'generated') {
+      console.log('[Music Mode] Stopping MP3 music');
+      mp3Music.stop();
+    }
+    
+    // Always stop procedural music when switching to MP3 mode
+    if (musicMode === 'mp3') {
+      console.log('[Music Mode] Stopping procedural music');
+      proceduralMusic.stop();
+    }
+  }, [musicMode, mp3Music, proceduralMusic]);
+  
   const { announce, isSupported: isVoiceSupported, isEnabled: isVoiceEnabled, toggleEnabled: toggleVoice, volume: voiceVolume, setVolume: setVoiceVolume } = useCyberpunkVoice({ audioContext });
 
   // Initialize shared AudioContext for voice synthesis
@@ -226,6 +259,8 @@ export default function Home() {
                       {Math.round(musicVolume * 100)}
                     </span>
                   </div>
+                  {/* Music Mode Selector */}
+                  <MusicModeSelector className="px-1" />
                 </div>
                 
                 {/* Voice Control with Volume */}

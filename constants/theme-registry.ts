@@ -23,6 +23,9 @@ export interface ThemeConfig {
   /** Music folder name for background music */
   musicDirectory: string;
   
+  /** Optional flag to use procedurally generated music instead of MP3 files */
+  useProceduralMusic?: boolean;
+  
   /** Optional emoji/icon for UI representation */
   icon?: string;
   
@@ -102,11 +105,11 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       soundEffectsVolume: 0.125,
     },
     exampleQuestions: [
-      'What is the current price of AAPL?',
-      'Compare TSLA and NVDA performance',
-      'Show me the top gainers today',
-      'What are the market trends for tech stocks?',
-      'Analyze the P/E ratio of MSFT',
+      'Show me AAPL stock price with metrics',
+      'Compare TSLA vs NVDA performance over time',
+      'Display MSFT key financial metrics in a grid',
+      'Show me a comparison table of AAPL and GOOGL',
+      'Analyze AMZN stock data with visualizations',
     ],
   },
   
@@ -144,11 +147,11 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       soundEffectsVolume: 0.125,
     },
     exampleQuestions: [
-      'What planets are in our solar system?',
-      'Tell me about the James Webb Space Telescope',
-      'What is a black hole?',
-      'How far is Mars from Earth?',
-      'Explain the Big Bang theory',
+      'Tell me about Mars',
+      'What is the Moon?',
+      'Show me Jupiter facts',
+      'Tell me about the Sun',
+      'What are the planets in our solar system?',
     ],
   },
 };
