@@ -28,7 +28,7 @@ export default function ComparisonTable({
   const formatChange = (change?: number) => {
     if (change === undefined) return null;
     const sign = change >= 0 ? '+' : '';
-    const color = change >= 0 ? 'text-[#00ff9f]' : 'text-[#ff0000]';
+    const color = change >= 0 ? 'text-[#00CED1]' : 'text-[#ff0000]';
     return (
       <span className={`${color} text-xs ml-2`}>
         ({sign}{change.toFixed(2)}%)
@@ -37,19 +37,19 @@ export default function ComparisonTable({
   };
 
   return (
-    <div className="w-full p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border">
-      <h3 className="text-lg font-pixel text-[#00ff9f] mb-4 glow-text">{title}</h3>
+    <div className="w-full p-6 bg-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border">
+      <h3 className="text-lg font-pixel text-[#4169E1] mb-4 glow-text">{title}</h3>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b-2 border-[#00ff9f]">
-              <th className="px-4 py-3 text-left font-pixel text-xs text-[#00ff9f]">
+            <tr className="border-b-2 border-[#4169E1]">
+              <th className="px-4 py-3 text-left font-pixel text-xs text-[#4169E1]">
                 Metric
               </th>
-              <th className="px-4 py-3 text-right font-pixel text-xs text-[#00ff9f]">
+              <th className="px-4 py-3 text-right font-pixel text-xs text-[#4169E1]">
                 {column1Label}
               </th>
-              <th className="px-4 py-3 text-right font-pixel text-xs text-[#ff00ff]">
+              <th className="px-4 py-3 text-right font-pixel text-xs text-[#00CED1]">
                 {column2Label}
               </th>
             </tr>
@@ -58,15 +58,15 @@ export default function ComparisonTable({
             {items.map((item, index) => (
               <tr
                 key={index}
-                className="border-b border-[#00ff9f]/30 hover:bg-[#1a1f3a] transition-colors"
+                className="border-b border-[#4169E1]/30 hover:bg-[#1a1f3a] transition-colors"
               >
                 <td className="px-4 py-3 font-pixel text-xs text-white">
                   {item.label}
                 </td>
-                <td className="px-4 py-3 font-pixel text-xs text-right text-[#00ff9f]">
+                <td className="px-4 py-3 font-pixel text-xs text-right text-[#4169E1]">
                   {formatValue(item.value1)}
                 </td>
-                <td className="px-4 py-3 font-pixel text-xs text-right text-[#ff00ff]">
+                <td className="px-4 py-3 font-pixel text-xs text-right text-[#00CED1]">
                   {formatValue(item.value2)}
                   {formatChange(item.change)}
                 </td>

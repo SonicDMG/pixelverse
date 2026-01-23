@@ -33,33 +33,33 @@ export default function LoadingSpinner({ status = 'choosing_agent' }: LoadingSpi
       {/* Animated pixel dots */}
       <div className="flex items-center justify-center space-x-2">
         <div
-          className="w-4 h-4 bg-[#00ff9f] pixel-dot animate-bounce"
+          className="w-4 h-4 bg-[#4169E1] pixel-dot animate-bounce"
           style={{ animationDelay: '0ms', animationDuration: '1s' }}
         ></div>
         <div
-          className="w-4 h-4 bg-[#00ff9f] pixel-dot animate-bounce"
+          className="w-4 h-4 bg-[#4169E1] pixel-dot animate-bounce"
           style={{ animationDelay: '200ms', animationDuration: '1s' }}
         ></div>
         <div
-          className="w-4 h-4 bg-[#00ff9f] pixel-dot animate-bounce"
+          className="w-4 h-4 bg-[#4169E1] pixel-dot animate-bounce"
           style={{ animationDelay: '400ms', animationDuration: '1s' }}
         ></div>
       </div>
       
       {/* Animated text */}
-      <div className="text-[#00ff9f] text-sm font-pixel animate-pulse">
+      <div className="text-[#4169E1] text-sm font-pixel animate-pulse">
         {config.text}
       </div>
       
       {/* Progress bar with stage indicator */}
       <div className="w-64 space-y-2">
-        <div className="h-2 bg-[#0a0e27] border-2 border-[#00ff9f] pixel-border overflow-hidden">
+        <div className="h-2 bg-[#0a0e27] border-2 border-[#4169E1] pixel-border overflow-hidden">
           <div
-            className="h-full bg-[#00ff9f] transition-all duration-500 ease-out"
+            className="h-full bg-[#4169E1] transition-all duration-500 ease-out"
             style={{ width: `${config.progress}%` }}
           ></div>
         </div>
-        <div className="text-[#00ff9f]/70 text-xs font-pixel text-center">
+        <div className="text-[#4169E1]/70 text-xs font-pixel text-center">
           {config.progress}% COMPLETE
         </div>
       </div>

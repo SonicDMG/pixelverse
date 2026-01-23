@@ -7,6 +7,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AudioVisualizer from '@/components/AudioVisualizer';
+import AppSwitcher from '@/components/AppSwitcher';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useCyberpunkVoice } from '@/hooks/useCyberpunkVoice';
@@ -20,6 +22,7 @@ interface ApiErrorResponse {
 }
 
 export default function Home() {
+  const { theme } = useTheme();
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
@@ -179,7 +182,7 @@ export default function Home() {
     <div className="h-screen flex items-center justify-center p-4">
       <div className="h-full w-full max-w-7xl flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="text-center space-y-4 py-8 px-4 border-b-4 border-[#00ff9f]/30 pixel-border flex-shrink-0">
+        <header className="text-center space-y-4 py-8 px-4 border-b-4 pixel-border flex-shrink-0" style={{ borderColor: `${theme.colors.primary}30` }}>
           <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             {/* Left section: Music & Voice Controls with Visualizer below */}
             <div className="flex flex-col gap-2 justify-start">
@@ -192,8 +195,8 @@ export default function Home() {
                     disabled={!isReady}
                     className={`px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                       isPlaying
-                        ? 'bg-[#1a1f3a] border-[#00ff9f] text-[#00ff9f] hover:bg-[#00ff9f] hover:text-[#0a0e27]'
-                        : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-[#00ff9f] hover:text-[#00ff9f]'
+                        ? `bg-[#1a1f3a] text-[#0a0e27]`
+                        : 'bg-[#0a0e27] border-gray-600 text-gray-500'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                     title={isPlaying ? "Stop background music" : "Play background music"}
                   >
@@ -201,7 +204,7 @@ export default function Home() {
                   </button>
                   {/* Music Volume Slider */}
                   <div className="flex items-center gap-1 px-1">
-                    <span className="text-[10px] text-[#00ff9f] font-pixel opacity-60">VOL</span>
+                    <span className="text-[10px] font-pixel opacity-60" style={{ color: theme.colors.primary }}>VOL</span>
                     <input
                       type="range"
                       min="0"
@@ -211,12 +214,15 @@ export default function Home() {
                       disabled={!isReady}
                       className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
-                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ff9f]
+                        [&::-webkit-slider-thumb]:rounded-full
                         [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
-                        [&::-moz-range-thumb]:bg-[#00ff9f] [&::-moz-range-thumb]:border-0"
+                        [&::-moz-range-thumb]:border-0"
+                      style={{
+                        ['--thumb-color' as any]: theme.colors.primary,
+                      }}
                       title={`Music volume: ${Math.round(musicVolume * 100)}%`}
                     />
-                    <span className="text-[10px] text-[#00ff9f] font-pixel opacity-60 w-6 text-right">
+                    <span className="text-[10px] font-pixel opacity-60 w-6 text-right" style={{ color: theme.colors.primary }}>
                       {Math.round(musicVolume * 100)}
                     </span>
                   </div>
@@ -230,8 +236,8 @@ export default function Home() {
                       disabled={!isVoiceSupported}
                       className={`px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                         isVoiceEnabled
-                          ? 'bg-[#1a1f3a] border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-[#0a0e27]'
-                          : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-[#ff00ff] hover:text-[#ff00ff]'
+                          ? `bg-[#1a1f3a] text-[#0a0e27]`
+                          : 'bg-[#0a0e27] border-gray-600 text-gray-500'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                       title={isVoiceEnabled ? "Disable voice announcements" : "Enable voice announcements"}
                     >
@@ -239,7 +245,7 @@ export default function Home() {
                     </button>
                     {/* Voice Volume Slider */}
                     <div className="flex items-center gap-1 px-1">
-                      <span className="text-[10px] text-[#ff00ff] font-pixel opacity-60">VOL</span>
+                      <span className="text-[10px] font-pixel opacity-60" style={{ color: theme.colors.neonMagenta }}>VOL</span>
                       <input
                         type="range"
                         min="0"
@@ -249,12 +255,12 @@ export default function Home() {
                         disabled={!isVoiceSupported}
                         className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
-                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#ff00ff]
+                          [&::-webkit-slider-thumb]:rounded-full
                           [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
-                          [&::-moz-range-thumb]:bg-[#ff00ff] [&::-moz-range-thumb]:border-0"
+                          [&::-moz-range-thumb]:border-0"
                         title={`Voice volume: ${Math.round(voiceVolume * 100)}%`}
                       />
-                      <span className="text-[10px] text-[#ff00ff] font-pixel opacity-60 w-6 text-right">
+                      <span className="text-[10px] font-pixel opacity-60 w-6 text-right" style={{ color: theme.colors.neonMagenta }}>
                         {Math.round(voiceVolume * 100)}
                       </span>
                     </div>
@@ -272,21 +278,26 @@ export default function Home() {
             
             {/* Center section: Title (absolutely centered) */}
             <div className="flex flex-col items-center justify-self-center self-start">
-              <h1 className="text-3xl md:text-5xl font-pixel text-[#00ff9f] glow-text whitespace-nowrap">
-                PIXELTICKER
+              <h1 className="text-3xl md:text-5xl font-pixel glow-text whitespace-nowrap" style={{ color: theme.colors.primary }}>
+                {theme.name.toUpperCase()}
               </h1>
-              <p className="text-xs md:text-sm text-[#ff00ff] font-pixel mt-2 whitespace-nowrap">
-                {'>'} RETRO STOCK ANALYSIS POWERED BY LANGFLOW + MCP
+              <p className="text-xs md:text-sm font-pixel mt-2 whitespace-nowrap" style={{ color: theme.colors.accent }}>
+                {'>'} {theme.tagline}
               </p>
             </div>
             
-            {/* Right section: Clear Button */}
-            <div className="flex justify-end self-start">
+            {/* Right section: App Switcher and Clear Button */}
+            <div className="flex flex-col gap-2 justify-end self-start items-end">
+              <AppSwitcher />
               {conversationGroups.length > 0 && (
                 <button
                   onClick={handleClearConversation}
                   disabled={loadingStatus !== null && loadingStatus !== 'done'}
-                  className="px-4 py-2 bg-[#1a1f3a] border-2 border-[#ff00ff] text-[#ff00ff] text-xs font-pixel hover:bg-[#ff00ff] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
+                  className="px-4 py-2 bg-[#1a1f3a] border-2 text-xs font-pixel hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
+                  style={{
+                    borderColor: theme.colors.accent,
+                    color: theme.colors.accent,
+                  }}
                   title="Clear conversation history"
                 >
                   CLEAR
@@ -328,14 +339,14 @@ export default function Home() {
         </main>
 
         {/* Question Input - Fixed above footer */}
-        <div className="flex-shrink-0 bg-[#0a0e27]/95 p-4 mt-4 border-t-4 border-[#00ff9f] pixel-border backdrop-blur-sm">
+        <div className="flex-shrink-0 bg-[#0a0e27]/95 p-4 mt-4 border-t-4 pixel-border backdrop-blur-sm" style={{ borderColor: theme.colors.primary }}>
           <QuestionInput onSubmit={handleQuestion} loadingStatus={loadingStatus} />
         </div>
 
         {/* Footer */}
-        <footer className="text-center py-4 px-4 border-t-4 border-[#00ff9f]/30 pixel-border flex-shrink-0">
+        <footer className="text-center py-4 px-4 border-t-4 pixel-border flex-shrink-0" style={{ borderColor: `${theme.colors.primary}30` }}>
           <p className="text-xs text-gray-500 font-pixel">
-            2026 PIXELTICKER | POWERED BY LANGFLOW
+            2026 {theme.name.toUpperCase()} | POWERED BY LANGFLOW
           </p>
         </footer>
       </div>

@@ -65,7 +65,7 @@ export default function StockChart({ data, symbol }: StockChartProps) {
   };
 
   return (
-    <div className="w-full h-[400px] p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border">
+    <div className="w-full h-[400px] p-6 bg-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border">
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );

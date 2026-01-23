@@ -91,9 +91,9 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
 
         case 'alert-box':
           const severityColors = {
-            info: 'border-[#00d4ff] text-[#00d4ff]',
-            warning: 'border-[#ffff00] text-[#ffff00]',
-            success: 'border-[#00ff9f] text-[#00ff9f]',
+            info: 'border-[#4169E1] text-[#4169E1]',
+            warning: 'border-[#FFD700] text-[#FFD700]',
+            success: 'border-[#00CED1] text-[#00CED1]',
             error: 'border-[#ff0000] text-[#ff0000]',
           };
           return (
@@ -112,7 +112,7 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
           return (
             <div
               key={key}
-              className="p-4 bg-[#0a0e27] border-2 border-[#00ff9f]/30 rounded pixel-border"
+              className="p-4 bg-[#0a0e27] border-2 border-[#4169E1]/30 rounded pixel-border"
             >
               <p className="font-pixel text-xs text-white whitespace-pre-wrap leading-relaxed">
                 {spec.props.content}

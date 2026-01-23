@@ -24,7 +24,7 @@ export default function MetricCard({
 
   const getChangeColor = (change?: number) => {
     if (change === undefined) return '';
-    return change >= 0 ? 'text-[#00ff9f]' : 'text-[#ff0000]';
+    return change >= 0 ? 'text-[#00CED1]' : 'text-[#ff0000]';
   };
 
   const getChangeIcon = (change?: number) => {
@@ -33,9 +33,9 @@ export default function MetricCard({
   };
 
   return (
-    <div className="p-6 bg-[#0a0e27] border-4 border-[#00ff9f] rounded-lg pixel-border hover:border-[#ff00ff] transition-colors glitch-hover">
+    <div className="p-6 bg-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border hover:border-[#00CED1] transition-colors glitch-hover">
       <div className="space-y-3">
-        <h4 className="text-xs font-pixel text-[#00ff9f] uppercase">{title}</h4>
+        <h4 className="text-xs font-pixel text-[#4169E1] uppercase">{title}</h4>
         <div className="text-2xl font-pixel text-white glow-text glitch-hover">
           {formatValue(value)}
         </div>

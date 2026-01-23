@@ -1,26 +1,27 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientLayout from "@/components/ClientLayout";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
-      default: "PixelTicker - Retro Stock Analysis",
-      template: "%s | PixelTicker"
+      default: "PixelSpace - Retro Space Exploration",
+      template: "%s | PixelSpace"
     },
-    description: "A cyberpunk pixel art stock analysis app powered by Langflow and MCP. Get AI-driven insights on stocks with a retro aesthetic.",
-    keywords: ["stock analysis", "AI", "Langflow", "MCP", "retro", "cyberpunk", "financial data", "stock market"],
-    authors: [{ name: "PixelTicker Team" }],
-    creator: "PixelTicker",
+    description: "A cyberpunk pixel art space exploration app powered by Langflow and MCP. Explore the cosmos with AI-driven insights and a retro aesthetic.",
+    keywords: ["space exploration", "astronomy", "AI", "Langflow", "MCP", "retro", "cyberpunk", "cosmos", "planets", "stars"],
+    authors: [{ name: "PixelSpace Team" }],
+    creator: "PixelSpace",
     openGraph: {
-      title: "PixelTicker - Retro Stock Analysis",
-      description: "AI-powered stock analysis with a retro cyberpunk twist",
+      title: "PixelSpace - Retro Space Exploration",
+      description: "AI-powered space exploration with a retro cyberpunk twist",
       type: "website",
       locale: "en_US",
     },
     twitter: {
       card: "summary_large_image",
-      title: "PixelTicker - Retro Stock Analysis",
-      description: "AI-powered stock analysis with a retro cyberpunk twist",
+      title: "PixelSpace - Retro Space Exploration",
+      description: "AI-powered space exploration with a retro cyberpunk twist",
     },
     robots: {
       index: true,
@@ -47,7 +48,9 @@ export default function RootLayout({
       <body className="antialiased">
         <div className="grid-bg fixed inset-0 pointer-events-none" aria-hidden="true"></div>
         <div className="crt-overlay" aria-hidden="true"></div>
-        {children}
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

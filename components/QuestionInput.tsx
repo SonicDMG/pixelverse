@@ -38,14 +38,14 @@ export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInput
     <div className="w-full space-y-4 pt-8">
       {/* Example Questions */}
       <div className="space-y-2">
-        <p className="text-[#ff00ff] text-xs font-pixel">Try these examples:</p>
+        <p className="text-[#FFD700] text-xs font-pixel">Try these examples:</p>
         <div className="flex flex-wrap gap-2">
           {EXAMPLE_QUESTIONS.map((example, index) => (
             <button
               key={index}
               onClick={() => handleExampleClick(example)}
               disabled={isLoading}
-              className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#00ff9f] text-[#00ff9f] text-xs font-pixel hover:bg-[#00ff9f] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
+              className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#4169E1] text-[#4169E1] text-xs font-pixel hover:bg-[#4169E1] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
             >
               {example}
             </button>
@@ -61,12 +61,12 @@ export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInput
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask about any stock..."
           disabled={isLoading}
-          className="flex-1 px-4 py-3 bg-[#0a0e27] border-4 border-[#00ff9f] text-[#00ff9f] placeholder-[#00ff9f]/50 font-pixel text-sm focus:outline-none focus:border-[#ff00ff] disabled:opacity-50 pixel-border"
+          className="flex-1 px-4 py-3 bg-[#0a0e27] border-4 border-[#4169E1] text-[#4169E1] placeholder-[#4169E1]/50 font-pixel text-sm focus:outline-none focus:border-[#00CED1] disabled:opacity-50 pixel-border"
         />
         <button
           type="submit"
           disabled={isLoading || !question.trim()}
-          className="px-6 py-3 bg-[#00ff9f] border-4 border-[#00ff9f] text-[#0a0e27] font-pixel text-sm hover:bg-[#ff00ff] hover:border-[#ff00ff] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
+          className="px-6 py-3 bg-[#4169E1] border-4 border-[#4169E1] text-white font-pixel text-sm hover:bg-[#00CED1] hover:border-[#00CED1] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
         >
           {isLoading ? (
             <span className="inline-flex">

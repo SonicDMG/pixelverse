@@ -25,9 +25,9 @@ export default function ConversationGroup({
   return (
     <div className="conversation-group">
       {/* User Question */}
-      <div className="p-4 border-4 pixel-border bg-[#1a1f3a] border-[#00ff9f] ml-8 mb-4 animate-fade-in">
+      <div className="p-4 border-4 pixel-border bg-[#1a1f3a] border-[#4169E1] ml-8 mb-4 animate-fade-in">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-pixel text-[#00ff9f]">
+          <span className="text-xs font-pixel text-[#4169E1]">
             {'>'} USER
           </span>
           <span className="text-xs text-gray-500 font-pixel">
@@ -40,10 +40,10 @@ export default function ConversationGroup({
       </div>
 
       {/* Assistant Response */}
-      <div className="p-4 border-4 pixel-border bg-[#0a0e27] border-[#ff00ff] mr-8 mb-6 animate-fade-in">
+      <div className="p-4 border-4 pixel-border bg-[#0a0e27] border-[#00CED1] mr-8 mb-6 animate-fade-in">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-pixel text-[#ff00ff]">
-            {'>'} PIXELTICKER
+          <span className="text-xs font-pixel text-[#00CED1]">
+            {'>'} PIXELSPACE
           </span>
           <span className="text-xs text-gray-500 font-pixel">
             {new Date(assistantMessage.timestamp).toLocaleTimeString()}
