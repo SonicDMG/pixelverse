@@ -22,14 +22,14 @@ interface ApiErrorResponse {
 }
 
 export default function Home() {
-  const { theme } = useTheme();
+  const { appMode, theme } = useTheme();
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode, volume: musicVolume, setVolume: setMusicVolume } = useBackgroundMusic({
+  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode, volume: musicVolume, setVolume: setMusicVolume } = useBackgroundMusic(appMode, {
     volume: 0.175, // Decreased by 30% from 0.25
     autoPlay: false // Don't auto-play to respect browser policies
   });
@@ -90,7 +90,7 @@ export default function Home() {
     timeoutsRef.current.push(timeout2);
 
     try {
-      const response = await axios.post<StockQueryResult>('/api/ask-stock', {
+      const response = await axios.post<StockQueryResult>(theme.apiEndpoint, {
         question,
       });
 

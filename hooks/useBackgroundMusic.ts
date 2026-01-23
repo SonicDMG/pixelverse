@@ -26,11 +26,15 @@ interface AudioTrack {
 
 /**
  * Custom hook for playing MP3 background music with crossfading
- * Automatically discovers and plays all MP3 files from /audio/music/
+ * Dynamically discovers and plays all MP3 files from theme-specific directories
  * Implements smooth crossfading between tracks using dual audio sources
  * Loops continuously through all available tracks like a radio station
+ *
+ * @param themeId - The theme identifier (e.g., 'ticker', 'space')
+ * @param options - Configuration options for volume and autoplay
  */
 export function useBackgroundMusic(
+  themeId: string,
   options: UseBackgroundMusicOptions = {}
 ): UseBackgroundMusicReturn {
   const { volume: initialVolume = 0.175, autoPlay = false } = options;
@@ -79,42 +83,70 @@ export function useBackgroundMusic(
   }, []);
 
   /**
-   * Load all MP3 files from the music directory
+   * Load all MP3 files from the theme-specific music directory
+   * Fetches the file list from the API and loads each track
    */
   const loadMusicTracks = useCallback(async (audioContext: AudioContext): Promise<AudioTrack[]> => {
-    // Hardcoded list of MP3 files (in a real app, you'd fetch this from an API)
-    const musicFiles = [
-      'Push Thru - The Grey Room _ Golden Palms.mp3',
-      'The Fifth Quadrant - Dan _Lebo_ Lebowitz, Tone Seeker.mp3',
-      'Smooth and Cool - Nico Staf.mp3',
-    ];
-
-    const tracks: AudioTrack[] = [];
-
-    for (const filename of musicFiles) {
-      try {
-        const response = await fetch(`/audio/music/${encodeURIComponent(filename)}`);
-        if (!response.ok) {
-          console.warn(`Failed to load ${filename}: ${response.statusText}`);
-          continue;
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        
-        tracks.push({
-          buffer: audioBuffer,
-          filename
-        });
-        
-        console.log(`Loaded track: ${filename} (${audioBuffer.duration.toFixed(1)}s)`);
-      } catch (error) {
-        console.error(`Error loading ${filename}:`, error);
+    try {
+      // Fetch the list of music files for this theme from the API
+      console.log(`Fetching music files for theme: ${themeId}`);
+      const apiResponse = await fetch(`/api/music/${themeId}`);
+      
+      if (!apiResponse.ok) {
+        console.error(`Failed to fetch music file list: ${apiResponse.status} ${apiResponse.statusText}`);
+        return [];
       }
-    }
 
-    return tracks;
-  }, []);
+      const data = await apiResponse.json();
+      const musicFiles: string[] = data.files || [];
+
+      if (musicFiles.length === 0) {
+        console.warn(`No music files found for theme: ${themeId}`);
+        return [];
+      }
+
+      console.log(`Found ${musicFiles.length} music files for theme ${themeId}:`, musicFiles);
+
+      const tracks: AudioTrack[] = [];
+
+      // Load each music file from the theme-specific directory
+      for (const filename of musicFiles) {
+        try {
+          const filePath = `/audio/music/${themeId}/${encodeURIComponent(filename)}`;
+          console.log(`Loading: ${filePath}`);
+          
+          const response = await fetch(filePath);
+          if (!response.ok) {
+            console.warn(`Failed to load ${filename}: ${response.status} ${response.statusText}`);
+            continue;
+          }
+
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          
+          tracks.push({
+            buffer: audioBuffer,
+            filename
+          });
+          
+          console.log(`✓ Loaded track: ${filename} (${audioBuffer.duration.toFixed(1)}s)`);
+        } catch (error) {
+          console.error(`Error loading ${filename}:`, error);
+        }
+      }
+
+      if (tracks.length === 0) {
+        console.error(`No tracks successfully loaded for theme: ${themeId}`);
+      } else {
+        console.log(`Successfully loaded ${tracks.length}/${musicFiles.length} tracks for theme: ${themeId}`);
+      }
+
+      return tracks;
+    } catch (error) {
+      console.error(`Failed to load music tracks for theme ${themeId}:`, error);
+      return [];
+    }
+  }, [themeId]);
 
   /**
    * Initialize audio context and load all tracks
@@ -240,7 +272,7 @@ export function useBackgroundMusic(
         });
       }
     };
-  }, []); // Only run once on mount
+  }, [themeId, loadMusicTracks, autoPlay]); // Re-initialize when theme changes
 
   /**
    * Play a track on the specified source with crossfade

@@ -1,83 +1,65 @@
 /**
  * Theme constants for PixelTicker and PixelSpace
- * Supports dual-app mode with different themes
+ * 
+ * This file maintains backward compatibility with existing code while using
+ * the new centralized theme registry system from theme-registry.ts
+ * 
+ * All theme definitions now live in theme-registry.ts as the single source of truth.
+ * This file re-exports everything needed for backward compatibility.
  */
 
-export type AppMode = 'ticker' | 'space';
+// Import from the new theme registry
+import {
+  ThemeConfig,
+  THEME_REGISTRY,
+  DEFAULT_THEME_ID,
+  getTheme,
+  getAllThemes,
+  getThemeIds,
+  isValidThemeId,
+} from './theme-registry';
 
-export const TICKER_THEME = {
-  colors: {
-    primary: '#00ff9f',      // Neon cyan - stock ticker green
-    secondary: '#00d4ff',    // Bright cyan
-    accent: '#ff00ff',       // Magenta
-    neonCyan: '#00ff9f',
-    neonMagenta: '#ff00ff',
-    neonBlue: '#00d4ff',
-    neonYellow: '#ffff00',
-    darkBg: '#0a0e27',
-    darkerBg: '#050814',
-    cardBg: '#1a1f3a',
-    error: '#ff0000',
-  },
-  fonts: {
-    pixel: "'Press Start 2P', monospace",
-  },
-  animations: {
-    duration: {
-      fast: 200,
-      normal: 500,
-      slow: 1500,
-    },
-  },
-  audio: {
-    soundEffectsVolume: 0.125,
-  },
-  name: 'PixelTicker',
-  tagline: 'RETRO STOCK ANALYSIS POWERED BY LANGFLOW + MCP',
-  apiEndpoint: '/api/ask-stock',
-} as const;
+// Re-export the ThemeConfig type
+export type { ThemeConfig };
 
-export const SPACE_THEME = {
-  colors: {
-    primary: '#4169E1',      // Royal blue - deep space
-    secondary: '#00CED1',    // Dark turquoise - nebula
-    accent: '#FFD700',       // Gold - stars
-    neonCyan: '#00CED1',
-    neonMagenta: '#9370DB',  // Medium purple - cosmic
-    neonBlue: '#4169E1',
-    neonYellow: '#FFD700',
-    darkBg: '#0a0e1f',       // Deeper blue-black
-    darkerBg: '#050a14',     // Even deeper space
-    cardBg: '#1a1f3a',
-    error: '#ff0000',
-  },
-  fonts: {
-    pixel: "'Press Start 2P', monospace",
-  },
-  animations: {
-    duration: {
-      fast: 200,
-      normal: 500,
-      slow: 1500,
-    },
-  },
-  audio: {
-    soundEffectsVolume: 0.125,
-  },
-  name: 'PixelSpace',
-  tagline: 'RETRO SPACE EXPLORATION POWERED BY LANGFLOW + MCP',
-  apiEndpoint: '/api/ask-space', // Future endpoint for space queries
-} as const;
+// Re-export all helper functions
+export { getTheme, getAllThemes, getThemeIds, isValidThemeId, DEFAULT_THEME_ID };
 
-export const THEMES = {
-  ticker: TICKER_THEME,
-  space: SPACE_THEME,
-} as const;
+// Re-export the registry itself
+export { THEME_REGISTRY };
 
-// Default theme (for backwards compatibility)
+// ============================================================================
+// BACKWARD COMPATIBILITY EXPORTS
+// ============================================================================
+
+/**
+ * Dynamic AppMode type based on registry keys
+ * This makes it automatically update when new themes are added to the registry
+ */
+export type AppMode = keyof typeof THEME_REGISTRY;
+
+/**
+ * Individual theme exports for backward compatibility
+ */
+export const TICKER_THEME = THEME_REGISTRY.ticker;
+export const SPACE_THEME = THEME_REGISTRY.space;
+
+/**
+ * THEMES object for backward compatibility
+ * This is just an alias to THEME_REGISTRY
+ */
+export const THEMES = THEME_REGISTRY;
+
+/**
+ * Default theme (for backwards compatibility)
+ * Uses the space theme as the default
+ */
 export const THEME = SPACE_THEME;
 
-// Export individual values for convenience
+/**
+ * Export individual values for convenience
+ * These provide direct access to the default theme's properties
+ */
 export const COLORS = THEME.colors;
 export const FONTS = THEME.fonts;
 export const ANIMATIONS = THEME.animations;
