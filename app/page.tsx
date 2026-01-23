@@ -214,23 +214,69 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             {/* Mobile Layout: Stacked vertically (below lg breakpoint) */}
             <div className="flex flex-col gap-4 lg:hidden">
-              {/* 1. Title */}
-              <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl sm:text-3xl font-pixel glow-text" style={{ color: theme.colors.primary }}>
+              {/* 1. App Switcher Buttons - Full width row */}
+              <div className="flex items-center justify-center gap-2 px-2">
+                {/* TICKER button */}
+                <button
+                  onClick={() => window.location.href = '?app=ticker'}
+                  className={`flex-shrink-0 px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
+                    appMode === 'ticker'
+                      ? 'text-[#0a0e27]'
+                      : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-gray-500'
+                  }`}
+                  style={appMode === 'ticker' ? {
+                    backgroundColor: '#00ff41',
+                    borderColor: '#00ff41',
+                    boxShadow: '0 0 10px #00ff41',
+                  } : {
+                    backgroundColor: '#0a0e27',
+                    borderColor: '#4a5568',
+                  }}
+                  title="Switch to TICKER"
+                >
+                  📈 TICKER
+                </button>
+                
+                {/* SPACE button */}
+                <button
+                  onClick={() => window.location.href = '?app=space'}
+                  className={`flex-shrink-0 px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
+                    appMode === 'space'
+                      ? 'text-[#0a0e27]'
+                      : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-gray-500'
+                  }`}
+                  style={appMode === 'space' ? {
+                    backgroundColor: '#00d4ff',
+                    borderColor: '#00d4ff',
+                    boxShadow: '0 0 10px #00d4ff',
+                  } : {
+                    backgroundColor: '#0a0e27',
+                    borderColor: '#4a5568',
+                  }}
+                  title="Switch to SPACE"
+                >
+                  🚀 SPACE
+                </button>
+              </div>
+
+              {/* 2. Title and Tagline - Full width, no constraints */}
+              <div className="flex flex-col items-center text-center w-full px-2">
+                <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-pixel glow-text leading-tight whitespace-nowrap" style={{ color: theme.colors.primary }}>
                   {theme.name.toUpperCase()}
                 </h1>
-                {/* 2. Tagline */}
-                <p className="text-xs md:text-sm font-pixel mt-1" style={{ color: theme.colors.accent }}>
+                {/* Tagline - can wrap to multiple lines */}
+                <p className="text-xs md:text-sm font-pixel mt-1 break-words w-full" style={{ color: theme.colors.accent }}>
                   {'>'} {theme.tagline}
                 </p>
               </div>
 
-              {/* 3. Music Button */}
-              <div className="flex justify-center">
+              {/* 3. Music and Voice Buttons - Side by Side */}
+              <div className="flex gap-2 px-4">
+                {/* Music Button */}
                 <button
                   onClick={togglePlayback}
                   disabled={!isReady}
-                  className={`px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
+                  className={`flex-1 px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                     isPlaying
                       ? `bg-[#1a1f3a] text-[#0a0e27]`
                       : 'bg-[#0a0e27] border-gray-600 text-gray-500'
@@ -239,15 +285,13 @@ export default function Home() {
                 >
                   🎵 MUSIC
                 </button>
-              </div>
 
-              {/* 4. Voice Button */}
-              {isMounted && (
-                <div className="flex justify-center">
+                {/* Voice Button */}
+                {isMounted && (
                   <button
                     onClick={toggleVoice}
                     disabled={!isVoiceSupported}
-                    className={`px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
+                    className={`flex-1 px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                       isVoiceEnabled
                         ? `bg-[#1a1f3a] text-[#0a0e27]`
                         : 'bg-[#0a0e27] border-gray-600 text-gray-500'
@@ -256,90 +300,86 @@ export default function Home() {
                   >
                     🗣️ VOICE
                   </button>
-                </div>
-              )}
-
-              {/* 5. Music Volume Control */}
-              <div className="flex items-center justify-center gap-2 px-4">
-                <span className="text-xs font-pixel" style={{ color: theme.colors.primary }}>MUSIC VOL</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(musicVolume * 100)}
-                  onChange={(e) => setMusicVolume(parseInt(e.target.value) / 100)}
-                  disabled={!isReady}
-                  className="flex-1 max-w-xs h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
-                    [&::-webkit-slider-thumb]:rounded-full
-                    [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
-                    [&::-moz-range-thumb]:border-0"
-                  style={{
-                    ['--thumb-color' as any]: theme.colors.primary,
-                  }}
-                  title={`Music volume: ${Math.round(musicVolume * 100)}%`}
-                />
-                <span className="text-xs font-pixel w-8 text-right" style={{ color: theme.colors.primary }}>
-                  {Math.round(musicVolume * 100)}
-                </span>
+                )}
               </div>
 
-              {/* 6. Voice Volume Control */}
-              {isMounted && (
-                <div className="flex items-center justify-center gap-2 px-4">
-                  <span className="text-xs font-pixel" style={{ color: theme.colors.neonMagenta }}>VOICE VOL</span>
+              {/* 4. Volume Controls - Side by Side under respective buttons */}
+              <div className="flex gap-2 px-4">
+                {/* Music Volume Control */}
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="text-[10px] font-pixel flex-shrink-0" style={{ color: theme.colors.primary }}>VOL</span>
                   <input
                     type="range"
                     min="0"
                     max="100"
-                    value={Math.round(voiceVolume * 100)}
-                    onChange={(e) => setVoiceVolume(parseInt(e.target.value) / 100)}
-                    disabled={!isVoiceSupported}
-                    className="flex-1 max-w-xs h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                    value={Math.round(musicVolume * 100)}
+                    onChange={(e) => setMusicVolume(parseInt(e.target.value) / 100)}
+                    disabled={!isReady}
+                    className="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
                       [&::-webkit-slider-thumb]:rounded-full
                       [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
                       [&::-moz-range-thumb]:border-0"
-                    title={`Voice volume: ${Math.round(voiceVolume * 100)}%`}
+                    style={{
+                      ['--thumb-color' as any]: theme.colors.primary,
+                    }}
+                    title={`Music volume: ${Math.round(musicVolume * 100)}%`}
                   />
-                  <span className="text-xs font-pixel w-8 text-right" style={{ color: theme.colors.neonMagenta }}>
-                    {Math.round(voiceVolume * 100)}
+                  <span className="text-[10px] font-pixel w-6 text-right flex-shrink-0" style={{ color: theme.colors.primary }}>
+                    {Math.round(musicVolume * 100)}
                   </span>
                 </div>
-              )}
 
-              {/* 7. Music Controls (Song Selector) */}
+                {/* Voice Volume Control */}
+                {isMounted && (
+                  <div className="flex-1 flex items-center gap-2">
+                    <span className="text-[10px] font-pixel flex-shrink-0" style={{ color: theme.colors.neonMagenta }}>VOL</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={Math.round(voiceVolume * 100)}
+                      onChange={(e) => setVoiceVolume(parseInt(e.target.value) / 100)}
+                      disabled={!isVoiceSupported}
+                      className="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full
+                        [&::-moz-range-thumb]:border-0"
+                      title={`Voice volume: ${Math.round(voiceVolume * 100)}%`}
+                    />
+                    <span className="text-[10px] font-pixel w-6 text-right flex-shrink-0" style={{ color: theme.colors.neonMagenta }}>
+                      {Math.round(voiceVolume * 100)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Song Selector - Full Width */}
               {availableSongs.length > 0 && (
-                <div className="flex justify-center px-4">
+                <div className="w-full">
                   <SongSelector
                     currentSong={currentSong}
                     availableSongs={availableSongs}
                     isAutoCycling={isAutoCycling}
                     onSongChange={setSong}
-                    className="w-full max-w-xs"
+                    className="w-full"
                   />
                 </div>
               )}
 
-              {/* 8. Audio Visualizer */}
-              <div className="flex justify-center">
-                <div className="w-full max-w-xs">
-                  <AudioVisualizer
-                    analyserNode={analyserNode}
-                    isPlaying={isPlaying}
-                    height={40}
-                  />
-                </div>
-              </div>
-
-              {/* App Switcher */}
-              <div className="flex justify-center">
-                <AppSwitcher />
+              {/* 6. Audio Visualizer - Full Width */}
+              <div className="w-full px-4">
+                <AudioVisualizer
+                  analyserNode={analyserNode}
+                  isPlaying={isPlaying}
+                  height={40}
+                />
               </div>
 
               {/* Clear Button */}
               {conversationGroups.length > 0 && (
-                <div className="flex justify-center">
+                <div className="flex justify-center mb-8">
                   <button
                     onClick={handleClearConversation}
                     disabled={loadingStatus !== null && loadingStatus !== 'done'}
@@ -495,13 +535,14 @@ export default function Home() {
               </div>
             </div>
           </div>
-          {/* Loading State in Header */}
-          {loadingStatus !== null && loadingStatus !== 'done' && (
-            <div className="flex flex-col items-center justify-center py-4">
-              <LoadingSpinner status={loadingStatus} />
-            </div>
-          )}
         </header>
+
+        {/* Loading State - Between Header and Main */}
+        {loadingStatus !== null && loadingStatus !== 'done' && (
+          <div className="flex flex-col items-center justify-center pt-24 pb-8 border-b-4 pixel-border flex-shrink-0" style={{ borderColor: `${theme.colors.primary}30` }}>
+            <LoadingSpinner status={loadingStatus} />
+          </div>
+        )}
 
         {/* Main Content - Scrollable */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
