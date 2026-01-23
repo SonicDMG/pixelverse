@@ -68,7 +68,7 @@ export function SongSelector({
       <button
         onClick={handlePrevious}
         disabled={isAutoCycling}
-        className="px-1.5 py-0.5 text-[10px] font-pixel bg-black/30 border border-gray-600 text-gray-400 hover:bg-black/50 hover:text-cyan-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed pixel-border"
+        className="flex-1 px-1.5 py-0.5 text-[10px] font-pixel bg-black/30 border border-gray-600 text-gray-400 hover:bg-black/50 hover:text-cyan-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed pixel-border"
         title={currentSong ? `Previous song (current: ${currentSong.name})` : 'Previous song'}
       >
         ‹‹
@@ -77,21 +77,24 @@ export function SongSelector({
       {/* Auto toggle */}
       <button
         onClick={toggleAuto}
-        className={`px-2 py-0.5 text-[10px] font-pixel transition-all pixel-border ${
+        className={`flex-1 px-3 py-0.5 text-[10px] font-pixel transition-all pixel-border ${
           isAutoCycling
             ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
             : 'bg-black/30 border-gray-600 text-gray-400 hover:bg-black/50'
         }`}
         title={isAutoCycling ? `Auto-cycling (current: ${currentSong?.name || 'N/A'})` : `Manual mode (${currentSong?.name || 'N/A'})`}
       >
-        {isAutoCycling ? '● AUTO' : '○ MANUAL'}
+        <span className="flex items-center justify-center gap-1">
+          <span className={`inline-block w-1.5 h-1.5 ${isAutoCycling ? 'bg-cyan-300 shadow-[0_0_4px_#67e8f9]' : 'bg-gray-500'}`} style={{ imageRendering: 'pixelated' }} />
+          <span>{isAutoCycling ? 'AUTO' : 'MANUAL'}</span>
+        </span>
       </button>
 
       {/* Next button */}
       <button
         onClick={handleNext}
         disabled={isAutoCycling}
-        className="px-1.5 py-0.5 text-[10px] font-pixel bg-black/30 border border-gray-600 text-gray-400 hover:bg-black/50 hover:text-cyan-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed pixel-border"
+        className="flex-1 px-1.5 py-0.5 text-[10px] font-pixel bg-black/30 border border-gray-600 text-gray-400 hover:bg-black/50 hover:text-cyan-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed pixel-border"
         title={currentSong ? `Next song (current: ${currentSong.name})` : 'Next song'}
       >
         ››
