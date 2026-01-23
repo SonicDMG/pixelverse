@@ -2,21 +2,15 @@
 
 import { useState } from 'react';
 import { LoadingStatus } from '@/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface QuestionInputProps {
   onSubmit: (question: string) => void;
   loadingStatus: LoadingStatus;
 }
 
-const EXAMPLE_QUESTIONS = [
-  "How has IBM's stock performed over the last 2 weeks?", // line-chart
-  "Compare AAPL vs GOOGL performance", // comparison-chart
-  "Show me Amazon's key stock metrics", // metric-grid
-  "Show me Microsoft's weekly trading data", // data-table
-  "Explain the current market conditions", // text-block
-];
-
 export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInputProps) {
+  const { theme } = useTheme();
   const [question, setQuestion] = useState('');
   const isLoading = loadingStatus !== null && loadingStatus !== 'done';
 
@@ -34,24 +28,32 @@ export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInput
     }
   };
 
+  // Get example questions from theme, with fallback to empty array
+  const exampleQuestions = theme.exampleQuestions || [];
+  
+  // Generate dynamic placeholder based on theme
+  const placeholder = `Ask about ${theme.name.toLowerCase().replace('pixel', '')}...`;
+
   return (
     <div className="w-full space-y-4 pt-8">
       {/* Example Questions */}
-      <div className="space-y-2">
-        <p className="text-[#FFD700] text-xs font-pixel">Try these examples:</p>
-        <div className="flex flex-wrap gap-2">
-          {EXAMPLE_QUESTIONS.map((example, index) => (
-            <button
-              key={index}
-              onClick={() => handleExampleClick(example)}
-              disabled={isLoading}
-              className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#4169E1] text-[#4169E1] text-xs font-pixel hover:bg-[#4169E1] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
-            >
-              {example}
-            </button>
-          ))}
+      {exampleQuestions.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[#FFD700] text-xs font-pixel">Try these examples:</p>
+          <div className="flex flex-wrap gap-2">
+            {exampleQuestions.map((example, index) => (
+              <button
+                key={index}
+                onClick={() => handleExampleClick(example)}
+                disabled={isLoading}
+                className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#4169E1] text-[#4169E1] text-xs font-pixel hover:bg-[#4169E1] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Input Form */}
       <form onSubmit={handleSubmit} className="flex gap-2">
@@ -59,7 +61,7 @@ export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInput
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask about any stock..."
+          placeholder={placeholder}
           disabled={isLoading}
           className="flex-1 px-4 py-3 bg-[#0a0e27] border-4 border-[#4169E1] text-[#4169E1] placeholder-[#4169E1]/50 font-pixel text-sm focus:outline-none focus:border-[#00CED1] disabled:opacity-50 pixel-border"
         />
