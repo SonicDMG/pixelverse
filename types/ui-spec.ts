@@ -107,6 +107,65 @@ export interface TextBlockSpec extends UIComponentSpec {
   };
 }
 
+// Space-specific component types
+
+export interface PlanetCardSpec extends UIComponentSpec {
+  type: 'planet-card';
+  props: {
+    name: string;
+    description: string;
+    diameter: string;
+    mass: string;
+    distanceFromSun: string;
+    orbitalPeriod: string;
+    moons?: number;
+    imageUrl?: string;
+  };
+}
+
+export interface ConstellationSpec extends UIComponentSpec {
+  type: 'constellation';
+  props: {
+    name: string;
+    abbreviation: string;
+    description: string;
+    brightestStar?: string;
+    visibility: string; // e.g., "Northern Hemisphere, Winter"
+    stars: Array<{
+      name: string;
+      magnitude: number;
+    }>;
+  };
+}
+
+export interface SpaceTimelineSpec extends UIComponentSpec {
+  type: 'space-timeline';
+  props: {
+    title: string;
+    events: Array<{
+      date: string;
+      title: string;
+      description: string;
+      type?: 'mission' | 'discovery' | 'observation';
+    }>;
+  };
+}
+
+// Helper types for space components
+
+export type CelestialBody = {
+  name: string;
+  type: 'planet' | 'moon' | 'star' | 'asteroid' | 'comet';
+  description?: string;
+};
+
+export type SpaceEvent = {
+  date: string;
+  title: string;
+  description: string;
+  type: 'mission' | 'discovery' | 'observation';
+};
+
 // Union type of all possible component specs
 export type ComponentSpec =
   | LineChartSpec
@@ -116,7 +175,10 @@ export type ComponentSpec =
   | MetricCardSpec
   | MetricGridSpec
   | AlertBoxSpec
-  | TextBlockSpec;
+  | TextBlockSpec
+  | PlanetCardSpec
+  | ConstellationSpec
+  | SpaceTimelineSpec;
 
 // Response from Langflow with UI specifications
 export interface UIResponse {

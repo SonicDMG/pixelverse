@@ -433,7 +433,13 @@ export function useBackgroundMusic(
         const nextTrackIndex = manualSongIndexRef.current !== null
           ? manualSongIndexRef.current
           : playlistRef.current[actualNextPosition];
-        console.log(`Crossfading to: ${tracks[nextTrackIndex].filename}`);
+        
+        // Defensive check: ensure track exists before accessing properties
+        if (nextTrackIndex !== undefined && tracks[nextTrackIndex]) {
+          console.log(`Crossfading to: ${tracks[nextTrackIndex].filename}`);
+        } else {
+          console.error('[Background Music] Invalid track index during crossfade:', nextTrackIndex);
+        }
       }, crossfadeStartTime * 1000);
 
       // Start playback

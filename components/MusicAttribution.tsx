@@ -108,7 +108,7 @@ export function MusicAttribution({
     <div
       className={`text-[10px] font-pixel text-gray-500 opacity-70 hover:opacity-100 transition-opacity ${className}`}
     >
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-center gap-2 flex-wrap">
         <span>♪</span>
         <span className="text-gray-400">{metadata.title}</span>
         <span>by</span>

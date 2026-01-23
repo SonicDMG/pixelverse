@@ -72,6 +72,18 @@ export default function Home() {
     };
   }, []);
 
+  // Clear conversation and reset music when switching modes
+  useEffect(() => {
+    // Clear conversation history
+    setConversationGroups([]);
+    setError(null);
+    
+    // Stop music if playing (it will restart with new theme's music)
+    if (isPlaying) {
+      togglePlayback();
+    }
+  }, [appMode]);
+
   const handleQuestion = useCallback(async (question: string) => {
     // Announce request submission with voice
     if (isVoiceSupported) {
@@ -206,7 +218,7 @@ export default function Home() {
             <div className="flex flex-col gap-2 justify-start">
               {/* Controls Row */}
               <div className="flex gap-4 items-start">
-                {/* Music Control with Volume */}
+                {/* Music Control with Volume and Song Selector */}
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={togglePlayback}
@@ -244,9 +256,19 @@ export default function Home() {
                       {Math.round(musicVolume * 100)}
                     </span>
                   </div>
+                  {/* Song Selector - Below volume control, matching button width */}
+                  {availableSongs.length > 0 && (
+                    <SongSelector
+                      currentSong={currentSong}
+                      availableSongs={availableSongs}
+                      isAutoCycling={isAutoCycling}
+                      onSongChange={setSong}
+                      className="w-full"
+                    />
+                  )}
                 </div>
                 
-                {/* Voice Control with Volume and Song Selector */}
+                {/* Voice Control with Volume */}
                 {isMounted && (
                   <div className="flex flex-col gap-1">
                     <button
@@ -282,16 +304,6 @@ export default function Home() {
                         {Math.round(voiceVolume * 100)}
                       </span>
                     </div>
-                    {/* Song Selector - Show for MP3 music */}
-                    {availableSongs.length > 0 && (
-                      <SongSelector
-                        currentSong={currentSong}
-                        availableSongs={availableSongs}
-                        isAutoCycling={isAutoCycling}
-                        onSongChange={setSong}
-                        className="px-1"
-                      />
-                    )}
                   </div>
                 )}
               </div>
