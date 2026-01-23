@@ -8,11 +8,11 @@ import ConversationGroup from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import AppSwitcher from '@/components/AppSwitcher';
-import { MusicModeSelector, useMusicMode } from '@/components/MusicModeSelector';
+import { SongSelector } from '@/components/SongSelector';
+import { MusicAttribution } from '@/components/MusicAttribution';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
-import { useProceduralMusic } from '@/hooks/useProceduralMusic';
 import { useCyberpunkVoice } from '@/hooks/useCyberpunkVoice';
 
 /**
@@ -25,7 +25,6 @@ interface ApiErrorResponse {
 
 export default function Home() {
   const { appMode, theme } = useTheme();
-  const musicMode = useMusicMode();
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupType[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,38 +32,24 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   
-  // Use the appropriate music hook based on user preference
-  // Only initialize the hook that matches the current mode to prevent both from running
-  const mp3Music = useBackgroundMusic(appMode, {
+  // Use MP3 background music
+  const {
+    isPlaying,
+    isMuted,
+    togglePlayback,
+    toggleMute,
+    isReady,
+    analyserNode,
+    volume: musicVolume,
+    setVolume: setMusicVolume,
+    currentSong,
+    availableSongs,
+    isAutoCycling,
+    setSong,
+  } = useBackgroundMusic(appMode, {
     volume: 0.175,
     autoPlay: false
   });
-  
-  const proceduralMusic = useProceduralMusic(appMode, {
-    volume: 0.175,
-    autoPlay: false
-  });
-  
-  // Select the active music system based on mode
-  const activeMusic = musicMode === 'generated' ? proceduralMusic : mp3Music;
-  const { isPlaying, isMuted, togglePlayback, toggleMute, isReady, analyserNode, volume: musicVolume, setVolume: setMusicVolume } = activeMusic;
-  
-  // Stop the inactive music system when switching modes
-  useEffect(() => {
-    console.log(`[Music Mode] Switched to: ${musicMode}`);
-    
-    // Always stop MP3 music when switching to generated mode
-    if (musicMode === 'generated') {
-      console.log('[Music Mode] Stopping MP3 music');
-      mp3Music.stop();
-    }
-    
-    // Always stop procedural music when switching to MP3 mode
-    if (musicMode === 'mp3') {
-      console.log('[Music Mode] Stopping procedural music');
-      proceduralMusic.stop();
-    }
-  }, [musicMode, mp3Music, proceduralMusic]);
   
   const { announce, isSupported: isVoiceSupported, isEnabled: isVoiceEnabled, toggleEnabled: toggleVoice, volume: voiceVolume, setVolume: setVoiceVolume } = useCyberpunkVoice({ audioContext });
 
@@ -259,11 +244,9 @@ export default function Home() {
                       {Math.round(musicVolume * 100)}
                     </span>
                   </div>
-                  {/* Music Mode Selector */}
-                  <MusicModeSelector className="px-1" />
                 </div>
                 
-                {/* Voice Control with Volume */}
+                {/* Voice Control with Volume and Song Selector */}
                 {isMounted && (
                   <div className="flex flex-col gap-1">
                     <button
@@ -299,6 +282,16 @@ export default function Home() {
                         {Math.round(voiceVolume * 100)}
                       </span>
                     </div>
+                    {/* Song Selector - Show for MP3 music */}
+                    {availableSongs.length > 0 && (
+                      <SongSelector
+                        currentSong={currentSong}
+                        availableSongs={availableSongs}
+                        isAutoCycling={isAutoCycling}
+                        onSongChange={setSong}
+                        className="px-1"
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -379,7 +372,14 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="text-center py-4 px-4 border-t-4 pixel-border flex-shrink-0" style={{ borderColor: `${theme.colors.primary}30` }}>
+        <footer className="text-center py-4 px-4 border-t-4 pixel-border flex-shrink-0 space-y-2" style={{ borderColor: `${theme.colors.primary}30` }}>
+          {/* Music Attribution */}
+          <MusicAttribution
+            currentSong={currentSong}
+            isPlaying={isPlaying}
+            className="mb-2"
+          />
+          
           <p className="text-xs text-gray-500 font-pixel">
             2026 {theme.name.toUpperCase()} | POWERED BY LANGFLOW
           </p>

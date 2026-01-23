@@ -23,9 +23,6 @@ export interface ThemeConfig {
   /** Music folder name for background music */
   musicDirectory: string;
   
-  /** Optional flag to use procedurally generated music instead of MP3 files */
-  useProceduralMusic?: boolean;
-  
   /** Optional emoji/icon for UI representation */
   icon?: string;
   

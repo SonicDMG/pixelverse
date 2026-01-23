@@ -5,6 +5,15 @@ interface UseBackgroundMusicOptions {
   autoPlay?: boolean; // Whether to start automatically (subject to browser policies)
 }
 
+// Song info interface for MP3 tracks
+export interface SongInfo {
+  id: number;
+  name: string;
+  filename: string;
+  bpm?: number; // Optional - not always known for MP3s
+  description?: string; // Optional - for display purposes
+}
+
 interface UseBackgroundMusicReturn {
   isPlaying: boolean;
   isMuted: boolean;
@@ -17,6 +26,11 @@ interface UseBackgroundMusicReturn {
   isReady: boolean;
   audioContext: AudioContext | null;
   analyserNode: AnalyserNode | null;
+  // Song selection
+  currentSong: SongInfo | null;
+  availableSongs: SongInfo[];
+  isAutoCycling: boolean;
+  setSong: (songId: number | null) => void;
 }
 
 interface AudioTrack {
@@ -55,12 +69,16 @@ export function useBackgroundMusic(
   const playlistRef = useRef<number[]>([]); // Shuffled playlist of track indices
   const playlistPositionRef = useRef<number>(0); // Current position in playlist
   const activeSourceRef = useRef<'A' | 'B'>('A'); // Which source is currently playing
+  const manualSongIndexRef = useRef<number | null>(null); // Manual song selection (null = auto-cycle)
   
   // State
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolumeState] = useState(initialVolume);
   const [isReady, setIsReady] = useState(false);
+  const [currentSong, setCurrentSong] = useState<SongInfo | null>(null);
+  const [availableSongs, setAvailableSongs] = useState<SongInfo[]>([]);
+  const [isAutoCycling, setIsAutoCycling] = useState(true);
   
   // Crossfade configuration
   const CROSSFADE_DURATION = 2.5; // seconds
@@ -206,9 +224,22 @@ export function useBackgroundMusic(
         
         tracksRef.current = tracks;
         
+        // Create song info list for UI
+        const songs: SongInfo[] = tracks.map((track, index) => ({
+          id: index,
+          name: track.filename.replace(/\.(mp3|wav|ogg)$/i, '').replace(/[-_]/g, ' '),
+          filename: track.filename,
+        }));
+        setAvailableSongs(songs);
+        
         // Create initial shuffled playlist
         playlistRef.current = shufflePlaylist(tracks.length);
         playlistPositionRef.current = 0;
+        
+        // Set initial current song
+        if (songs.length > 0) {
+          setCurrentSong(songs[playlistRef.current[0]]);
+        }
         
         console.log(`Loaded ${tracks.length} tracks`);
         setIsReady(true);
@@ -291,8 +322,18 @@ export function useBackgroundMusic(
       return;
     }
 
-    const trackIndex = playlist[playlistPosition];
+    // Use manual song index if set, otherwise use playlist position
+    const trackIndex = manualSongIndexRef.current !== null
+      ? manualSongIndexRef.current
+      : playlist[playlistPosition];
     const track = tracks[trackIndex];
+    
+    // Update current song state
+    setCurrentSong({
+      id: trackIndex,
+      name: track.filename.replace(/\.(mp3|wav|ogg)$/i, '').replace(/[-_]/g, ' '),
+      filename: track.filename,
+    });
     const sourceRef = source === 'A' ? sourceARef : sourceBRef;
     const gainRef = source === 'A' ? gainARef : gainBRef;
     const gainNode = gainRef.current;
@@ -329,15 +370,23 @@ export function useBackgroundMusic(
       }
 
       // Schedule next track before this one ends (for crossfade)
-      const nextPlaylistPosition = playlistPosition + 1;
+      // Only auto-advance if not in manual mode
+      const shouldAutoAdvance = manualSongIndexRef.current === null;
       
-      // Check if we need to reshuffle (reached end of playlist)
-      let actualNextPosition = nextPlaylistPosition;
-      if (nextPlaylistPosition >= playlist.length) {
-        // Reshuffle for next round
-        console.log('End of playlist reached, reshuffling...');
-        playlistRef.current = shufflePlaylist(tracks.length);
-        actualNextPosition = 0;
+      let nextPlaylistPosition = playlistPosition;
+      let actualNextPosition = playlistPosition;
+      
+      if (shouldAutoAdvance) {
+        nextPlaylistPosition = playlistPosition + 1;
+        
+        // Check if we need to reshuffle (reached end of playlist)
+        actualNextPosition = nextPlaylistPosition;
+        if (nextPlaylistPosition >= playlist.length) {
+          // Reshuffle for next round
+          console.log('End of playlist reached, reshuffling...');
+          playlistRef.current = shufflePlaylist(tracks.length);
+          actualNextPosition = 0;
+        }
       }
       
       const crossfadeStartTime = track.buffer.duration - CROSSFADE_DURATION;
@@ -358,6 +407,12 @@ export function useBackgroundMusic(
           return;
         }
         
+        // If in manual mode, just loop the same track
+        if (manualSongIndexRef.current !== null) {
+          console.log(`Manual mode: looping track ${manualSongIndexRef.current}`);
+          actualNextPosition = playlistPosition; // Stay on same track
+        }
+        
         // Determine which source to use for next track
         const nextSource = source === 'A' ? 'B' : 'A';
         const currentGainNode = gainRef.current;
@@ -375,7 +430,9 @@ export function useBackgroundMusic(
         playlistPositionRef.current = actualNextPosition;
         playTrackOnSource(actualNextPosition, nextSource, true);
         
-        const nextTrackIndex = playlistRef.current[actualNextPosition];
+        const nextTrackIndex = manualSongIndexRef.current !== null
+          ? manualSongIndexRef.current
+          : playlistRef.current[actualNextPosition];
         console.log(`Crossfading to: ${tracks[nextTrackIndex].filename}`);
       }, crossfadeStartTime * 1000);
 
@@ -516,6 +573,80 @@ export function useBackgroundMusic(
     );
   }, [isMuted]);
 
+  /**
+   * Set the current song (manual selection or auto-cycle)
+   * @param songId - Song index to play, or null for auto-cycle mode
+   */
+  const setSong = useCallback((songId: number | null) => {
+    const tracks = tracksRef.current;
+    
+    if (!isReady || tracks.length === 0) {
+      console.warn('[MP3 Music] Not ready or no tracks available');
+      return;
+    }
+
+    if (songId === null) {
+      // Switch to auto-cycle mode
+      console.log('[MP3 Music] Switching to AUTO-CYCLE mode');
+      manualSongIndexRef.current = null;
+      setIsAutoCycling(true);
+      
+      // If playing, trigger crossfade to next track in playlist
+      if (isPlaying) {
+        const currentSource = activeSourceRef.current;
+        const nextSource = currentSource === 'A' ? 'B' : 'A';
+        const nextPosition = (playlistPositionRef.current + 1) % playlistRef.current.length;
+        
+        // Fade out current
+        const currentGainNode = currentSource === 'A' ? gainARef.current : gainBRef.current;
+        const audioContext = audioContextRef.current;
+        if (currentGainNode && audioContext) {
+          const fadeStartTime = audioContext.currentTime;
+          currentGainNode.gain.cancelScheduledValues(fadeStartTime);
+          currentGainNode.gain.setValueAtTime(currentGainNode.gain.value, fadeStartTime);
+          currentGainNode.gain.linearRampToValueAtTime(0, fadeStartTime + CROSSFADE_DURATION);
+        }
+        
+        // Play next track
+        activeSourceRef.current = nextSource;
+        playlistPositionRef.current = nextPosition;
+        playTrackOnSource(nextPosition, nextSource, true);
+      }
+    } else {
+      // Switch to manual mode with specific song
+      if (songId < 0 || songId >= tracks.length) {
+        console.warn(`[MP3 Music] Invalid song index: ${songId}`);
+        return;
+      }
+      
+      const song = availableSongs[songId];
+      console.log(`[MP3 Music] Switching to MANUAL mode, song: "${song.name}"`);
+      manualSongIndexRef.current = songId;
+      setIsAutoCycling(false);
+      setCurrentSong(song);
+      
+      // If playing, trigger crossfade to selected track
+      if (isPlaying) {
+        const currentSource = activeSourceRef.current;
+        const nextSource = currentSource === 'A' ? 'B' : 'A';
+        
+        // Fade out current
+        const currentGainNode = currentSource === 'A' ? gainARef.current : gainBRef.current;
+        const audioContext = audioContextRef.current;
+        if (currentGainNode && audioContext) {
+          const fadeStartTime = audioContext.currentTime;
+          currentGainNode.gain.cancelScheduledValues(fadeStartTime);
+          currentGainNode.gain.setValueAtTime(currentGainNode.gain.value, fadeStartTime);
+          currentGainNode.gain.linearRampToValueAtTime(0, fadeStartTime + CROSSFADE_DURATION);
+        }
+        
+        // Play selected track
+        activeSourceRef.current = nextSource;
+        playTrackOnSource(playlistPositionRef.current, nextSource, true);
+      }
+    }
+  }, [isReady, isPlaying, availableSongs, playTrackOnSource, CROSSFADE_DURATION]);
+
   return {
     isPlaying,
     isMuted,
@@ -528,6 +659,10 @@ export function useBackgroundMusic(
     isReady,
     audioContext: audioContextRef.current,
     analyserNode: analyserNodeRef.current,
+    currentSong,
+    availableSongs,
+    isAutoCycling,
+    setSong,
   };
 }
 
