@@ -240,6 +240,14 @@ export class WebSpeechTTS {
         };
 
         utterance.onerror = (event) => {
+          // "interrupted" is not really an error - it's normal when speech is cancelled
+          if (event.error === 'interrupted') {
+            console.log('[TTS] Speech interrupted (normal behavior)');
+            resolve(); // Resolve instead of reject
+            return;
+          }
+          
+          // Handle actual errors
           console.error('Speech error:', event);
           reject(new Error(`Speech synthesis error: ${event.error}`));
         };

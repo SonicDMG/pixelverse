@@ -29,7 +29,7 @@ export function useCyberpunkVoice(
   const { audioContext } = options;
   const ttsRef = useRef<WebSpeechTTS | null>(null);
   const isSpeakingRef = useRef<boolean>(false);
-  const [isEnabled, setIsEnabled] = useState(false); // Voice disabled by default
+  const [isEnabled, setIsEnabled] = useState(true); // Voice enabled by default
   const [volume, setVolumeState] = useState(0.75); // Default volume from voice settings
 
   // Initialize TTS when audio context is available
@@ -212,8 +212,16 @@ export function useCyberpunkVoice(
 
       isSpeakingRef.current = false;
     } catch (error) {
-      console.error('Failed to announce:', error);
       isSpeakingRef.current = false;
+      
+      // Check if it's an interruption error (normal behavior)
+      if (error instanceof Error && error.message.includes('interrupted')) {
+        console.log('[Voice] Speech interrupted (normal behavior)');
+        return; // Don't throw for interruptions
+      }
+      
+      // Log and throw actual errors
+      console.error('Failed to announce:', error);
       throw error;
     }
   }, [isEnabled, preprocessText, getVoiceSettings, getAudioEffects]);

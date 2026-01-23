@@ -46,9 +46,11 @@ export default function Home() {
     availableSongs,
     isAutoCycling,
     setSong,
+    start: startMusic,
+    stop: stopMusic,
   } = useBackgroundMusic(appMode, {
     volume: 0.175,
-    autoPlay: false
+    autoPlay: false // Can't autoplay due to browser policy - user must click
   });
   
   const { announce, isSupported: isVoiceSupported, isEnabled: isVoiceEnabled, toggleEnabled: toggleVoice, volume: voiceVolume, setVolume: setVoiceVolume } = useCyberpunkVoice({ audioContext });
@@ -72,16 +74,12 @@ export default function Home() {
     };
   }, []);
 
-  // Clear conversation and reset music when switching modes
+  // Clear conversation when switching modes
+  // Music will automatically reload with new theme's tracks
   useEffect(() => {
     // Clear conversation history
     setConversationGroups([]);
     setError(null);
-    
-    // Stop music if playing (it will restart with new theme's music)
-    if (isPlaying) {
-      togglePlayback();
-    }
   }, [appMode]);
 
   const handleQuestion = useCallback(async (question: string) => {
@@ -380,7 +378,7 @@ export default function Home() {
 
         {/* Question Input - Fixed above footer */}
         <div className="flex-shrink-0 bg-[#0a0e27]/95 p-4 mt-4 border-t-4 pixel-border backdrop-blur-sm" style={{ borderColor: theme.colors.primary }}>
-          <QuestionInput onSubmit={handleQuestion} loadingStatus={loadingStatus} />
+          <QuestionInput key={appMode} onSubmit={handleQuestion} loadingStatus={loadingStatus} />
         </div>
 
         {/* Footer */}

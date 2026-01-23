@@ -34,8 +34,9 @@ interface UseBackgroundMusicReturn {
 }
 
 interface AudioTrack {
-  buffer: AudioBuffer;
+  buffer: AudioBuffer | null; // null means not loaded yet
   filename: string;
+  isLoading?: boolean;
 }
 
 /**
@@ -101,12 +102,10 @@ export function useBackgroundMusic(
   }, []);
 
   /**
-   * Load all MP3 files from the theme-specific music directory
-   * Fetches the file list from the API and loads each track
+   * Fetch the list of music files (without loading them)
    */
-  const loadMusicTracks = useCallback(async (audioContext: AudioContext): Promise<AudioTrack[]> => {
+  const fetchMusicFileList = useCallback(async (): Promise<string[]> => {
     try {
-      // Fetch the list of music files for this theme from the API
       console.log(`Fetching music files for theme: ${themeId}`);
       const apiResponse = await fetch(`/api/music/${themeId}`);
       
@@ -123,48 +122,85 @@ export function useBackgroundMusic(
         return [];
       }
 
-      console.log(`Found ${musicFiles.length} music files for theme ${themeId}:`, musicFiles);
-
-      const tracks: AudioTrack[] = [];
-
-      // Load each music file from the theme-specific directory
-      for (const filename of musicFiles) {
-        try {
-          const filePath = `/audio/music/${themeId}/${encodeURIComponent(filename)}`;
-          console.log(`Loading: ${filePath}`);
-          
-          const response = await fetch(filePath);
-          if (!response.ok) {
-            console.warn(`Failed to load ${filename}: ${response.status} ${response.statusText}`);
-            continue;
-          }
-
-          const arrayBuffer = await response.arrayBuffer();
-          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-          
-          tracks.push({
-            buffer: audioBuffer,
-            filename
-          });
-          
-          console.log(`✓ Loaded track: ${filename} (${audioBuffer.duration.toFixed(1)}s)`);
-        } catch (error) {
-          console.error(`Error loading ${filename}:`, error);
-        }
-      }
-
-      if (tracks.length === 0) {
-        console.error(`No tracks successfully loaded for theme: ${themeId}`);
-      } else {
-        console.log(`Successfully loaded ${tracks.length}/${musicFiles.length} tracks for theme: ${themeId}`);
-      }
-
-      return tracks;
+      console.log(`Found ${musicFiles.length} music files for theme ${themeId}`);
+      return musicFiles;
     } catch (error) {
-      console.error(`Failed to load music tracks for theme ${themeId}:`, error);
+      console.error(`Failed to fetch music file list for theme ${themeId}:`, error);
       return [];
     }
   }, [themeId]);
+
+  /**
+   * Load a single track on-demand
+   */
+  const loadSingleTrack = useCallback(async (
+    filename: string,
+    audioContext: AudioContext
+  ): Promise<AudioBuffer | null> => {
+    try {
+      const filePath = `/audio/music/${themeId}/${encodeURIComponent(filename)}`;
+      console.log(`Lazy loading: ${filePath}`);
+      
+      const response = await fetch(filePath);
+      if (!response.ok) {
+        console.warn(`Failed to load ${filename}: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      console.log(`✓ Loaded track: ${filename} (${audioBuffer.duration.toFixed(1)}s)`);
+      return audioBuffer;
+    } catch (error) {
+      console.error(`Error loading ${filename}:`, error);
+      return null;
+    }
+  }, [themeId]);
+
+  /**
+   * Initialize track list with only the first track loaded
+   */
+  const initializeMusicTracks = useCallback(async (audioContext: AudioContext): Promise<AudioTrack[]> => {
+    try {
+      // Fetch file list
+      const musicFiles = await fetchMusicFileList();
+      
+      if (musicFiles.length === 0) {
+        return [];
+      }
+
+      // Create track list with only first track loaded
+      const tracks: AudioTrack[] = [];
+      
+      for (let i = 0; i < musicFiles.length; i++) {
+        const filename = musicFiles[i];
+        
+        if (i === 0) {
+          // Load first track immediately
+          const buffer = await loadSingleTrack(filename, audioContext);
+          tracks.push({
+            buffer,
+            filename,
+            isLoading: false
+          });
+        } else {
+          // Other tracks start as unloaded
+          tracks.push({
+            buffer: null,
+            filename,
+            isLoading: false
+          });
+        }
+      }
+
+      console.log(`Initialized ${tracks.length} tracks (1 loaded, ${tracks.length - 1} lazy)`);
+      return tracks;
+    } catch (error) {
+      console.error(`Failed to initialize music tracks for theme ${themeId}:`, error);
+      return [];
+    }
+  }, [themeId, fetchMusicFileList, loadSingleTrack]);
 
   /**
    * Initialize audio context and load all tracks
@@ -211,21 +247,21 @@ export function useBackgroundMusic(
         gainB.connect(masterGain);
         gainBRef.current = gainB;
         
-        // Load all music tracks
-        console.log('Loading music tracks...');
-        const tracks = await loadMusicTracks(audioContext);
+        // Initialize music tracks (lazy load)
+        console.log('Initializing music tracks...');
+        const tracks = await initializeMusicTracks(audioContext);
         
         if (!mounted) return;
         
         if (tracks.length === 0) {
-          console.error('No music tracks loaded');
+          console.error('No music tracks initialized');
           return;
         }
         
         tracksRef.current = tracks;
         
         // Create song info list for UI
-        const songs: SongInfo[] = tracks.map((track, index) => ({
+        const songs: SongInfo[] = tracks.map((track: AudioTrack, index: number) => ({
           id: index,
           name: track.filename.replace(/\.(mp3|wav|ogg)$/i, '').replace(/[-_]/g, ' '),
           filename: track.filename,
@@ -242,13 +278,18 @@ export function useBackgroundMusic(
         }
         
         console.log(`Loaded ${tracks.length} tracks`);
+        
+        // Set ready state first
         setIsReady(true);
 
-        // Auto-play if requested
-        if (autoPlay) {
+        // Auto-play if requested - wait a bit longer to ensure state is updated
+        if (autoPlay && mounted) {
           setTimeout(() => {
-            start();
-          }, 100);
+            if (mounted) {
+              console.log('Auto-starting music...');
+              start();
+            }
+          }, 200);
         }
       } catch (error) {
         console.error('Failed to initialize background music:', error);
@@ -261,6 +302,11 @@ export function useBackgroundMusic(
     // Cleanup
     return () => {
       mounted = false;
+      console.log(`Cleaning up music hook for theme: ${themeId}`);
+      
+      // Stop playback
+      setIsPlaying(false);
+      setIsReady(false);
       
       if (sourceARef.current) {
         try {
@@ -297,18 +343,27 @@ export function useBackgroundMusic(
         masterGainNodeRef.current = null;
       }
       
+      if (analyserNodeRef.current) {
+        analyserNodeRef.current.disconnect();
+        analyserNodeRef.current = null;
+      }
+      
       if (audioContextRef.current) {
         audioContextRef.current.close().catch(err => {
           console.error('Error closing audio context:', err);
         });
+        audioContextRef.current = null;
       }
+      
+      // Clear tracks
+      tracksRef.current = [];
     };
-  }, [themeId, loadMusicTracks, autoPlay]); // Re-initialize when theme changes
+  }, [themeId, initializeMusicTracks, autoPlay]); // Re-initialize when theme changes
 
   /**
-   * Play a track on the specified source with crossfade
+   * Play a track on the specified source with crossfade (with lazy loading)
    */
-  const playTrackOnSource = useCallback((
+  const playTrackOnSource = useCallback(async (
     playlistPosition: number,
     source: 'A' | 'B',
     fadeIn: boolean = false
@@ -327,6 +382,34 @@ export function useBackgroundMusic(
       ? manualSongIndexRef.current
       : playlist[playlistPosition];
     const track = tracks[trackIndex];
+    
+    // Lazy load track if not loaded yet
+    if (!track.buffer && !track.isLoading) {
+      console.log(`Lazy loading track: ${track.filename}`);
+      track.isLoading = true;
+      const buffer = await loadSingleTrack(track.filename, audioContext);
+      track.buffer = buffer;
+      track.isLoading = false;
+      
+      if (!buffer) {
+        console.error(`Failed to load track: ${track.filename}`);
+        return;
+      }
+    }
+    
+    // Wait if track is currently loading
+    if (track.isLoading) {
+      console.log(`Waiting for track to load: ${track.filename}`);
+      // Try again in a moment
+      setTimeout(() => playTrackOnSource(playlistPosition, source, fadeIn), 100);
+      return;
+    }
+    
+    // Check if buffer is available
+    if (!track.buffer) {
+      console.error(`Track buffer not available: ${track.filename}`);
+      return;
+    }
     
     // Update current song state
     setCurrentSong({
@@ -450,25 +533,34 @@ export function useBackgroundMusic(
     } catch (error) {
       console.error(`Failed to play track on source ${source}:`, error);
     }
-  }, [CROSSFADE_DURATION]);
+  }, [CROSSFADE_DURATION, loadSingleTrack, shufflePlaylist]);
 
   /**
    * Start playing the background music
    */
   const start = useCallback(() => {
-    if (!isReady || !audioContextRef.current || tracksRef.current.length === 0) {
-      console.warn('Background music not ready');
+    const audioContext = audioContextRef.current;
+    const tracks = tracksRef.current;
+    
+    // Check refs directly instead of state to avoid stale closure issues
+    if (!audioContext || !tracks || tracks.length === 0) {
+      console.warn('Background music not ready - missing audio context or tracks');
+      return;
+    }
+    
+    // Check if first track is loaded
+    if (!tracks[0] || !tracks[0].buffer) {
+      console.warn('Background music not ready - first track not loaded');
       return;
     }
 
     // Don't start if already playing
     if (isPlaying) {
+      console.log('Music already playing');
       return;
     }
 
     try {
-      const audioContext = audioContextRef.current;
-
       // Resume audio context if suspended
       if (audioContext.state === 'suspended') {
         audioContext.resume().then(() => {
@@ -489,7 +581,7 @@ export function useBackgroundMusic(
       console.error('Failed to start background music:', error);
       setIsPlaying(false);
     }
-  }, [isReady, isPlaying, playTrackOnSource]);
+  }, [isPlaying, playTrackOnSource]);
 
   /**
    * Stop playing the background music
