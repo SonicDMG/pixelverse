@@ -12,8 +12,34 @@ function extractSymbol(question: string): string | undefined {
 
 // Server-side only - no NEXT_PUBLIC_ prefix for security
 const LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
-const LANGFLOW_FLOW_ID = process.env.LANGFLOW_FLOW_ID || '97cc8b65-0fb1-4f87-8d2b-a2359082f322';
 const LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || '';
+
+// Theme-specific flow IDs
+const FLOW_IDS = {
+  ticker: process.env.LANGFLOW_FLOW_ID_TICKER || process.env.LANGFLOW_FLOW_ID || '97cc8b65-0fb1-4f87-8d2b-a2359082f322',
+  space: process.env.LANGFLOW_FLOW_ID_SPACE || process.env.LANGFLOW_FLOW_ID || '97cc8b65-0fb1-4f87-8d2b-a2359082f322',
+};
+
+/**
+ * Valid theme types for Langflow queries
+ */
+export type LangflowTheme = 'ticker' | 'space';
+
+/**
+ * Get the flow ID for a specific theme
+ * @param theme - The theme to get the flow ID for
+ * @returns The flow ID for the specified theme
+ * @throws Error if the theme is invalid or flow ID is not configured
+ */
+function getFlowIdForTheme(theme: LangflowTheme): string {
+  const flowId = FLOW_IDS[theme];
+  
+  if (!flowId) {
+    throw new Error(`Flow ID not configured for theme: ${theme}`);
+  }
+  
+  return flowId;
+}
 
 /**
  * Raw stock data item from external sources
@@ -78,10 +104,15 @@ function parseStockData(responseText: string, data?: unknown): StockDataPoint[] 
 }
 
 /**
- * Query Langflow with a stock-related question
+ * Query Langflow with a question for a specific theme
+ * @param question - The question to ask
+ * @param theme - The theme to use for selecting the appropriate flow ID (default: 'ticker')
  */
-export async function queryLangflow(question: string): Promise<StockQueryResult> {
+export async function queryLangflow(question: string, theme: LangflowTheme = 'ticker'): Promise<StockQueryResult> {
   try {
+    // Get the appropriate flow ID for the theme
+    const flowId = getFlowIdForTheme(theme);
+
     const request: LangflowRequest = {
       input_value: question,
       output_type: 'chat',
@@ -104,7 +135,7 @@ export async function queryLangflow(question: string): Promise<StockQueryResult>
     }
 
     const response = await axios.post<LangflowResponse>(
-      `${LANGFLOW_URL}/api/v1/run/${LANGFLOW_FLOW_ID}`,
+      `${LANGFLOW_URL}/api/v1/run/${flowId}`,
       payload,
       {
         headers,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { queryLangflow } from '@/services/langflow';
 
 /**
  * API Error response interface
@@ -331,11 +332,33 @@ export async function POST(request: NextRequest) {
 
     console.log('[Space API] Validation passed. Sanitized question:', validation.sanitized);
 
-    // TODO: Replace with actual Langflow integration when space flow is configured
-    // For now, use mock responses
-    const result = getMockSpaceResponse(validation.sanitized!);
+    // Query Langflow with sanitized input using the 'space' theme
+    // Falls back to mock responses if Langflow is not configured or fails
+    let result: SpaceQueryResult;
     
-    console.log('[Space API] Mock response generated:', {
+    try {
+      console.log('[Space API] Attempting Langflow query with space theme');
+      result = await queryLangflow(validation.sanitized!, 'space');
+      console.log('[Space API] Langflow response received:', {
+        hasAnswer: !!result.answer,
+        answerLength: result.answer?.length,
+        hasComponents: !!result.components,
+        componentCount: result.components?.length,
+        hasError: !!result.error
+      });
+    } catch (error) {
+      console.warn('[Space API] Langflow query failed, falling back to mock responses:', error);
+      result = getMockSpaceResponse(validation.sanitized!);
+      console.log('[Space API] Mock response generated:', {
+        hasAnswer: !!result.answer,
+        answerLength: result.answer?.length,
+        hasComponents: !!result.components,
+        componentCount: result.components?.length,
+        hasError: !!result.error
+      });
+    }
+    
+    console.log('[Space API] Final result prepared:', {
       hasAnswer: !!result.answer,
       answerLength: result.answer?.length,
       hasComponents: !!result.components,

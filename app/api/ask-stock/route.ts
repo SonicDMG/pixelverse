@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Query Langflow with sanitized input
-    const result = await queryLangflow(validation.sanitized!);
+    // Query Langflow with sanitized input using the 'ticker' theme
+    const result = await queryLangflow(validation.sanitized!, 'ticker');
 
     if (result.error) {
       return NextResponse.json<ApiErrorResponse>(
