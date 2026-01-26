@@ -144,11 +144,10 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       soundEffectsVolume: 0.125,
     },
     exampleQuestions: [
-      'Tell me about Mars',
-      'What is the Moon?',
-      'Show me Jupiter facts',
-      'Tell me about the Sun',
-      'What are the planets in our solar system?',
+      'Tell me about Jupiter',
+      'Show me the Orion constellation',
+      'What is the history of Mars exploration?',
+      'How far is the Moon from Earth?',
     ],
   },
 };

@@ -118,11 +118,22 @@ export default function Home() {
     timeoutsRef.current.push(timeout2);
 
     try {
+      console.log('[Home] Sending request to:', theme.apiEndpoint);
       const response = await axios.post<StockQueryResult>(theme.apiEndpoint, {
         question,
       });
 
       const result = response.data;
+      console.log('[Home] Received API response:', {
+        hasAnswer: !!result.answer,
+        answerLength: result.answer?.length,
+        hasComponents: !!result.components,
+        componentCount: result.components?.length,
+        componentTypes: result.components?.map(c => c.type),
+        hasStockData: !!result.stockData,
+        stockDataLength: result.stockData?.length,
+        symbol: result.symbol,
+      });
 
       // Create assistant message
       const assistantMessage: Message = {

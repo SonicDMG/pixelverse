@@ -161,8 +161,15 @@ export async function queryLangflow(question: string, theme: LangflowTheme = 'ti
 
     // If we have a UI response with components, use it
     if (uiResponse && uiResponse.components && Array.isArray(uiResponse.components)) {
+      // Support both "text" and "answer" field names for the response text
+      const answerText = uiResponse.answer || uiResponse.text || messageText;
+      console.log('[Langflow] Parsed UI response with components:', {
+        hasAnswer: !!answerText,
+        componentCount: uiResponse.components.length,
+        componentTypes: uiResponse.components.map((c: any) => c.type),
+      });
       return {
-        answer: uiResponse.text || messageText,
+        answer: answerText,
         components: uiResponse.components,
         symbol: extractSymbol(question),
       };

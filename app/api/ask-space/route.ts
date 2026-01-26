@@ -2,6 +2,261 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryLangflow } from '@/services/langflow';
 
 /**
+ * ============================================================================
+ * SPACE API ROUTE - DYNAMIC COMPONENT EXAMPLES
+ * ============================================================================
+ *
+ * This API route handles space/astronomy queries and can return dynamic UI
+ * components along with text responses. Below are comprehensive examples for
+ * each available component type.
+ *
+ * AVAILABLE COMPONENT TYPES:
+ *
+ * 1. planet-card - Display detailed information about planets, moons, or other celestial bodies
+ * 2. constellation - Show constellation information with star data
+ * 3. space-timeline - Display chronological space events (missions, discoveries, observations)
+ * 4. text-block - Display formatted text content (plain or markdown)
+ * 5. Plain text response - Simple factual answers without visual components
+ *
+ * ============================================================================
+ * EXAMPLE 1: PLANET-CARD COMPONENT
+ * ============================================================================
+ *
+ * USE CASE: Queries about specific planets, moons, or celestial bodies
+ * EXAMPLE QUERIES:
+ *   - "Tell me about Jupiter"
+ *   - "What is Mars like?"
+ *   - "Show me information about Saturn"
+ *
+ * RESPONSE FORMAT:
+ * {
+ *   answer: "Jupiter is the largest planet in our Solar System...",
+ *   components: [
+ *     {
+ *       type: "planet-card",
+ *       props: {
+ *         name: "Jupiter",
+ *         description: "The gas giant with the Great Red Spot, a massive storm larger than Earth.",
+ *         diameter: "139,820 km",
+ *         mass: "1.898 × 10²⁷ kg",
+ *         distanceFromSun: "778.5 million km",
+ *         orbitalPeriod: "11.9 Earth years",
+ *         moons: 95,
+ *         imageUrl: "https://example.com/jupiter.jpg" // Optional
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * PROPS INTERFACE (from types/ui-spec.ts):
+ * - name: string (required) - Name of the celestial body
+ * - description: string (required) - Detailed description
+ * - diameter: string (required) - Size measurement
+ * - mass: string (required) - Mass measurement
+ * - distanceFromSun: string (required) - Distance from sun or parent body
+ * - orbitalPeriod: string (required) - Time to complete one orbit
+ * - moons: number (optional) - Number of moons/satellites
+ * - imageUrl: string (optional) - URL to an image of the body
+ *
+ * ============================================================================
+ * EXAMPLE 2: CONSTELLATION COMPONENT
+ * ============================================================================
+ *
+ * USE CASE: Queries about constellations and star patterns
+ * EXAMPLE QUERIES:
+ *   - "Show me the Orion constellation"
+ *   - "Tell me about Ursa Major"
+ *   - "What stars are in Cassiopeia?"
+ *
+ * RESPONSE FORMAT:
+ * {
+ *   answer: "Orion is one of the most recognizable constellations...",
+ *   components: [
+ *     {
+ *       type: "constellation",
+ *       props: {
+ *         name: "Orion",
+ *         abbreviation: "Ori",
+ *         description: "The Hunter constellation, featuring the famous Orion's Belt asterism.",
+ *         brightestStar: "Rigel (β Orionis)",
+ *         visibility: "Visible worldwide, best seen December-March",
+ *         stars: [
+ *           { name: "Rigel", magnitude: 0.13 },
+ *           { name: "Betelgeuse", magnitude: 0.50 },
+ *           { name: "Bellatrix", magnitude: 1.64 },
+ *           { name: "Alnilam", magnitude: 1.69 }
+ *         ]
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * PROPS INTERFACE (from types/ui-spec.ts):
+ * - name: string (required) - Constellation name
+ * - abbreviation: string (required) - Standard 3-letter abbreviation
+ * - description: string (required) - Detailed description
+ * - brightestStar: string (optional) - Name of the brightest star
+ * - visibility: string (required) - When/where it can be seen
+ * - stars: Array<{name: string, magnitude: number}> (required) - List of notable stars
+ *
+ * ============================================================================
+ * EXAMPLE 3: SPACE-TIMELINE COMPONENT
+ * ============================================================================
+ *
+ * USE CASE: Queries about space exploration history, mission timelines, or chronological events
+ * EXAMPLE QUERIES:
+ *   - "History of Mars exploration"
+ *   - "Timeline of Apollo missions"
+ *   - "When was the Hubble telescope launched?"
+ *
+ * RESPONSE FORMAT:
+ * {
+ *   answer: "Mars exploration has a rich history spanning decades...",
+ *   components: [
+ *     {
+ *       type: "space-timeline",
+ *       props: {
+ *         title: "Mars Exploration Timeline",
+ *         events: [
+ *           {
+ *             date: "1965",
+ *             title: "Mariner 4",
+ *             description: "First successful flyby of Mars, returning the first close-up images",
+ *             type: "mission"
+ *           },
+ *           {
+ *             date: "1976",
+ *             title: "Viking 1 & 2",
+ *             description: "First successful Mars landers, conducted experiments searching for life",
+ *             type: "mission"
+ *           },
+ *           {
+ *             date: "2012",
+ *             title: "Curiosity Rover Landing",
+ *             description: "Car-sized rover landed in Gale Crater to study Mars habitability",
+ *             type: "mission"
+ *           },
+ *           {
+ *             date: "2021",
+ *             title: "Perseverance & Ingenuity",
+ *             description: "Rover and first Mars helicopter began operations in Jezero Crater",
+ *             type: "mission"
+ *           }
+ *         ]
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * PROPS INTERFACE (from types/ui-spec.ts):
+ * - title: string (required) - Timeline title
+ * - events: Array (required) - List of chronological events
+ *   - date: string (required) - Date or time period
+ *   - title: string (required) - Event name
+ *   - description: string (required) - Event details
+ *   - type: 'mission' | 'discovery' | 'observation' (optional) - Event category
+ *
+ * ============================================================================
+ * EXAMPLE 4: TEXT-BLOCK COMPONENT
+ * ============================================================================
+ *
+ * USE CASE: Display formatted text content with optional markdown support
+ * EXAMPLE QUERIES:
+ *   - "What is the distance between Earth and Moon?"
+ *   - "Explain black holes"
+ *   - "Tell me about the Big Bang theory"
+ *
+ * RESPONSE FORMAT:
+ * {
+ *   text: "Moon-Earth distance",
+ *   components: [
+ *     {
+ *       type: "text-block",
+ *       props: {
+ *         content: "Distance (center-to-center): average ~384,400 km (238,855 miles).\n\nThis varies due to the Moon's elliptical orbit:\n- Perigee (closest): ~356,500 km\n- Apogee (farthest): ~406,700 km",
+ *         format: "plain"
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * MARKDOWN FORMAT EXAMPLE:
+ * {
+ *   text: "Black holes explained",
+ *   components: [
+ *     {
+ *       type: "text-block",
+ *       props: {
+ *         content: "## What is a Black Hole?\n\nA **black hole** is a region of spacetime where gravity is so strong that nothing can escape.\n\n### Key Properties:\n- *Event Horizon*: The point of no return\n- *Singularity*: Infinite density at the center\n- *Hawking Radiation*: Theoretical radiation emission",
+ *         format: "markdown"
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * PROPS INTERFACE (from types/ui-spec.ts):
+ * - content: string (required) - The text content to display
+ * - format: 'plain' | 'markdown' (optional, default: 'plain') - Text formatting type
+ *
+ * MARKDOWN SUPPORT:
+ * - Headers: ## Header, ### Subheader
+ * - Bold: **text**
+ * - Italic: *text*
+ * - Code: `code`
+ * - Links: [text](url)
+ * - Line breaks: Double newline for paragraphs
+ *
+ * ============================================================================
+ * EXAMPLE 5: PLAIN TEXT RESPONSE (NO COMPONENT)
+ * ============================================================================
+ *
+ * USE CASE: Simple factual queries that don't benefit from visual components
+ * EXAMPLE QUERIES:
+ *   - "How far is the Moon from Earth?"
+ *   - "What is a light year?"
+ *   - "How hot is the Sun's core?"
+ *
+ * RESPONSE FORMAT:
+ * {
+ *   answer: "The Moon orbits Earth at an average distance of 384,400 kilometers (238,855 miles). This distance varies slightly due to the Moon's elliptical orbit, ranging from about 356,500 km at perigee (closest) to 406,700 km at apogee (farthest)."
+ * }
+ *
+ * NOTE: When components array is omitted or empty, only the text answer is displayed.
+ *
+ * ============================================================================
+ * MULTIPLE COMPONENTS EXAMPLE
+ * ============================================================================
+ *
+ * You can return multiple components in a single response. For example, when
+ * asked "What are all the planets in our solar system?", you could return
+ * multiple planet-card components:
+ *
+ * {
+ *   answer: "Our Solar System has 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune.",
+ *   components: [
+ *     { type: "planet-card", props: { name: "Mercury", ... } },
+ *     { type: "planet-card", props: { name: "Venus", ... } },
+ *     { type: "planet-card", props: { name: "Earth", ... } },
+ *     // ... etc
+ *   ]
+ * }
+ *
+ * ============================================================================
+ * IMPLEMENTATION NOTES
+ * ============================================================================
+ *
+ * 1. Always include a text 'answer' field - this is the primary response
+ * 2. Components are optional enhancements to visualize the data
+ * 3. Match component props exactly to the interfaces in types/ui-spec.ts
+ * 4. Use appropriate component types based on the query context
+ * 5. For complex queries, consider combining multiple components
+ * 6. Ensure all required props are provided for each component type
+ * 7. Follow OWASP security standards - validate and sanitize all data
+ *
+ * ============================================================================
+ */
+
+/**
  * API Error response interface
  */
 interface ApiErrorResponse {

@@ -10,6 +10,7 @@ import MetricGrid from './dynamic/MetricGrid';
 import PlanetCard from './dynamic/PlanetCard';
 import Constellation from './dynamic/Constellation';
 import SpaceTimeline from './dynamic/SpaceTimeline';
+import TextBlock from './dynamic/TextBlock';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
@@ -23,8 +24,19 @@ interface DynamicUIRendererProps {
  * Langflow agent to dynamically compose UIs from safe building blocks.
  */
 export default function DynamicUIRenderer({ components }: DynamicUIRendererProps) {
+  console.log('[DynamicUIRenderer] Rendering components:', {
+    count: components.length,
+    types: components.map(c => c.type),
+  });
+
   const renderComponent = (spec: ComponentSpec, index: number) => {
     const key = spec.id || `${spec.type}-${index}`;
+    console.log('[DynamicUIRenderer] Rendering component:', {
+      type: spec.type,
+      index,
+      hasProps: !!spec.props,
+      propsKeys: spec.props ? Object.keys(spec.props) : [],
+    });
 
     try {
       switch (spec.type) {
@@ -113,14 +125,11 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
 
         case 'text-block':
           return (
-            <div
+            <TextBlock
               key={key}
-              className="p-4 bg-[#0a0e27] border-2 border-[#4169E1]/30 rounded pixel-border"
-            >
-              <p className="font-pixel text-xs text-white whitespace-pre-wrap leading-relaxed">
-                {spec.props.content}
-              </p>
-            </div>
+              content={spec.props.content}
+              format={spec.props.format}
+            />
           );
 
         case 'planet-card':
