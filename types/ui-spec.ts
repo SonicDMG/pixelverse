@@ -120,6 +120,10 @@ export interface PlanetCardSpec extends UIComponentSpec {
     orbitalPeriod: string;
     moons?: number;
     imageUrl?: string;
+    // Phase 3 enhancement: Dynamic image generation
+    planetType?: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf';
+    enableImageGeneration?: boolean;
+    generatedImageUrl?: string;
   };
 }
 

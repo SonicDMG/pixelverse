@@ -144,6 +144,10 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
               orbitalPeriod={spec.props.orbitalPeriod}
               moons={spec.props.moons}
               imageUrl={spec.props.imageUrl}
+              // Phase 3 enhancement: Dynamic image generation props
+              planetType={spec.props.planetType}
+              enableImageGeneration={spec.props.enableImageGeneration}
+              generatedImageUrl={spec.props.generatedImageUrl}
             />
           );
 
