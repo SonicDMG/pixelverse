@@ -105,8 +105,8 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       'Show me AAPL stock price with metrics',
       'Compare TSLA vs NVDA performance over time',
       'Display MSFT key financial metrics in a grid',
-      'Show me a comparison table of AAPL and GOOGL',
-      'Analyze AMZN stock data with visualizations',
+      'Show me trading data for IBM',
+      'What are the latest financial trends?',
     ],
   },
   
