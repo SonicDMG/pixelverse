@@ -96,6 +96,7 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
   const {
     name,
     description,
+    visualDescription,
     bodyType,
     diameter,
     mass,
@@ -174,29 +175,30 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
     setGenerationError(null);
 
     try {
-      // Create visual-focused description for image generation
-      // Extract only visual characteristics, not historical/scientific facts
-      let visualDesc = name;
+      // Use visualDescription if provided, otherwise build from available data
+      let visualDesc = visualDescription || name;
       
-      // Add visual characteristics based on body type
-      if (bodyType === 'planet') {
-        visualDesc = `${name} planet`;
-        if (planetType) visualDesc += `, ${planetType}`;
-      } else if (bodyType === 'moon') {
-        visualDesc = `${name} moon`;
-        if (parentBody) visualDesc += ` of ${parentBody}`;
-      } else if (bodyType === 'star') {
-        visualDesc = `${name} star`;
-        if (spectralClass) visualDesc += `, ${spectralClass} class`;
-      } else if (bodyType === 'galaxy') {
-        visualDesc = `${name}`;
-        if (galaxyType) visualDesc += `, ${galaxyType} galaxy`;
-      } else if (bodyType === 'black-hole') {
-        visualDesc = `${name} black hole`;
-        if (blackHoleType) visualDesc += `, ${blackHoleType}`;
-      } else if (bodyType === 'nebula') {
-        visualDesc = `${name} nebula`;
-        if (nebulaType) visualDesc += `, ${nebulaType}`;
+      if (!visualDescription) {
+        // Fallback: Add visual characteristics based on body type
+        if (bodyType === 'planet') {
+          visualDesc = `${name} planet`;
+          if (planetType) visualDesc += `, ${planetType}`;
+        } else if (bodyType === 'moon') {
+          visualDesc = `${name} moon`;
+          if (parentBody) visualDesc += ` of ${parentBody}`;
+        } else if (bodyType === 'star') {
+          visualDesc = `${name} star`;
+          if (spectralClass) visualDesc += `, ${spectralClass} class`;
+        } else if (bodyType === 'galaxy') {
+          visualDesc = `${name}`;
+          if (galaxyType) visualDesc += `, ${galaxyType} galaxy`;
+        } else if (bodyType === 'black-hole') {
+          visualDesc = `${name} black hole`;
+          if (blackHoleType) visualDesc += `, ${blackHoleType}`;
+        } else if (bodyType === 'nebula') {
+          visualDesc = `${name} nebula`;
+          if (nebulaType) visualDesc += `, ${nebulaType}`;
+        }
       }
       
       const requestBody = {

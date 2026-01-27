@@ -133,6 +133,8 @@ export interface CelestialBodyCardSpec extends UIComponentSpec {
     // Universal properties (all celestial bodies)
     name: string;
     description: string;
+    /** Visual characteristics only (colors, size, appearance) - used for image generation */
+    visualDescription?: string;
     bodyType: 'planet' | 'moon' | 'star' | 'galaxy' | 'black-hole' | 'nebula';
     
     // Physical properties (conditional based on bodyType)
