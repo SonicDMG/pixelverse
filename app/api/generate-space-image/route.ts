@@ -24,6 +24,7 @@ import { SpacePromptBuilder } from '@/services/space/prompt-builder';
  */
 interface GenerateImageRequest {
   objectType: 'planet' | 'constellation' | 'celestial';
+  name?: string;
   description: string;
   planetType?: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf';
   celestialType?: 'moon' | 'star' | 'galaxy' | 'nebula' | 'black-hole';
@@ -110,10 +111,20 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
     }
   }
 
+  // Validate name if provided
+  let sanitizedName: string | undefined;
+  if (req.name && typeof req.name === 'string') {
+    const trimmedName = req.name.trim();
+    if (trimmedName.length > 0 && trimmedName.length <= 100) {
+      sanitizedName = trimmedName.replace(/[\x00-\x1F\x7F]/g, '');
+    }
+  }
+
   return {
     valid: true,
     data: {
       objectType: req.objectType,
+      name: sanitizedName,
       description: sanitizedDescription,
       planetType: req.planetType,
       celestialType: req.celestialType,
@@ -127,24 +138,58 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
  * Build appropriate prompt based on object type and parameters
  */
 function buildPrompt(request: GenerateImageRequest): string {
-  const { objectType, description, planetType, celestialType, style } = request;
+  const { objectType, name: providedName, description, planetType, celestialType, style } = request;
 
-  // Extract name from description (first word or phrase before comma/period)
-  const name = description.split(/[,.]/).shift()?.trim() || 'Unknown';
+  // Use provided name if available, otherwise extract from description
+  const name = providedName || description.split(/[,.]/).shift()?.trim() || 'Unknown';
 
   switch (objectType) {
     case 'planet':
-        // Check if this is a known solar system planet
-        const supportedPlanets = SpacePromptBuilder.getSupportedPlanets();
-        // Extract just the planet name (first word) for matching
+      // Check if this is a known solar system planet
+      const supportedPlanets = SpacePromptBuilder.getSupportedPlanets();
+      
+      // Try to find a matching planet name
+      // Priority: 1) provided name field, 2) description
+      let matchedPlanet: string | null = null;
+      
+      // First, check the provided name field if available
+      if (providedName) {
+        const planetNameOnly = providedName.split(/\s+/)[0];
+        const normalizedName = planetNameOnly.toLowerCase();
+        
+        if (supportedPlanets.includes(normalizedName)) {
+          matchedPlanet = planetNameOnly;
+          console.log(`[Generate Space Image API] Matched planet from name field: ${matchedPlanet}`);
+        }
+      }
+      
+      // If not found in name field, search the description
+      if (!matchedPlanet) {
+        // Check if the extracted name (first word of description) matches
         const planetNameOnly = name.split(/\s+/)[0];
         const normalizedName = planetNameOnly.toLowerCase();
         
         if (supportedPlanets.includes(normalizedName)) {
-          // Use scientifically accurate prompt for known planets
-          console.log(`[Generate Space Image API] Using accurate prompt for planet: ${planetNameOnly}`);
-          return SpacePromptBuilder.buildAccuratePlanetPrompt(planetNameOnly);
+          matchedPlanet = planetNameOnly;
+        } else {
+          // If not found, search the entire description for any planet name
+          const descLower = description.toLowerCase();
+          for (const planet of supportedPlanets) {
+            // Use word boundary regex to match whole words only
+            const regex = new RegExp(`\\b${planet}\\b`, 'i');
+            if (regex.test(descLower)) {
+              matchedPlanet = planet.charAt(0).toUpperCase() + planet.slice(1);
+              break;
+            }
+          }
         }
+      }
+      
+      if (matchedPlanet) {
+        // Use scientifically accurate prompt for known planets
+        console.log(`[Generate Space Image API] Using accurate prompt for solar system planet: ${matchedPlanet}`);
+        return SpacePromptBuilder.buildAccuratePlanetPrompt(matchedPlanet);
+      }
       
       // For exoplanets or unknown planets, parse details from description
       console.log(`[Generate Space Image API] Using generic prompt for exoplanet: ${name}`);
@@ -205,14 +250,34 @@ function buildPrompt(request: GenerateImageRequest): string {
       // Check for known moons if type is moon
       if (determinedCelestialType === 'moon') {
         const supportedMoons = SpacePromptBuilder.getSupportedMoons();
-        // Extract just the moon name (first word) for matching
-        const moonNameOnly = name.split(/\s+/)[0];
-        const normalizedMoonName = moonNameOnly.toLowerCase();
         
-        if (supportedMoons.includes(normalizedMoonName)) {
+        // Try to match moon name - prioritize provided name field
+        let matchedMoon: string | null = null;
+        
+        if (providedName) {
+          const moonNameOnly = providedName.split(/\s+/)[0];
+          const normalizedMoonName = moonNameOnly.toLowerCase();
+          
+          if (supportedMoons.includes(normalizedMoonName)) {
+            matchedMoon = moonNameOnly;
+            console.log(`[Generate Space Image API] Matched moon from name field: ${matchedMoon}`);
+          }
+        }
+        
+        // If not found in name field, try extracting from description
+        if (!matchedMoon) {
+          const moonNameOnly = name.split(/\s+/)[0];
+          const normalizedMoonName = moonNameOnly.toLowerCase();
+          
+          if (supportedMoons.includes(normalizedMoonName)) {
+            matchedMoon = moonNameOnly;
+          }
+        }
+        
+        if (matchedMoon) {
           // Use scientifically accurate prompt for known moons
-          console.log(`[Generate Space Image API] Using accurate prompt for moon: ${moonNameOnly}`);
-          return SpacePromptBuilder.buildAccurateMoonPrompt(moonNameOnly);
+          console.log(`[Generate Space Image API] Using accurate prompt for moon: ${matchedMoon}`);
+          return SpacePromptBuilder.buildAccurateMoonPrompt(matchedMoon);
         }
       }
 
@@ -240,8 +305,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('[Generate Space Image API] Request body:', {
       objectType: body.objectType,
+      name: body.name,
       descriptionLength: body.description?.length,
       planetType: body.planetType,
+      celestialType: body.celestialType,
       style: body.style,
       hasSeed: !!body.seed,
     });

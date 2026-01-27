@@ -304,7 +304,7 @@ export default function Home() {
                   disabled={!isReady}
                   className={`flex-1 px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                     isPlaying
-                      ? `bg-[#1a1f3a] text-[#0a0e27]`
+                      ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
                       : 'bg-[#0a0e27] border-gray-600 text-gray-500'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                   title={isPlaying ? "Stop background music" : "Play background music"}
@@ -319,7 +319,7 @@ export default function Home() {
                     disabled={!isVoiceSupported}
                     className={`flex-1 px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                       isVoiceEnabled
-                        ? `bg-[#1a1f3a] text-[#0a0e27]`
+                        ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
                         : 'bg-[#0a0e27] border-gray-600 text-gray-500'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                     title={isVoiceEnabled ? "Disable voice announcements" : "Enable voice announcements"}
@@ -435,7 +435,7 @@ export default function Home() {
                       disabled={!isReady}
                       className={`w-full px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                         isPlaying
-                          ? `bg-[#1a1f3a] text-[#0a0e27]`
+                          ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
                           : 'bg-[#0a0e27] border-gray-600 text-gray-500'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                       title={isPlaying ? "Stop background music" : "Play background music"}
@@ -476,7 +476,7 @@ export default function Home() {
                         disabled={!isVoiceSupported}
                         className={`w-full px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                           isVoiceEnabled
-                            ? `bg-[#1a1f3a] text-[#0a0e27]`
+                            ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
                             : 'bg-[#0a0e27] border-gray-600 text-gray-500'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                         title={isVoiceEnabled ? "Disable voice announcements" : "Enable voice announcements"}

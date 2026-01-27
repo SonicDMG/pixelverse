@@ -203,6 +203,7 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
       
       const requestBody = {
         objectType: bodyType === 'planet' ? 'planet' : 'celestial',
+        name: name,
         description: visualDesc,
         planetType: bodyType === 'planet' ? (planetType || 'terrestrial') : undefined,
         celestialType: bodyType !== 'planet' ? bodyType : undefined,

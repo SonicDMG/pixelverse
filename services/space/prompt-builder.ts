@@ -138,7 +138,7 @@ export class SpacePromptBuilder {
       '32-bit pixel art',
       'retro space game aesthetic',
       'SNES/Genesis style',
-      `planet ${planetName}`,
+      `planet named ${planetName}`,
       ...planetData.features,
       `with ${planetData.colors.join(', ')} colors`,
       'centered composition',
