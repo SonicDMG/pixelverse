@@ -617,7 +617,7 @@ export default function Home() {
           />
           
           <p className="text-xs text-gray-500 font-pixel">
-            2026 {theme.name.toUpperCase()} | POWERED BY OPENRAG
+            2026 {theme.name.toUpperCase()} | POWERED BY {appMode === 'ticker' ? 'LANGFLOW' : 'OPENRAG'}
           </p>
         </footer>
       </div>
