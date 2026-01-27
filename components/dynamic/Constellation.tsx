@@ -27,6 +27,7 @@ interface ConstellationProps {
   visibility: string;
   stars: Star[];
   lines?: ConstellationLine[];
+  onStarClick?: (star: Star) => void;
 }
 
 export default function Constellation({
@@ -37,8 +38,18 @@ export default function Constellation({
   visibility,
   stars,
   lines = [],
+  onStarClick,
 }: ConstellationProps) {
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
+  const [clickedStar, setClickedStar] = useState<number | null>(null);
+
+  // Handle star click
+  const handleStarClick = (index: number) => {
+    setClickedStar(index);
+    if (onStarClick) {
+      onStarClick(starsWithCoords[index]);
+    }
+  };
 
   // Auto-calculate coordinates from RA/Dec if not provided
   const starsWithCoords = useMemo(() => {
@@ -210,8 +221,10 @@ export default function Constellation({
                   className="flex items-center justify-between p-2 bg-[#0a0e27]/80 border border-[#4169E1]/20 rounded hover:border-[#00CED1]/50 transition-colors cursor-pointer"
                   onMouseEnter={() => setHoveredStar(index)}
                   onMouseLeave={() => setHoveredStar(null)}
+                  onClick={() => handleStarClick(index)}
                   style={{
-                    borderColor: hoveredStar === index ? '#00CED1' : undefined,
+                    borderColor: clickedStar === index ? '#FFD700' : hoveredStar === index ? '#00CED1' : undefined,
+                    backgroundColor: clickedStar === index ? 'rgba(255, 215, 0, 0.1)' : undefined,
                   }}
                 >
                   <div className="flex items-center gap-2">
@@ -300,11 +313,39 @@ export default function Constellation({
                     const radius = getStarRadius(star);
                     const color = getStarColor(star);
                     const isHovered = hoveredStar === index;
+                    const isClicked = clickedStar === index;
 
                     return (
                       <g key={index}>
-                        {/* Glow effect */}
-                        {isHovered && (
+                        {/* Pulsing ring for clicked star */}
+                        {isClicked && (
+                          <>
+                            <circle
+                              cx={star.x}
+                              cy={star.y}
+                              r={radius * 4}
+                              fill="none"
+                              stroke="#FFD700"
+                              strokeWidth="2"
+                              opacity="0.6"
+                              className="animate-pulse"
+                            />
+                            <circle
+                              cx={star.x}
+                              cy={star.y}
+                              r={radius * 5}
+                              fill="none"
+                              stroke="#FFD700"
+                              strokeWidth="1"
+                              opacity="0.3"
+                              className="animate-pulse"
+                              style={{ animationDelay: '0.15s' }}
+                            />
+                          </>
+                        )}
+                        
+                        {/* Glow effect for hover */}
+                        {isHovered && !isClicked && (
                           <circle
                             cx={star.x}
                             cy={star.y}
@@ -323,16 +364,17 @@ export default function Constellation({
                           fill={color}
                           className="cursor-pointer transition-all duration-200"
                           style={{
-                            filter: isHovered ? 'brightness(1.5)' : 'brightness(1)',
-                            transform: isHovered ? 'scale(1.2)' : 'scale(1)',
+                            filter: isClicked ? 'brightness(1.8)' : isHovered ? 'brightness(1.5)' : 'brightness(1)',
+                            transform: isClicked ? 'scale(1.3)' : isHovered ? 'scale(1.2)' : 'scale(1)',
                             transformOrigin: `${star.x}px ${star.y}px`,
                           }}
                           onMouseEnter={() => setHoveredStar(index)}
                           onMouseLeave={() => setHoveredStar(null)}
+                          onClick={() => handleStarClick(index)}
                         />
 
-                        {/* Star label on hover */}
-                        {isHovered && (
+                        {/* Star label on hover or click */}
+                        {(isHovered || isClicked) && (
                           <text
                             x={star.x}
                             y={star.y - radius - 8}

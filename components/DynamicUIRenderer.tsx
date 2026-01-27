@@ -15,16 +15,17 @@ import TextBlock from './dynamic/TextBlock';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
+  onSetQuestion?: (question: string) => void;
 }
 
 /**
  * DynamicUIRenderer - Safe component registry for rendering agent-generated UI
- * 
+ *
  * This component acts as a whitelist registry, only rendering pre-approved components
  * with validated props. This prevents arbitrary code execution while allowing the
  * Langflow agent to dynamically compose UIs from safe building blocks.
  */
-export default function DynamicUIRenderer({ components }: DynamicUIRendererProps) {
+export default function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRendererProps) {
   console.log('[DynamicUIRenderer] Rendering components:', {
     count: components.length,
     types: components.map(c => c.type),
@@ -163,6 +164,11 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
               visibility={spec.props.visibility}
               stars={spec.props.stars}
               lines={spec.props.lines}
+              onStarClick={onSetQuestion ? (star) => {
+                // Extract star name, removing designation in parentheses if present
+                const starName = star.name.split('(')[0].trim();
+                onSetQuestion(`Tell me about ${starName}`);
+              } : undefined}
             />
           );
 

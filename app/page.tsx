@@ -30,6 +30,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [question, setQuestion] = useState('');
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   
   // Use MP3 background music
@@ -82,7 +83,7 @@ export default function Home() {
     setError(null);
   }, [appMode]);
 
-  const handleQuestion = useCallback(async (question: string) => {
+  const handleQuestion = useCallback(async (questionText: string) => {
     // Announce request submission with voice
     if (isVoiceSupported) {
       announce('Processing your request', 'info').catch(err =>
@@ -102,7 +103,7 @@ export default function Home() {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: question,
+      content: questionText,
       timestamp: new Date(),
     };
 
@@ -120,7 +121,7 @@ export default function Home() {
     try {
       console.log('[Home] Sending request to:', theme.apiEndpoint);
       const response = await axios.post<StockQueryResult>(theme.apiEndpoint, {
-        question,
+        question: questionText,
       });
 
       const result = response.data;
@@ -156,6 +157,7 @@ export default function Home() {
       };
 
       setConversationGroups(prev => [...prev, newGroup]);
+      setQuestion(''); // Clear the question input after successful submission
       requestSuccessful = true;
 
       // Announce completion
@@ -574,6 +576,7 @@ export default function Home() {
                   components={group.components}
                   stockData={group.stockData}
                   symbol={group.symbol}
+                  onSetQuestion={setQuestion}
                 />
               </ErrorBoundary>
             ))}
@@ -582,7 +585,13 @@ export default function Home() {
 
         {/* Question Input - Fixed above footer */}
         <div className="flex-shrink-0 bg-[#0a0e27]/95 p-4 mt-4 border-t-4 pixel-border backdrop-blur-sm" style={{ borderColor: theme.colors.primary }}>
-          <QuestionInput key={appMode} onSubmit={handleQuestion} loadingStatus={loadingStatus} />
+          <QuestionInput
+            key={appMode}
+            onSubmit={handleQuestion}
+            loadingStatus={loadingStatus}
+            question={question}
+            setQuestion={setQuestion}
+          />
         </div>
 
         {/* Footer */}

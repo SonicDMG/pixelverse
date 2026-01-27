@@ -10,6 +10,7 @@ interface ConversationGroupProps {
   components?: ComponentSpec[];
   stockData?: any[];
   symbol?: string;
+  onSetQuestion?: (question: string) => void;
 }
 
 /**
@@ -22,6 +23,7 @@ export default function ConversationGroup({
   components,
   stockData,
   symbol,
+  onSetQuestion,
 }: ConversationGroupProps) {
   const { theme } = useTheme();
   
@@ -69,7 +71,7 @@ export default function ConversationGroup({
       {/* UI Components or Charts */}
       {components && components.length > 0 && (
         <div className="animate-fade-in mt-6">
-          <DynamicUIRenderer components={components} />
+          <DynamicUIRenderer components={components} onSetQuestion={onSetQuestion} />
         </div>
       )}
 

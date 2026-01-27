@@ -7,6 +7,7 @@ import mockResponse from './mock-response.json';
 
 export default function TestConstellationPage() {
   const [response] = useState<UIResponse>(mockResponse as UIResponse);
+  const [clickedQuestion, setClickedQuestion] = useState<string>('');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a1f3a] to-[#0a0e27] p-8">
@@ -36,6 +37,21 @@ export default function TestConstellationPage() {
           </p>
         </div>
 
+        {/* Clicked Star Question Display */}
+        {clickedQuestion && (
+          <div className="p-6 bg-[#1a1f3a] border-2 border-[#FFD700] rounded-lg pixel-border">
+            <h2 className="text-xl font-pixel text-[#FFD700] mb-3 uppercase">
+              Star Click Demo:
+            </h2>
+            <p className="font-pixel text-sm text-gray-300 leading-relaxed">
+              Question generated: <span className="text-[#00CED1]">{clickedQuestion}</span>
+            </p>
+            <p className="font-pixel text-xs text-gray-400 mt-2">
+              (In the main app, this would populate the question input and you could submit it)
+            </p>
+          </div>
+        )}
+
         {/* Dynamic UI Components */}
         <div className="space-y-6">
           <h2 className="text-2xl font-pixel text-[#9370DB] uppercase tracking-wide flex items-center gap-3">
@@ -43,7 +59,10 @@ export default function TestConstellationPage() {
             <span>Rendered Components</span>
             <span>✦</span>
           </h2>
-          <DynamicUIRenderer components={response.components || []} />
+          <DynamicUIRenderer
+            components={response.components || []}
+            onSetQuestion={setClickedQuestion}
+          />
         </div>
 
         {/* Info Box */}
@@ -54,7 +73,8 @@ export default function TestConstellationPage() {
           <div className="space-y-2 text-sm font-pixel text-gray-400">
             <p>• This page demonstrates the Constellation component with Orion data</p>
             <p>• Star magnitudes are visually represented (lower = brighter)</p>
-            <p>• The component includes the constellation's brightest stars and visibility info</p>
+            <p>• Click on any star to generate a "Tell me about..." question</p>
+            <p>• In the main app, clicking a star populates the question input</p>
             <p>• Hover effects and animations enhance the space theme</p>
           </div>
         </div>

@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import { LoadingStatus } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface QuestionInputProps {
   onSubmit: (question: string) => void;
   loadingStatus: LoadingStatus;
+  question: string;
+  setQuestion: (question: string) => void;
 }
 
-export default function QuestionInput({ onSubmit, loadingStatus }: QuestionInputProps) {
+export default function QuestionInput({ onSubmit, loadingStatus, question, setQuestion }: QuestionInputProps) {
   const { theme } = useTheme();
-  const [question, setQuestion] = useState('');
   const isLoading = loadingStatus !== null && loadingStatus !== 'done';
 
   const handleSubmit = (e: React.FormEvent) => {
