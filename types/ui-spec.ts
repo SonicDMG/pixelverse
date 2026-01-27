@@ -127,6 +127,56 @@ export interface PlanetCardSpec extends UIComponentSpec {
   };
 }
 
+export interface CelestialBodyCardSpec extends UIComponentSpec {
+  type: 'celestial-body-card';
+  props: {
+    // Universal properties (all celestial bodies)
+    name: string;
+    description: string;
+    bodyType: 'planet' | 'moon' | 'star' | 'galaxy' | 'black-hole' | 'nebula';
+    
+    // Physical properties (conditional based on bodyType)
+    diameter?: string;
+    mass?: string;
+    
+    // Orbital properties (planets & moons)
+    distanceFrom?: string;        // Replaces distanceFromSun - more generic
+    distanceFromLabel?: string;   // e.g., "Distance from Sun", "Distance from Earth"
+    orbitalPeriod?: string;
+    parentBody?: string;          // e.g., "Earth" for Moon, "Jupiter" for Io
+    
+    // Satellite properties (planets & stars)
+    satellites?: number;          // Replaces moons - more generic
+    satelliteLabel?: string;      // e.g., "Moons", "Planets", "Star Systems"
+    
+    // Star-specific properties
+    spectralClass?: string;       // e.g., "G2V" for Sun
+    luminosity?: string;          // e.g., "1 L☉"
+    temperature?: string;         // e.g., "5,778 K"
+    
+    // Galaxy-specific properties
+    galaxyType?: string;          // e.g., "Spiral", "Elliptical", "Irregular"
+    starCount?: string;           // e.g., "200-400 billion stars"
+    distanceFromEarth?: string;   // For extragalactic objects
+    
+    // Black hole-specific properties
+    blackHoleType?: string;       // e.g., "Stellar", "Supermassive", "Intermediate"
+    eventHorizonRadius?: string;  // Schwarzschild radius
+    
+    // Nebula-specific properties
+    nebulaType?: string;          // e.g., "Emission", "Reflection", "Planetary", "Supernova Remnant"
+    
+    // Image generation (existing)
+    imageUrl?: string;
+    enableImageGeneration?: boolean;
+    generatedImageUrl?: string;
+    
+    // Type-specific generation hints
+    planetType?: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf';
+    starType?: 'main-sequence' | 'red-giant' | 'white-dwarf' | 'neutron-star';
+  };
+}
+
 export interface ConstellationSpec extends UIComponentSpec {
   type: 'constellation';
   props: {
@@ -201,6 +251,7 @@ export type ComponentSpec =
   | AlertBoxSpec
   | TextBlockSpec
   | PlanetCardSpec
+  | CelestialBodyCardSpec
   | ConstellationSpec
   | SpaceTimelineSpec
   | SolarSystemSpec;

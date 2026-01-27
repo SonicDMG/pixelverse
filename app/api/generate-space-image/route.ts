@@ -26,6 +26,7 @@ interface GenerateImageRequest {
   objectType: 'planet' | 'constellation' | 'celestial';
   description: string;
   planetType?: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf';
+  celestialType?: 'moon' | 'star' | 'galaxy';
   style?: 'pixel-art' | 'realistic';
   seed?: number;
 }
@@ -86,6 +87,14 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
     }
   }
 
+  // Validate celestialType if provided
+  if (req.celestialType) {
+    const validCelestialTypes = ['moon', 'star', 'galaxy'];
+    if (!validCelestialTypes.includes(req.celestialType)) {
+      return { valid: false, error: `celestialType must be one of: ${validCelestialTypes.join(', ')}` };
+    }
+  }
+
   // Validate style if provided
   if (req.style) {
     const validStyles = ['pixel-art', 'realistic'];
@@ -107,6 +116,7 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
       objectType: req.objectType,
       description: sanitizedDescription,
       planetType: req.planetType,
+      celestialType: req.celestialType,
       style: req.style || 'pixel-art',
       seed: req.seed,
     },
@@ -117,7 +127,7 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
  * Build appropriate prompt based on object type and parameters
  */
 function buildPrompt(request: GenerateImageRequest): string {
-  const { objectType, description, planetType, style } = request;
+  const { objectType, description, planetType, celestialType, style } = request;
 
   // Extract name from description (first word or phrase before comma/period)
   const name = description.split(/[,.]/).shift()?.trim() || 'Unknown';
@@ -176,13 +186,22 @@ function buildPrompt(request: GenerateImageRequest): string {
       return SpacePromptBuilder.buildConstellationPrompt(name, starCount);
 
     case 'celestial':
-      // Determine celestial type from description
-      let celestialType: 'moon' | 'star' | 'nebula' | 'galaxy' = 'star';
+      // Use provided celestialType or determine from description
+      let determinedCelestialType: 'moon' | 'star' | 'nebula' | 'galaxy' = celestialType || 'star';
       
-      if (description.toLowerCase().includes('moon')) {
-        celestialType = 'moon';
-        
-        // Check if this is a known moon
+      // If celestialType not provided, try to determine from description
+      if (!celestialType) {
+        if (description.toLowerCase().includes('moon')) {
+          determinedCelestialType = 'moon';
+        } else if (description.toLowerCase().includes('nebula')) {
+          determinedCelestialType = 'nebula';
+        } else if (description.toLowerCase().includes('galaxy')) {
+          determinedCelestialType = 'galaxy';
+        }
+      }
+      
+      // Check for known moons if type is moon
+      if (determinedCelestialType === 'moon') {
         const supportedMoons = SpacePromptBuilder.getSupportedMoons();
         const normalizedMoonName = name.toLowerCase();
         
@@ -191,14 +210,10 @@ function buildPrompt(request: GenerateImageRequest): string {
           console.log(`[Generate Space Image API] Using accurate prompt for moon: ${name}`);
           return SpacePromptBuilder.buildAccurateMoonPrompt(name);
         }
-      } else if (description.toLowerCase().includes('nebula')) {
-        celestialType = 'nebula';
-      } else if (description.toLowerCase().includes('galaxy')) {
-        celestialType = 'galaxy';
       }
 
       return SpacePromptBuilder.buildGenericCelestialPrompt(
-        celestialType,
+        determinedCelestialType,
         name,
         description
       );

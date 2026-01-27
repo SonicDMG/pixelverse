@@ -7,7 +7,7 @@ import DataTable from './dynamic/DataTable';
 import ComparisonTable from './dynamic/ComparisonTable';
 import MetricCard from './dynamic/MetricCard';
 import MetricGrid from './dynamic/MetricGrid';
-import PlanetCard from './dynamic/PlanetCard';
+import CelestialBodyCard from './dynamic/CelestialBodyCard';
 import Constellation from './dynamic/Constellation';
 import SpaceTimeline from './dynamic/SpaceTimeline';
 import SolarSystem from './dynamic/SolarSystem';
@@ -134,22 +134,11 @@ export default function DynamicUIRenderer({ components, onSetQuestion }: Dynamic
             />
           );
 
-        case 'planet-card':
+        case 'celestial-body-card':
           return (
-            <PlanetCard
+            <CelestialBodyCard
               key={key}
-              name={spec.props.name}
-              description={spec.props.description}
-              diameter={spec.props.diameter}
-              mass={spec.props.mass}
-              distanceFromSun={spec.props.distanceFromSun}
-              orbitalPeriod={spec.props.orbitalPeriod}
-              moons={spec.props.moons}
-              imageUrl={spec.props.imageUrl}
-              // Phase 3 enhancement: Dynamic image generation props
-              planetType={spec.props.planetType}
-              enableImageGeneration={spec.props.enableImageGeneration}
-              generatedImageUrl={spec.props.generatedImageUrl}
+              {...spec.props}
             />
           );
 

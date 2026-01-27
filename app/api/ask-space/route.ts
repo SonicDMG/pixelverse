@@ -12,51 +12,147 @@ import { queryLangflow } from '@/services/langflow';
  *
  * AVAILABLE COMPONENT TYPES:
  *
- * 1. planet-card - Display detailed information about planets, moons, or other celestial bodies
+ * 1. celestial-body-card - Display detailed information about planets, moons, stars, or galaxies
  * 2. constellation - Show constellation information with star data
  * 3. space-timeline - Display chronological space events (missions, discoveries, observations)
  * 4. text-block - Display formatted text content (plain or markdown)
  * 5. Plain text response - Simple factual answers without visual components
  *
  * ============================================================================
- * EXAMPLE 1: PLANET-CARD COMPONENT
+ * EXAMPLE 1: CELESTIAL-BODY-CARD COMPONENT
  * ============================================================================
  *
- * USE CASE: Queries about specific planets, moons, or celestial bodies
+ * USE CASE: Queries about specific celestial bodies (planets, moons, stars, galaxies)
  * EXAMPLE QUERIES:
- *   - "Tell me about Jupiter"
- *   - "What is Mars like?"
- *   - "Show me information about Saturn"
+ *   - "Tell me about Jupiter" (planet)
+ *   - "What is the Moon like?" (moon)
+ *   - "Show me information about the Sun" (star)
+ *   - "Describe the Andromeda Galaxy" (galaxy)
  *
- * RESPONSE FORMAT:
+ * RESPONSE FORMAT (Planet Example):
  * {
  *   answer: "Jupiter is the largest planet in our Solar System...",
  *   components: [
  *     {
- *       type: "planet-card",
+ *       type: "celestial-body-card",
  *       props: {
  *         name: "Jupiter",
+ *         bodyType: "planet",
  *         description: "The gas giant with the Great Red Spot, a massive storm larger than Earth.",
  *         diameter: "139,820 km",
  *         mass: "1.898 × 10²⁷ kg",
- *         distanceFromSun: "778.5 million km",
+ *         distanceFrom: "778.5 million km",
+ *         distanceFromLabel: "Distance from Sun",
  *         orbitalPeriod: "11.9 Earth years",
- *         moons: 95,
- *         imageUrl: "https://example.com/jupiter.jpg" // Optional
+ *         satellites: 95,
+ *         satelliteLabel: "Moons",
+ *         planetType: "gas-giant",
+ *         enableImageGeneration: true
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * RESPONSE FORMAT (Moon Example):
+ * {
+ *   answer: "The Moon is Earth's only natural satellite...",
+ *   components: [
+ *     {
+ *       type: "celestial-body-card",
+ *       props: {
+ *         name: "The Moon",
+ *         bodyType: "moon",
+ *         description: "Earth's only natural satellite and the fifth largest moon in the solar system.",
+ *         diameter: "3,474 km",
+ *         mass: "7.34 × 10²² kg",
+ *         distanceFrom: "384,400 km",
+ *         distanceFromLabel: "Distance from Earth",
+ *         orbitalPeriod: "27.3 Earth days",
+ *         parentBody: "Earth",
+ *         enableImageGeneration: true
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * RESPONSE FORMAT (Star Example):
+ * {
+ *   answer: "The Sun is the star at the center of our Solar System...",
+ *   components: [
+ *     {
+ *       type: "celestial-body-card",
+ *       props: {
+ *         name: "The Sun",
+ *         bodyType: "star",
+ *         description: "A G-type main-sequence star that contains 99.86% of the Solar System's mass.",
+ *         diameter: "1.39 million km",
+ *         mass: "1.989 × 10³⁰ kg",
+ *         spectralClass: "G2V",
+ *         temperature: "5,778 K",
+ *         luminosity: "1 L☉",
+ *         satellites: 8,
+ *         satelliteLabel: "Planets",
+ *         starType: "main-sequence",
+ *         enableImageGeneration: true
+ *       }
+ *     }
+ *   ]
+ * }
+ *
+ * RESPONSE FORMAT (Galaxy Example):
+ * {
+ *   answer: "The Andromeda Galaxy is the nearest major galaxy to the Milky Way...",
+ *   components: [
+ *     {
+ *       type: "celestial-body-card",
+ *       props: {
+ *         name: "Andromeda Galaxy",
+ *         bodyType: "galaxy",
+ *         description: "The nearest major galaxy to the Milky Way, on a collision course with our galaxy.",
+ *         galaxyType: "Spiral",
+ *         diameter: "220,000 light-years",
+ *         starCount: "1 trillion stars",
+ *         distanceFromEarth: "2.537 million light-years",
+ *         enableImageGeneration: true
  *       }
  *     }
  *   ]
  * }
  *
  * PROPS INTERFACE (from types/ui-spec.ts):
+ * UNIVERSAL (all body types):
  * - name: string (required) - Name of the celestial body
+ * - bodyType: 'planet' | 'moon' | 'star' | 'galaxy' (required) - Type of celestial body
  * - description: string (required) - Detailed description
- * - diameter: string (required) - Size measurement
- * - mass: string (required) - Mass measurement
- * - distanceFromSun: string (required) - Distance from sun or parent body
- * - orbitalPeriod: string (required) - Time to complete one orbit
- * - moons: number (optional) - Number of moons/satellites
- * - imageUrl: string (optional) - URL to an image of the body
+ * - enableImageGeneration: boolean (optional) - Auto-generate AI image
+ *
+ * PHYSICAL PROPERTIES (planets, moons, stars):
+ * - diameter: string (optional) - Size measurement
+ * - mass: string (optional) - Mass measurement
+ *
+ * ORBITAL PROPERTIES (planets, moons):
+ * - distanceFrom: string (optional) - Distance from parent body
+ * - distanceFromLabel: string (optional) - Label for distance (e.g., "Distance from Sun")
+ * - orbitalPeriod: string (optional) - Time to complete one orbit
+ * - parentBody: string (optional) - Parent body name (for moons)
+ *
+ * SATELLITE PROPERTIES (planets, stars):
+ * - satellites: number (optional) - Number of satellites
+ * - satelliteLabel: string (optional) - Label for satellites (e.g., "Moons", "Planets")
+ *
+ * STAR-SPECIFIC PROPERTIES:
+ * - spectralClass: string (optional) - Spectral classification (e.g., "G2V")
+ * - temperature: string (optional) - Surface temperature
+ * - luminosity: string (optional) - Luminosity relative to Sun
+ * - starType: string (optional) - Type hint for image generation
+ *
+ * GALAXY-SPECIFIC PROPERTIES:
+ * - galaxyType: string (optional) - Galaxy classification (e.g., "Spiral", "Elliptical")
+ * - starCount: string (optional) - Estimated number of stars
+ * - distanceFromEarth: string (optional) - Distance from Earth
+ *
+ * TYPE-SPECIFIC HINTS:
+ * - planetType: string (optional) - For planets: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf'
  *
  * ============================================================================
  * EXAMPLE 2: CONSTELLATION COMPONENT
