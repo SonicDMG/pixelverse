@@ -113,7 +113,7 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
   space: {
     id: 'space',
     name: 'PixelSpace',
-    tagline: 'RETRO SPACE EXPLORATION POWERED BY LANGFLOW + MCP',
+    tagline: 'RETRO SPACE EXPLORATION POWERED BY LANGFLOW + OPENRAG',
     apiEndpoint: '/api/ask-space',
     musicDirectory: 'space',
     icon: '🚀',
