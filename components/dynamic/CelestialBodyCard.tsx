@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CelestialBodyCardSpec } from '@/types/ui-spec';
 
 /**
@@ -127,6 +127,9 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
   const [localGeneratedUrl, setLocalGeneratedUrl] = useState<string | null>(
     generatedImageUrl || null
   );
+  
+  // Track if generation has been initiated to prevent duplicate calls
+  const generationInitiatedRef = useRef(false);
 
   // Get theme for current body type
   const theme = BODY_THEMES[bodyType];
@@ -138,20 +141,26 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
     enableImageGeneration,
     hasGeneratedImageUrl: !!generatedImageUrl,
     hasLocalGeneratedUrl: !!localGeneratedUrl,
+    generationInitiated: generationInitiatedRef.current,
   });
 
   /**
    * Automatically generate image on component mount if enabled
+   * Uses a ref to ensure generation only happens once per component instance
    */
   useEffect(() => {
-    const shouldGenerate = enableImageGeneration && !generatedImageUrl && !localGeneratedUrl && !isGenerating && !generationError;
+    const shouldGenerate =
+      enableImageGeneration &&
+      !generatedImageUrl &&
+      !localGeneratedUrl &&
+      !generationInitiatedRef.current;
     
     if (shouldGenerate) {
-      console.log('[CelestialBodyCard] Triggering image generation...');
+      console.log('[CelestialBodyCard] Triggering image generation for:', name);
+      generationInitiatedRef.current = true;
       generateImage();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enableImageGeneration, generatedImageUrl, localGeneratedUrl]);
+  }, [enableImageGeneration, generatedImageUrl, localGeneratedUrl, name]);
 
   /**
    * Generate a space image using the API endpoint
