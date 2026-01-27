@@ -26,7 +26,7 @@ interface GenerateImageRequest {
   objectType: 'planet' | 'constellation' | 'celestial';
   description: string;
   planetType?: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf';
-  celestialType?: 'moon' | 'star' | 'galaxy';
+  celestialType?: 'moon' | 'star' | 'galaxy' | 'nebula' | 'black-hole';
   style?: 'pixel-art' | 'realistic';
   seed?: number;
 }
@@ -89,7 +89,7 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
 
   // Validate celestialType if provided
   if (req.celestialType) {
-    const validCelestialTypes = ['moon', 'star', 'galaxy'];
+    const validCelestialTypes = ['moon', 'star', 'galaxy', 'nebula', 'black-hole'];
     if (!validCelestialTypes.includes(req.celestialType)) {
       return { valid: false, error: `celestialType must be one of: ${validCelestialTypes.join(', ')}` };
     }
@@ -187,7 +187,7 @@ function buildPrompt(request: GenerateImageRequest): string {
 
     case 'celestial':
       // Use provided celestialType or determine from description
-      let determinedCelestialType: 'moon' | 'star' | 'nebula' | 'galaxy' = celestialType || 'star';
+      let determinedCelestialType: 'moon' | 'star' | 'nebula' | 'galaxy' | 'black-hole' = celestialType || 'star';
       
       // If celestialType not provided, try to determine from description
       if (!celestialType) {

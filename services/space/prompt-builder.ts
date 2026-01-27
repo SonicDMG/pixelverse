@@ -1,5 +1,5 @@
 export interface CelestialObjectOptions {
-  type: 'planet' | 'moon' | 'star' | 'nebula' | 'galaxy';
+  type: 'planet' | 'moon' | 'star' | 'nebula' | 'galaxy' | 'black-hole';
   name: string;
   characteristics?: string[];
   colors?: string[];
@@ -235,7 +235,7 @@ export class SpacePromptBuilder {
    * @returns Formatted prompt string
    */
   static buildGenericCelestialPrompt(
-    type: 'moon' | 'star' | 'nebula' | 'galaxy',
+    type: 'moon' | 'star' | 'nebula' | 'galaxy' | 'black-hole',
     name: string,
     description?: string
   ): string {
