@@ -162,6 +162,7 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
               brightestStar={spec.props.brightestStar}
               visibility={spec.props.visibility}
               stars={spec.props.stars}
+              lines={spec.props.lines}
             />
           );
 

@@ -138,6 +138,16 @@ export interface ConstellationSpec extends UIComponentSpec {
     stars: Array<{
       name: string;
       magnitude: number;
+      ra?: string; // Right Ascension in "HHh MMm" format (e.g., "5h 55m") - auto-converts to x
+      dec?: string; // Declination in "±DD° MM'" format (e.g., "+7° 24'") - auto-converts to y
+      x?: number; // X coordinate for 2D visualization (0-400) - calculated from RA if not provided
+      y?: number; // Y coordinate for 2D visualization (0-400) - calculated from Dec if not provided
+      color?: string; // Hex color (e.g., "#FFD700") or spectral class (O, B, A, F, G, K, M)
+      size?: number; // Relative size multiplier (0.5-3.0), applied to base magnitude size
+    }>;
+    lines?: Array<{
+      from: number; // Index of star in stars array
+      to: number;   // Index of star in stars array
     }>;
   };
 }

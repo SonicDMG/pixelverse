@@ -1,15 +1,32 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import { convertStarsToCanvas } from '@/utils/celestial-coordinates';
+
+interface Star {
+  name: string;
+  magnitude: number;
+  ra?: string; // Right Ascension "HHh MMm"
+  dec?: string; // Declination "±DD° MM'"
+  x?: number;
+  y?: number;
+  color?: string; // Hex color or spectral class (O, B, A, F, G, K, M)
+  size?: number; // Relative size multiplier (0.5-3.0)
+}
+
+interface ConstellationLine {
+  from: number;
+  to: number;
+}
+
 interface ConstellationProps {
   name: string;
   abbreviation: string;
   description: string;
   brightestStar?: string;
   visibility: string;
-  stars: Array<{
-    name: string;
-    magnitude: number;
-  }>;
+  stars: Star[];
+  lines?: ConstellationLine[];
 }
 
 export default function Constellation({
@@ -19,16 +36,104 @@ export default function Constellation({
   brightestStar,
   visibility,
   stars,
+  lines = [],
 }: ConstellationProps) {
+  const [hoveredStar, setHoveredStar] = useState<number | null>(null);
+
+  // Auto-calculate coordinates from RA/Dec if not provided
+  const starsWithCoords = useMemo(() => {
+    // Check if any stars have RA/Dec but not x/y
+    const needsConversion = stars.some(star =>
+      star.ra && star.dec && (star.x === undefined || star.y === undefined)
+    );
+
+    if (!needsConversion) {
+      return stars;
+    }
+
+    // Extract stars with RA/Dec for conversion
+    const starsForConversion = stars.map(star => ({
+      ra: star.ra || '0h 0m',
+      dec: star.dec || '+0° 0\''
+    }));
+
+    try {
+      const canvasCoords = convertStarsToCanvas(starsForConversion);
+      
+      // Merge calculated coordinates with original star data
+      return stars.map((star, i) => ({
+        ...star,
+        x: star.x ?? canvasCoords[i].x,
+        y: star.y ?? canvasCoords[i].y
+      }));
+    } catch (error) {
+      console.error('Error converting RA/Dec to canvas coordinates:', error);
+      return stars;
+    }
+  }, [stars]);
+
+  // Check if we have coordinate data for visualization
+  const hasCoordinates = starsWithCoords.some(star => star.x !== undefined && star.y !== undefined);
+
+  // Helper to convert spectral class to color
+  const spectralClassToColor = (spectralClass: string): string => {
+    const upperClass = spectralClass.toUpperCase().charAt(0);
+    const spectralColors: Record<string, string> = {
+      'O': '#8BB0FF', // Blue - hottest stars
+      'B': '#B0C4FF', // Blue-white
+      'A': '#E0E8FF', // White
+      'F': '#FFF8E7', // Yellow-white
+      'G': '#FFEB7B', // Yellow (like our Sun)
+      'K': '#FFB347', // Orange
+      'M': '#FF6B4A', // Red-orange - coolest stars (Betelgeuse)
+    };
+    return spectralColors[upperClass] || '#FFFFFF';
+  };
+
+  // Helper to get star color
+  const getStarColor = (star: Star): string => {
+    // If color is provided, use it
+    if (star.color) {
+      // Check if it's a hex color
+      if (star.color.startsWith('#')) {
+        return star.color;
+      }
+      // Otherwise treat as spectral class
+      return spectralClassToColor(star.color);
+    }
+    
+    // Fallback to magnitude-based coloring
+    const brightness = Math.max(0, Math.min(5, 6 - star.magnitude));
+    if (brightness > 3) return '#FFD700';
+    if (brightness > 1) return '#00CED1';
+    return '#9370DB';
+  };
+
+  // Helper to get star size based on magnitude and optional size multiplier
+  const getStarRadius = (star: Star): number => {
+    const brightness = Math.max(0, Math.min(5, 6 - star.magnitude));
+    let baseRadius: number;
+    if (brightness > 3) baseRadius = 8;
+    else if (brightness > 1) baseRadius = 6;
+    else baseRadius = 4;
+    
+    // Apply size multiplier if provided
+    if (star.size !== undefined) {
+      return baseRadius * Math.max(0.5, Math.min(3.0, star.size));
+    }
+    
+    return baseRadius;
+  };
+
   // Helper to render star magnitude with visual representation
-  const renderStarMagnitude = (magnitude: number) => {
+  const renderStarMagnitude = (star: Star) => {
     // Brighter stars have lower magnitude values
-    const brightness = Math.max(0, Math.min(5, 6 - magnitude));
+    const brightness = Math.max(0, Math.min(5, 6 - star.magnitude));
     const starSize = brightness > 3 ? 'text-xl' : brightness > 1 ? 'text-lg' : 'text-base';
-    const starColor = brightness > 3 ? 'text-[#FFD700]' : brightness > 1 ? 'text-[#00CED1]' : 'text-[#9370DB]';
+    const color = getStarColor(star);
     
     return (
-      <span className={`${starSize} ${starColor}`}>★</span>
+      <span className={starSize} style={{ color }}>★</span>
     );
   };
 
@@ -90,21 +195,27 @@ export default function Constellation({
           </div>
         </div>
 
-        {/* Stars List */}
-        {stars && stars.length > 0 && (
-          <div className="pt-4 border-t-2 border-[#4169E1]/30">
+        {/* Hybrid Layout: Star List + SVG Visualization */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pt-4 border-t-2 border-[#4169E1]/30">
+          {/* Left Side: Star List (2 columns on large screens) */}
+          <div className="lg:col-span-2">
             <h3 className="text-sm font-pixel text-[#4169E1] uppercase mb-3 flex items-center gap-2">
               <span>Notable Stars</span>
               <span className="text-xs text-gray-500">({stars.length})</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {stars.map((star, index) => (
+            <div className="space-y-2">
+              {starsWithCoords.map((star, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2 bg-[#0a0e27]/80 border border-[#4169E1]/20 rounded hover:border-[#00CED1]/50 transition-colors"
+                  className="flex items-center justify-between p-2 bg-[#0a0e27]/80 border border-[#4169E1]/20 rounded hover:border-[#00CED1]/50 transition-colors cursor-pointer"
+                  onMouseEnter={() => setHoveredStar(index)}
+                  onMouseLeave={() => setHoveredStar(null)}
+                  style={{
+                    borderColor: hoveredStar === index ? '#00CED1' : undefined,
+                  }}
                 >
                   <div className="flex items-center gap-2">
-                    {renderStarMagnitude(star.magnitude)}
+                    {renderStarMagnitude(star)}
                     <span className="font-pixel text-xs text-white">
                       {star.name}
                     </span>
@@ -119,7 +230,154 @@ export default function Constellation({
               * Lower magnitude = brighter star
             </div>
           </div>
-        )}
+
+          {/* Right Side: SVG Constellation Visualization (3 columns on large screens) */}
+          <div className="lg:col-span-3">
+            <h3 className="text-sm font-pixel text-[#4169E1] uppercase mb-3 flex items-center gap-2">
+              <span>🌌 Sky View</span>
+              <span className="text-xs text-gray-500">(as seen from Earth)</span>
+            </h3>
+            
+            {hasCoordinates ? (
+              <div className="relative bg-gradient-to-b from-[#000814] to-[#0a0e27] border-2 border-[#4169E1]/30 rounded-lg p-6 overflow-hidden">
+                {/* Background stars - using deterministic positions */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                  {[...Array(50)].map((_, i) => {
+                    // Use index to generate deterministic but varied positions
+                    const seed = i * 137.508; // Golden angle for good distribution
+                    const left = ((seed * 7) % 100);
+                    const top = ((seed * 13) % 100);
+                    const opacity = 0.3 + ((seed * 3) % 50) / 100;
+                    
+                    return (
+                      <div
+                        key={i}
+                        className="absolute w-px h-px bg-white rounded-full"
+                        style={{
+                          left: `${left}%`,
+                          top: `${top}%`,
+                          opacity: opacity,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* SVG Canvas */}
+                <svg
+                  viewBox="0 0 400 400"
+                  className="w-full h-auto max-h-[500px] relative z-10"
+                  style={{ aspectRatio: '1/1' }}
+                >
+                  {/* Draw constellation lines */}
+                  {lines.map((line, index) => {
+                    const fromStar = starsWithCoords[line.from];
+                    const toStar = starsWithCoords[line.to];
+                    if (!fromStar?.x || !fromStar?.y || !toStar?.x || !toStar?.y) return null;
+                    
+                    return (
+                      <line
+                        key={index}
+                        x1={fromStar.x}
+                        y1={fromStar.y}
+                        x2={toStar.x}
+                        y2={toStar.y}
+                        stroke="#4169E1"
+                        strokeWidth="1.5"
+                        opacity="0.6"
+                        className="transition-opacity duration-300"
+                        style={{
+                          opacity: hoveredStar === line.from || hoveredStar === line.to ? 1 : 0.6,
+                        }}
+                      />
+                    );
+                  })}
+
+                  {/* Draw stars */}
+                  {starsWithCoords.map((star, index) => {
+                    if (!star.x || !star.y) return null;
+                    
+                    const radius = getStarRadius(star);
+                    const color = getStarColor(star);
+                    const isHovered = hoveredStar === index;
+
+                    return (
+                      <g key={index}>
+                        {/* Glow effect */}
+                        {isHovered && (
+                          <circle
+                            cx={star.x}
+                            cy={star.y}
+                            r={radius * 3}
+                            fill={color}
+                            opacity="0.2"
+                            className="animate-pulse"
+                          />
+                        )}
+                        
+                        {/* Star */}
+                        <circle
+                          cx={star.x}
+                          cy={star.y}
+                          r={radius}
+                          fill={color}
+                          className="cursor-pointer transition-all duration-200"
+                          style={{
+                            filter: isHovered ? 'brightness(1.5)' : 'brightness(1)',
+                            transform: isHovered ? 'scale(1.2)' : 'scale(1)',
+                            transformOrigin: `${star.x}px ${star.y}px`,
+                          }}
+                          onMouseEnter={() => setHoveredStar(index)}
+                          onMouseLeave={() => setHoveredStar(null)}
+                        />
+
+                        {/* Star label on hover */}
+                        {isHovered && (
+                          <text
+                            x={star.x}
+                            y={star.y - radius - 8}
+                            textAnchor="middle"
+                            fill="#FFD700"
+                            fontSize="10"
+                            fontFamily="monospace"
+                            className="font-pixel pointer-events-none"
+                          >
+                            {star.name}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                {/* Legend */}
+                <div className="mt-4 flex justify-center gap-4 text-xs font-pixel text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#FFD700]"></div>
+                    <span>Bright</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#00CED1]"></div>
+                    <span>Medium</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#9370DB]"></div>
+                    <span>Dim</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative bg-gradient-to-b from-[#000814] to-[#0a0e27] border-2 border-[#4169E1]/30 rounded-lg p-6 overflow-hidden aspect-square flex items-center justify-center">
+                <div className="text-center space-y-3">
+                  <div className="text-4xl">🌟</div>
+                  <p className="font-pixel text-xs text-gray-400">
+                    Constellation visualization requires coordinate data
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Decorative constellation pattern */}
         <div className="flex justify-center items-center gap-3 pt-2 opacity-40">

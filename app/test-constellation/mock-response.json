@@ -1,0 +1,109 @@
+{
+  "text": "Here's the Orion constellation, one of the most recognizable patterns in the night sky. Known as 'The Hunter' in Greek mythology, Orion features several bright stars including the red supergiant Betelgeuse and the blue supergiant Rigel. The three stars forming Orion's Belt (Alnitak, Alnilam, and Mintaka) are among the most famous asterisms visible from Earth. These coordinates are calculated from actual Right Ascension and Declination data.",
+  "components": [
+    {
+      "type": "constellation",
+      "id": "orion-constellation",
+      "props": {
+        "name": "Orion",
+        "abbreviation": "Ori",
+        "description": "One of the most recognizable constellations in the night sky, featuring bright stars like Betelgeuse and Rigel. Best visible during winter months in the Northern Hemisphere. Star positions are calculated from astronomical RA/Dec coordinates.",
+        "brightestStar": "Rigel (β Ori) - Magnitude 0.13",
+        "visibility": "Visible worldwide between latitudes +85° and -75°. Best viewing: December to March.",
+        "stars": [
+          {
+            "name": "Betelgeuse (α Ori)",
+            "magnitude": 0.5,
+            "color": "M",
+            "size": 2.5,
+            "x": 50,
+            "y": 89,
+            "ra": "5h 55m",
+            "dec": "+7° 24'"
+          },
+          {
+            "name": "Rigel (β Ori)",
+            "magnitude": 0.13,
+            "color": "B",
+            "size": 2.8,
+            "x": 350,
+            "y": 328,
+            "ra": "5h 14m",
+            "dec": "-8° 12'"
+          },
+          {
+            "name": "Bellatrix (γ Ori)",
+            "magnitude": 1.64,
+            "color": "B",
+            "size": 1.8,
+            "x": 270,
+            "y": 105,
+            "ra": "5h 25m",
+            "dec": "+6° 21'"
+          },
+          {
+            "name": "Alnitak (ζ Ori)",
+            "magnitude": 1.77,
+            "color": "O",
+            "size": 1.7,
+            "x": 152,
+            "y": 232,
+            "ra": "5h 41m",
+            "dec": "-1° 57'"
+          },
+          {
+            "name": "Alnilam (ε Ori)",
+            "magnitude": 1.69,
+            "color": "B",
+            "size": 1.8,
+            "x": 189,
+            "y": 220,
+            "ra": "5h 36m",
+            "dec": "-1° 12'"
+          },
+          {
+            "name": "Mintaka (δ Ori)",
+            "magnitude": 2.23,
+            "color": "O",
+            "size": 1.5,
+            "x": 218,
+            "y": 207,
+            "ra": "5h 32m",
+            "dec": "-0° 18'"
+          },
+          {
+            "name": "Saiph (κ Ori)",
+            "magnitude": 2.09,
+            "color": "B",
+            "size": 1.6,
+            "x": 101,
+            "y": 350,
+            "ra": "5h 48m",
+            "dec": "-9° 40'"
+          },
+          {
+            "name": "Meissa (λ Ori)",
+            "magnitude": 3.39,
+            "color": "O",
+            "size": 1.2,
+            "x": 196,
+            "y": 50,
+            "ra": "5h 35m",
+            "dec": "+9° 56'"
+          }
+        ],
+        "lines": [
+          {"from": 7, "to": 0},
+          {"from": 7, "to": 2},
+          {"from": 0, "to": 3},
+          {"from": 2, "to": 3},
+          {"from": 3, "to": 4},
+          {"from": 4, "to": 5},
+          {"from": 3, "to": 6},
+          {"from": 5, "to": 1},
+          {"from": 1, "to": 6}
+        ]
+      }
+    }
+  ]
+}
