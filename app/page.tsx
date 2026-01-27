@@ -86,7 +86,7 @@ export default function Home() {
   const handleQuestion = useCallback(async (questionText: string) => {
     // Announce request submission with voice
     if (isVoiceSupported) {
-      announce('Processing your request', 'info').catch(err =>
+      announce(`Processing your request: ${questionText}`, 'info').catch(err =>
         console.error('Voice announcement failed:', err)
       );
     }
@@ -167,14 +167,27 @@ export default function Home() {
         );
       }
 
-      // Announce key information from the response
+      // Read the answer text with voice
+      if (isVoiceSupported && result.answer) {
+        // Use a slight delay to let the "Request complete" announcement finish
+        setTimeout(() => {
+          announce(result.answer, 'info').catch(err =>
+            console.error('Voice announcement failed:', err)
+          );
+        }, 1000);
+      }
+
+      // Announce key information from the response (for stock data)
       if (isVoiceSupported && result.stockData && result.stockData.length > 0) {
         // Get the most recent price (last item in the array)
         const latestData = result.stockData[result.stockData.length - 1];
         const priceAnnouncement = `${result.symbol || 'Stock'} price: ${latestData.price} dollars`;
-        announce(priceAnnouncement, 'price').catch(err =>
-          console.error('Voice announcement failed:', err)
-        );
+        // Delay this announcement to let the answer finish
+        setTimeout(() => {
+          announce(priceAnnouncement, 'price').catch(err =>
+            console.error('Voice announcement failed:', err)
+          );
+        }, 2000);
       }
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
