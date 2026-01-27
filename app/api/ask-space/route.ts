@@ -313,6 +313,27 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
   console.log('[Space API] Mock response - Processing question:', question);
   console.log('[Space API] Mock response - Lowercase question:', lowerQuestion);
   
+  // Check for "show me the solar system" - interactive visualization
+  if ((lowerQuestion.includes('show') && lowerQuestion.includes('solar system')) ||
+      lowerQuestion.includes('visualize') && lowerQuestion.includes('solar system') ||
+      lowerQuestion.includes('display') && lowerQuestion.includes('solar system')) {
+    console.log('[Space API] Mock response - Matched: Solar System Visualization');
+    return {
+      answer: 'Here\'s an interactive visualization of our solar system! You can see all 8 planets orbiting the Sun. Click on any planet to learn more about it, and use the controls at the bottom to adjust the animation speed or pause the simulation.',
+      components: [
+        {
+          type: 'solar-system',
+          props: {
+            name: 'Solar System',
+            description: 'Our home planetary system with 8 planets',
+            autoPlay: true,
+            timeScale: 10
+          }
+        }
+      ]
+    };
+  }
+  
   // Detect space-related topics with flexible matching
   // Check for "planets in solar system" questions first (before "sun" check)
   if ((lowerQuestion.includes('planets') && lowerQuestion.includes('solar system')) ||

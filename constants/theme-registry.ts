@@ -144,6 +144,7 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       soundEffectsVolume: 0.125,
     },
     exampleQuestions: [
+      'Show me the solar system',
       'Tell me about Jupiter',
       'Show me the Orion constellation',
       'What is the history of Mars exploration?',

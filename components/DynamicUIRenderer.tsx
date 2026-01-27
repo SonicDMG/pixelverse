@@ -10,6 +10,7 @@ import MetricGrid from './dynamic/MetricGrid';
 import PlanetCard from './dynamic/PlanetCard';
 import Constellation from './dynamic/Constellation';
 import SpaceTimeline from './dynamic/SpaceTimeline';
+import SolarSystem from './dynamic/SolarSystem';
 import TextBlock from './dynamic/TextBlock';
 
 interface DynamicUIRendererProps {
@@ -170,6 +171,17 @@ export default function DynamicUIRenderer({ components }: DynamicUIRendererProps
               key={key}
               title={spec.props.title}
               events={spec.props.events}
+            />
+          );
+
+        case 'solar-system':
+          return (
+            <SolarSystem
+              key={key}
+              name={spec.props.name}
+              description={spec.props.description}
+              autoPlay={spec.props.autoPlay}
+              timeScale={spec.props.timeScale}
             />
           );
 

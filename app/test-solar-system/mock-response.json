@@ -1,0 +1,15 @@
+{
+  "text": "Here's an interactive visualization of our solar system! You can see all 8 planets orbiting the Sun. Click on any planet to learn more about it, and use the controls at the bottom to adjust the animation speed or pause the simulation.",
+  "components": [
+    {
+      "type": "solar-system",
+      "id": "solar-system-1",
+      "props": {
+        "name": "Solar System",
+        "description": "Our home planetary system with 8 planets",
+        "autoPlay": true,
+        "timeScale": 10
+      }
+    }
+  ]
+}

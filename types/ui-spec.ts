@@ -155,6 +155,16 @@ export interface SpaceTimelineSpec extends UIComponentSpec {
   };
 }
 
+export interface SolarSystemSpec extends UIComponentSpec {
+  type: 'solar-system';
+  props: {
+    name?: string;
+    description?: string;
+    autoPlay?: boolean;
+    timeScale?: number;
+  };
+}
+
 // Helper types for space components
 
 export type CelestialBody = {
@@ -182,7 +192,8 @@ export type ComponentSpec =
   | TextBlockSpec
   | PlanetCardSpec
   | ConstellationSpec
-  | SpaceTimelineSpec;
+  | SpaceTimelineSpec
+  | SolarSystemSpec;
 
 // Response from Langflow with UI specifications
 export interface UIResponse {
