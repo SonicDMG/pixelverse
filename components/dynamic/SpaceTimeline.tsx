@@ -165,22 +165,58 @@ export default function SpaceTimeline({
     });
   }, [events, scaleType, minHeight, layout]);
 
-  // Simple alternating vertical positioning - no overlap detection needed
+  // Multi-lane collision detection system
   const eventsWithVerticalPositions = useMemo((): ProcessedEvent[] => {
     if (layout !== 'horizontal') return processedEvents;
 
-    // Simple alternating pattern: even indices above, odd indices below
-    return processedEvents.map((event, index): ProcessedEvent => {
+    // Define lanes: 3 above, 3 below the timeline (wider spacing)
+    const lanes = {
+      top: [-100, -150, -200],
+      bottom: [100, 150, 200]
+    };
+
+    // Helper function to check horizontal overlap
+    // Card is 220px max width, container is typically 1600px min-width
+    // So we need ~15% spacing to prevent overlaps (220/1600 * 100 = 13.75%)
+    const checkHorizontalOverlap = (pos1: number, pos2: number, minSpacing: number = 15): boolean => {
+      return Math.abs(pos1 - pos2) < minSpacing;
+    };
+
+    const positionedEvents: ProcessedEvent[] = [];
+
+    processedEvents.forEach((event, index) => {
       const isAbove = index % 2 === 0;
-      const verticalOffset = isAbove ? -100 : 100;
-      
-      return {
+      const direction = isAbove ? 'top' : 'bottom';
+      let laneIndex = 0;
+
+      // Check for overlaps with ALL previous events (no early break)
+      for (let i = positionedEvents.length - 1; i >= 0; i--) {
+        const prevEvent = positionedEvents[i];
+
+        if (checkHorizontalOverlap(event.position, prevEvent.position)) {
+          // If overlapping with an event in the same direction, try next lane
+          const prevIsAbove = prevEvent.isAbove ?? false;
+          if (prevIsAbove === isAbove) {
+            const prevLaneIndex = prevEvent.laneIndex ?? 0;
+            laneIndex = Math.max(laneIndex, prevLaneIndex + 1);
+            
+            // Cap at maximum lane index
+            if (laneIndex >= lanes[direction].length) {
+              laneIndex = lanes[direction].length - 1;
+            }
+          }
+        }
+      }
+
+      positionedEvents.push({
         ...event,
-        verticalOffset,
+        verticalOffset: lanes[direction][laneIndex],
         isAbove,
-        laneIndex: index % 2
-      };
+        laneIndex
+      });
     });
+
+    return positionedEvents;
   }, [processedEvents, layout]);
 
   // Generate time axis markers
@@ -306,8 +342,8 @@ export default function SpaceTimeline({
         </div>
 
         {/* Horizontal Timeline Container */}
-        <div className="relative w-full overflow-x-auto overflow-y-visible pb-4" style={{ minHeight: '400px' }}>
-          <div className="relative" style={{ minWidth: 'max(200%, 1600px)', height: '400px' }}>
+        <div className="relative w-full overflow-x-auto overflow-y-visible pb-4" style={{ minHeight: '500px' }}>
+          <div className="relative" style={{ minWidth: 'max(200%, 1600px)', height: '500px' }}>
             
             {/* Horizontal timeline axis - centered exactly at 50% */}
             <div
@@ -359,7 +395,7 @@ export default function SpaceTimeline({
                     style={{
                       left: `${event.position}%`,
                       top: '50%',
-                      height: '100px',
+                      height: `${Math.abs(verticalOffset)}px`,
                       transform: isAbove
                         ? 'translate(-50%, -100%)' // Go UP from timeline
                         : 'translate(-50%, 0)', // Go DOWN from timeline
@@ -401,8 +437,9 @@ export default function SpaceTimeline({
                       left: `${event.position}%`,
                       top: '50%',
                       transform: `translate(-50%, ${verticalOffset}px)`,
-                      width: '220px',
-                      zIndex: isHovered ? 50 : 15
+                      width: isHovered ? '220px' : '140px',
+                      zIndex: isHovered ? 50 : 15,
+                      transition: 'width 0.3s ease-in-out'
                     }}
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
@@ -410,7 +447,7 @@ export default function SpaceTimeline({
                     <div
                       className={`bg-[#0a0e27] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 relative ${
                         isHovered
-                          ? 'border-opacity-100 scale-110 z-10 p-4'
+                          ? 'border-opacity-100 z-10 p-4'
                           : 'hover:border-opacity-100 group-hover:scale-102 p-3'
                       }`}
                       style={{
