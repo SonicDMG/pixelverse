@@ -124,25 +124,42 @@ function buildPrompt(request: GenerateImageRequest): string {
 
   switch (objectType) {
     case 'planet':
-      // Parse characteristics and colors from description
+      // Check if this is a known solar system planet
+      const supportedPlanets = SpacePromptBuilder.getSupportedPlanets();
+      const normalizedName = name.toLowerCase();
+      
+      if (supportedPlanets.includes(normalizedName)) {
+        // Use scientifically accurate prompt for known planets
+        console.log(`[Generate Space Image API] Using accurate prompt for planet: ${name}`);
+        return SpacePromptBuilder.buildAccuratePlanetPrompt(name);
+      }
+      
+      // For exoplanets or unknown planets, parse details from description
+      console.log(`[Generate Space Image API] Using generic prompt for exoplanet: ${name}`);
       const characteristics: string[] = [];
       const colors: string[] = [];
 
-      // Extract color keywords
-      const colorKeywords = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'white', 'brown', 'gray', 'cyan'];
+      // Extract color keywords from description
+      const colorKeywords = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'white', 'brown', 'gray', 'cyan', 'tan', 'golden', 'rusty'];
       colorKeywords.forEach(color => {
         if (description.toLowerCase().includes(color)) {
           colors.push(color);
         }
       });
 
-      // Extract characteristic keywords
-      const charKeywords = ['rocky', 'gaseous', 'icy', 'volcanic', 'cloudy', 'ringed', 'barren', 'stormy'];
+      // Extract characteristic keywords from description
+      const charKeywords = ['rocky', 'gaseous', 'icy', 'volcanic', 'cloudy', 'ringed', 'barren', 'stormy', 'hot', 'cold', 'desert', 'ocean'];
       charKeywords.forEach(char => {
         if (description.toLowerCase().includes(char)) {
           characteristics.push(char);
         }
       });
+
+      // Add any additional details from the description
+      if (characteristics.length === 0 && colors.length === 0) {
+        // Use the full description as characteristics if no keywords found
+        characteristics.push(description);
+      }
 
       return SpacePromptBuilder.buildPlanetPrompt(
         name,
@@ -164,6 +181,16 @@ function buildPrompt(request: GenerateImageRequest): string {
       
       if (description.toLowerCase().includes('moon')) {
         celestialType = 'moon';
+        
+        // Check if this is a known moon
+        const supportedMoons = SpacePromptBuilder.getSupportedMoons();
+        const normalizedMoonName = name.toLowerCase();
+        
+        if (supportedMoons.includes(normalizedMoonName)) {
+          // Use scientifically accurate prompt for known moons
+          console.log(`[Generate Space Image API] Using accurate prompt for moon: ${name}`);
+          return SpacePromptBuilder.buildAccurateMoonPrompt(name);
+        }
       } else if (description.toLowerCase().includes('nebula')) {
         celestialType = 'nebula';
       } else if (description.toLowerCase().includes('galaxy')) {

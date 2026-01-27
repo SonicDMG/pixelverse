@@ -90,7 +90,8 @@ export default function PlanetCard({
       console.log('[PlanetCard] Triggering image generation...');
       generateImage();
     }
-  }, [enableImageGeneration, generatedImageUrl, localGeneratedUrl, isGenerating, generationError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableImageGeneration, generatedImageUrl, localGeneratedUrl]);
 
   /**
    * Generate a space image using the API endpoint
