@@ -1,150 +1,88 @@
 # Celestial Body Card - Agent Prompt Guide
 
 ## Overview
-Use the `celestial-body-card` component to display detailed information about any celestial body: planets, moons, stars, or galaxies. This component automatically adapts its display based on the body type.
+Create celestial-body-card components for planets, moons, stars, galaxies, black holes, and nebulae.
 
-## When to Use
-
-Use `celestial-body-card` when users ask about:
-- **Planets**: "Tell me about Jupiter", "What is Mars like?", "Show me Saturn"
-- **Moons**: "Tell me about the Moon", "What is Titan?", "Describe Europa"
-- **Stars**: "Tell me about the Sun", "What is Betelgeuse?", "Describe Sirius"
-- **Galaxies**: "Tell me about Andromeda", "What is the Milky Way?", "Describe M87"
-
-## Component Structure
+## Response Structure
 
 ```json
 {
-  "type": "celestial-body-card",
-  "props": {
-    "name": "string (required)",
-    "bodyType": "planet | moon | star | galaxy (required)",
-    "description": "string (required)",
-    "enableImageGeneration": true
-    // ... additional properties based on bodyType
-  }
+  "answer": "Brief answer (1-2 sentences)",
+  "components": [{
+    "type": "celestial-body-card",
+    "props": {
+      "name": "string",
+      "bodyType": "planet|moon|star|galaxy|black-hole|nebula",
+      "description": "Educational description (2-3 sentences)",
+      "enableImageGeneration": true,
+      // Type-specific properties below
+    }
+  }]
 }
 ```
 
-## Body Type: Planet
+## Properties by Body Type
 
-### Required Properties
-- `name`: Planet name
-- `bodyType`: "planet"
-- `description`: Detailed description
+### PLANET
+**Required**: name, bodyType, description  
+**Recommended**: diameter, mass, distanceFrom, distanceFromLabel ("Distance from Sun"), orbitalPeriod, satellites, satelliteLabel ("Moons"), planetType (terrestrial|gas-giant|ice-giant|dwarf), enableImageGeneration
 
-### Recommended Properties
-- `diameter`: Size (e.g., "12,742 km")
-- `mass`: Mass (e.g., "5.97 × 10²⁴ kg")
-- `distanceFrom`: Distance from sun (e.g., "149.6 million km")
-- `distanceFromLabel`: "Distance from Sun"
-- `orbitalPeriod`: Orbit time (e.g., "365.25 Earth days")
-- `satellites`: Number of moons (e.g., 1)
-- `satelliteLabel`: "Moon" or "Moons"
-- `planetType`: "terrestrial" | "gas-giant" | "ice-giant" | "dwarf"
-- `enableImageGeneration`: true
-
-### Example: Jupiter
+**Example - Mars**:
 ```json
 {
   "type": "celestial-body-card",
   "props": {
-    "name": "Jupiter",
+    "name": "Mars",
     "bodyType": "planet",
-    "description": "The largest planet in our Solar System, a gas giant with the Great Red Spot storm.",
-    "diameter": "139,820 km",
-    "mass": "1.898 × 10²⁷ kg",
-    "distanceFrom": "778.5 million km",
+    "description": "The Red Planet with iron oxide surface and Olympus Mons volcano, the largest volcano in the solar system.",
+    "diameter": "6,779 km",
+    "mass": "6.39 × 10²³ kg",
+    "distanceFrom": "227.9 million km",
     "distanceFromLabel": "Distance from Sun",
-    "orbitalPeriod": "11.9 Earth years",
-    "satellites": 95,
+    "orbitalPeriod": "687 Earth days",
+    "satellites": 2,
     "satelliteLabel": "Moons",
-    "planetType": "gas-giant",
+    "planetType": "terrestrial",
     "enableImageGeneration": true
   }
 }
 ```
 
-## Body Type: Moon
+### MOON
+**Required**: name, bodyType, description  
+**Recommended**: diameter, mass, distanceFrom, distanceFromLabel ("Distance from [Planet]"), orbitalPeriod, parentBody, enableImageGeneration
 
-### Required Properties
-- `name`: Moon name
-- `bodyType`: "moon"
-- `description`: Detailed description
-
-### Recommended Properties
-- `diameter`: Size (e.g., "3,474 km")
-- `mass`: Mass (e.g., "7.34 × 10²² kg")
-- `distanceFrom`: Distance from parent planet (e.g., "384,400 km")
-- `distanceFromLabel`: "Distance from [Planet]" (e.g., "Distance from Earth")
-- `orbitalPeriod`: Orbit time (e.g., "27.3 Earth days")
-- `parentBody`: Parent planet name (e.g., "Earth")
-- `enableImageGeneration`: true
-
-### Example: The Moon
+**Example - Europa**:
 ```json
 {
   "type": "celestial-body-card",
   "props": {
-    "name": "The Moon",
+    "name": "Europa",
     "bodyType": "moon",
-    "description": "Earth's only natural satellite and the fifth largest moon in the solar system.",
-    "diameter": "3,474 km",
-    "mass": "7.34 × 10²² kg",
-    "distanceFrom": "384,400 km",
-    "distanceFromLabel": "Distance from Earth",
-    "orbitalPeriod": "27.3 Earth days",
-    "parentBody": "Earth",
+    "description": "Jupiter's icy moon with a subsurface ocean that may harbor life.",
+    "diameter": "3,121 km",
+    "mass": "4.8 × 10²² kg",
+    "distanceFrom": "671,000 km",
+    "distanceFromLabel": "Distance from Jupiter",
+    "orbitalPeriod": "3.55 Earth days",
+    "parentBody": "Jupiter",
     "enableImageGeneration": true
   }
 }
 ```
 
-### Example: Titan
-```json
-{
-  "type": "celestial-body-card",
-  "props": {
-    "name": "Titan",
-    "bodyType": "moon",
-    "description": "Saturn's largest moon with a thick atmosphere and liquid methane lakes.",
-    "diameter": "5,150 km",
-    "mass": "1.35 × 10²³ kg",
-    "distanceFrom": "1.2 million km",
-    "distanceFromLabel": "Distance from Saturn",
-    "orbitalPeriod": "15.9 Earth days",
-    "parentBody": "Saturn",
-    "enableImageGeneration": true
-  }
-}
-```
+### STAR
+**Required**: name, bodyType, description  
+**Recommended**: diameter, mass, spectralClass, temperature, luminosity, satellites (optional), satelliteLabel ("Planets"), starType (main-sequence|red-giant|white-dwarf|neutron-star), enableImageGeneration
 
-## Body Type: Star
-
-### Required Properties
-- `name`: Star name
-- `bodyType`: "star"
-- `description`: Detailed description
-
-### Recommended Properties
-- `diameter`: Size (e.g., "1.39 million km")
-- `mass`: Mass (e.g., "1.989 × 10³⁰ kg")
-- `spectralClass`: Classification (e.g., "G2V", "M1V", "B8V")
-- `temperature`: Surface temp (e.g., "5,778 K")
-- `luminosity`: Brightness (e.g., "1 L☉", "25,000 L☉")
-- `satellites`: Number of planets (optional)
-- `satelliteLabel`: "Planets" or "Planet"
-- `starType`: "main-sequence" | "red-giant" | "white-dwarf" | "neutron-star"
-- `enableImageGeneration`: true
-
-### Example: The Sun
+**Example - The Sun**:
 ```json
 {
   "type": "celestial-body-card",
   "props": {
     "name": "The Sun",
     "bodyType": "star",
-    "description": "A G-type main-sequence star that contains 99.86% of the Solar System's mass.",
+    "description": "A G-type main-sequence star that contains 99.86% of the Solar System's mass and provides energy for life on Earth.",
     "diameter": "1.39 million km",
     "mass": "1.989 × 10³⁰ kg",
     "spectralClass": "G2V",
@@ -158,14 +96,14 @@ Use `celestial-body-card` when users ask about:
 }
 ```
 
-### Example: Betelgeuse
+**Example - Betelgeuse**:
 ```json
 {
   "type": "celestial-body-card",
   "props": {
     "name": "Betelgeuse",
     "bodyType": "star",
-    "description": "A red supergiant star in Orion, one of the largest known stars.",
+    "description": "A red supergiant star in Orion, one of the largest known stars that will eventually explode as a supernova.",
     "diameter": "1.2 billion km",
     "mass": "16.5 M☉",
     "spectralClass": "M1-M2",
@@ -177,28 +115,18 @@ Use `celestial-body-card` when users ask about:
 }
 ```
 
-## Body Type: Galaxy
+### GALAXY
+**Required**: name, bodyType, description  
+**Recommended**: galaxyType (Spiral|Elliptical|Irregular|Barred Spiral), diameter, starCount, distanceFromEarth, enableImageGeneration
 
-### Required Properties
-- `name`: Galaxy name
-- `bodyType`: "galaxy"
-- `description`: Detailed description
-
-### Recommended Properties
-- `galaxyType`: Type (e.g., "Spiral", "Elliptical", "Irregular", "Barred Spiral")
-- `diameter`: Size (e.g., "220,000 light-years")
-- `starCount`: Number of stars (e.g., "1 trillion stars", "200-400 billion stars")
-- `distanceFromEarth`: Distance (e.g., "2.537 million light-years")
-- `enableImageGeneration`: true
-
-### Example: Andromeda Galaxy
+**Example - Andromeda**:
 ```json
 {
   "type": "celestial-body-card",
   "props": {
     "name": "Andromeda Galaxy",
     "bodyType": "galaxy",
-    "description": "The nearest major galaxy to the Milky Way, on a collision course with our galaxy.",
+    "description": "The nearest major galaxy to the Milky Way, on a collision course with our galaxy in about 4.5 billion years.",
     "galaxyType": "Spiral",
     "diameter": "220,000 light-years",
     "starCount": "1 trillion stars",
@@ -208,23 +136,48 @@ Use `celestial-body-card` when users ask about:
 }
 ```
 
-### Example: Milky Way
+### BLACK-HOLE
+**Required**: name, bodyType, description  
+**Recommended**: blackHoleType (Stellar|Supermassive|Intermediate), mass, eventHorizonRadius, distanceFromEarth, enableImageGeneration
+
+**Example - Sagittarius A***:
 ```json
 {
   "type": "celestial-body-card",
   "props": {
-    "name": "Milky Way",
-    "bodyType": "galaxy",
-    "description": "Our home galaxy, a barred spiral galaxy containing our Solar System.",
-    "galaxyType": "Barred Spiral",
-    "diameter": "105,700 light-years",
-    "starCount": "200-400 billion stars",
+    "name": "Sagittarius A*",
+    "bodyType": "black-hole",
+    "description": "Supermassive black hole at the center of the Milky Way galaxy, with a mass of 4 million suns.",
+    "blackHoleType": "Supermassive",
+    "mass": "4.1 million M☉",
+    "eventHorizonRadius": "12 million km",
+    "distanceFromEarth": "26,000 light-years",
     "enableImageGeneration": true
   }
 }
 ```
 
-## Visual Differentiation
+### NEBULA
+**Required**: name, bodyType, description  
+**Recommended**: nebulaType (Emission|Reflection|Planetary|Supernova Remnant), diameter, distanceFromEarth, enableImageGeneration
+
+**Example - Orion Nebula**:
+```json
+{
+  "type": "celestial-body-card",
+  "props": {
+    "name": "Orion Nebula",
+    "bodyType": "nebula",
+    "description": "Stellar nursery where new stars are being born in the Orion constellation, visible to the naked eye.",
+    "nebulaType": "Emission",
+    "diameter": "24 light-years",
+    "distanceFromEarth": "1,344 light-years",
+    "enableImageGeneration": true
+  }
+}
+```
+
+## Visual Themes
 
 The component automatically applies different visual themes based on `bodyType`:
 
@@ -232,57 +185,18 @@ The component automatically applies different visual themes based on `bodyType`:
 - **Moons**: Silver theme with 🌙 icon
 - **Stars**: Gold theme with ⭐ icon
 - **Galaxies**: Deep purple theme with 🌌 icon
+- **Black Holes**: Black/red theme with ⚫ icon
+- **Nebulae**: Pink/cyan theme with ☁️ icon
 
-## Property Display Logic
+## Rules
 
-The component intelligently shows only relevant properties:
-
-- **Planets**: diameter, mass, distance from sun, orbital period, satellites
-- **Moons**: diameter, mass, distance from parent, orbital period, parent body
-- **Stars**: diameter, mass, spectral class, temperature, luminosity, satellites
-- **Galaxies**: galaxy type, diameter, star count, distance from Earth
-
-## Image Generation
-
-When `enableImageGeneration: true` is set:
-- The component automatically generates an AI image using EverArt
-- For planets: Uses `planetType` to generate accurate imagery
-- For moons: Uses known moon data or generic moon imagery
-- For stars: Uses `starType` and spectral class for accurate colors
-- For galaxies: Uses `galaxyType` for appropriate structure
-
-## Best Practices
-
-1. **Always include `bodyType`**: This is critical for proper rendering
-2. **Use accurate data**: Provide scientifically accurate measurements when possible
-3. **Include units**: Always specify units (km, kg, K, L☉, light-years, etc.)
-4. **Enable image generation**: Set to `true` for visual appeal
-5. **Provide context**: Write descriptive text that explains significance
-6. **Use appropriate labels**: Customize `distanceFromLabel` and `satelliteLabel` for clarity
-
-## Common Patterns
-
-### Solar System Planets
-Always include: diameter, mass, distanceFrom, orbitalPeriod, satellites, planetType
-
-### Exoplanets
-Focus on: diameter, mass, parentBody (star name), orbitalPeriod, planetType
-
-### Major Moons
-Include: diameter, mass, distanceFrom, orbitalPeriod, parentBody
-
-### Nearby Stars
-Include: spectralClass, temperature, luminosity, and distance if known
-
-### Galaxies
-Include: galaxyType, diameter, starCount, distanceFromEarth
-
-## Error Handling
-
-If uncertain about a property:
-- Omit it rather than guessing
-- The component will gracefully handle missing optional properties
-- Always provide at minimum: name, bodyType, description
+1. **Always set `type: "celestial-body-card"`** at the component level (not inside props)
+2. **Always set `enableImageGeneration: true`** for visual appeal
+3. **Include units** (km, kg, K, L☉, M☉, light-years)
+4. **Use scientific notation** for large numbers (e.g., 1.898 × 10²⁷ kg)
+5. **Use accurate astronomical data** from reliable sources
+6. **Description can include any details** - image generation extracts only visual info
+7. **Provide minimum 2-3 sentences** in description for educational value
 
 ## Multiple Bodies
 
@@ -298,7 +212,13 @@ For queries like "Tell me about Jupiter's moons", return multiple celestial-body
         "name": "Io",
         "bodyType": "moon",
         "parentBody": "Jupiter",
-        // ... other properties
+        "description": "The most volcanically active body in the solar system.",
+        "diameter": "3,643 km",
+        "mass": "8.93 × 10²² kg",
+        "distanceFrom": "421,700 km",
+        "distanceFromLabel": "Distance from Jupiter",
+        "orbitalPeriod": "1.77 Earth days",
+        "enableImageGeneration": true
       }
     },
     {
@@ -307,10 +227,15 @@ For queries like "Tell me about Jupiter's moons", return multiple celestial-body
         "name": "Europa",
         "bodyType": "moon",
         "parentBody": "Jupiter",
-        // ... other properties
+        "description": "An icy moon with a subsurface ocean that may harbor life.",
+        "diameter": "3,121 km",
+        "mass": "4.8 × 10²² kg",
+        "distanceFrom": "671,000 km",
+        "distanceFromLabel": "Distance from Jupiter",
+        "orbitalPeriod": "3.55 Earth days",
+        "enableImageGeneration": true
       }
     }
-    // ... more moons
   ]
 }
 ```
@@ -318,11 +243,55 @@ For queries like "Tell me about Jupiter's moons", return multiple celestial-body
 ## Integration with Other Components
 
 Celestial body cards work well with:
-- `space-timeline`: For historical context
-- `constellation`: For stellar context
+- `space-timeline`: For historical context about discoveries
+- `constellation`: For stellar context and star positions
 - `solar-system`: For orbital visualization
 - `text-block`: For additional explanations
 
+## Common Mistakes to Avoid
+
+❌ **WRONG** - Missing `type` field:
+```json
+{
+  "props": {
+    "name": "Mars",
+    "bodyType": "planet"
+  }
+}
+```
+
+✅ **CORRECT** - Include `type` field:
+```json
+{
+  "type": "celestial-body-card",
+  "props": {
+    "name": "Mars",
+    "bodyType": "planet"
+  }
+}
+```
+
+❌ **WRONG** - `bodyType` at component level:
+```json
+{
+  "type": "planet",
+  "props": {
+    "name": "Mars"
+  }
+}
+```
+
+✅ **CORRECT** - `bodyType` inside props:
+```json
+{
+  "type": "celestial-body-card",
+  "props": {
+    "name": "Mars",
+    "bodyType": "planet"
+  }
+}
+```
+
 ---
 
-**Remember**: The celestial-body-card is your go-to component for any celestial body. Let the `bodyType` property guide which additional properties to include, and the component will handle the rest!
+**Remember**: Always use `"type": "celestial-body-card"` at the component level, and `"bodyType"` inside props to specify what kind of celestial body it is!

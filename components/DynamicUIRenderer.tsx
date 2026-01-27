@@ -32,12 +32,26 @@ export default function DynamicUIRenderer({ components, onSetQuestion }: Dynamic
   });
 
   const renderComponent = (spec: ComponentSpec, index: number) => {
-    const key = spec.id || `${spec.type}-${index}`;
+    // DEFENSIVE FIX: Handle malformed agent responses where bodyType exists but type is missing
+    // Agent should return: { type: "celestial-body-card", props: { bodyType: "star", ... } }
+    // But sometimes returns: { bodyType: "star", name: "Sun", ... } (missing type wrapper)
+    let normalizedSpec = spec;
+    const specAny = spec as any;
+    if (!spec.type && specAny.bodyType) {
+      console.warn('[DynamicUIRenderer] Detected malformed component with bodyType but no type field. Auto-normalizing to celestial-body-card.');
+      normalizedSpec = {
+        type: 'celestial-body-card',
+        props: specAny,
+        id: specAny.id,
+      } as ComponentSpec;
+    }
+    
+    const key = normalizedSpec.id || `${normalizedSpec.type}-${index}`;
     console.log('[DynamicUIRenderer] Rendering component:', {
-      type: spec.type,
+      type: normalizedSpec.type,
       index,
-      hasProps: !!spec.props,
-      propsKeys: spec.props ? Object.keys(spec.props) : [],
+      hasProps: !!normalizedSpec.props,
+      propsKeys: normalizedSpec.props ? Object.keys(normalizedSpec.props) : [],
     });
 
     try {

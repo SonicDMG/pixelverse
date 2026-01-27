@@ -134,15 +134,17 @@ function buildPrompt(request: GenerateImageRequest): string {
 
   switch (objectType) {
     case 'planet':
-      // Check if this is a known solar system planet
-      const supportedPlanets = SpacePromptBuilder.getSupportedPlanets();
-      const normalizedName = name.toLowerCase();
-      
-      if (supportedPlanets.includes(normalizedName)) {
-        // Use scientifically accurate prompt for known planets
-        console.log(`[Generate Space Image API] Using accurate prompt for planet: ${name}`);
-        return SpacePromptBuilder.buildAccuratePlanetPrompt(name);
-      }
+        // Check if this is a known solar system planet
+        const supportedPlanets = SpacePromptBuilder.getSupportedPlanets();
+        // Extract just the planet name (first word) for matching
+        const planetNameOnly = name.split(/\s+/)[0];
+        const normalizedName = planetNameOnly.toLowerCase();
+        
+        if (supportedPlanets.includes(normalizedName)) {
+          // Use scientifically accurate prompt for known planets
+          console.log(`[Generate Space Image API] Using accurate prompt for planet: ${planetNameOnly}`);
+          return SpacePromptBuilder.buildAccuratePlanetPrompt(planetNameOnly);
+        }
       
       // For exoplanets or unknown planets, parse details from description
       console.log(`[Generate Space Image API] Using generic prompt for exoplanet: ${name}`);
@@ -203,12 +205,14 @@ function buildPrompt(request: GenerateImageRequest): string {
       // Check for known moons if type is moon
       if (determinedCelestialType === 'moon') {
         const supportedMoons = SpacePromptBuilder.getSupportedMoons();
-        const normalizedMoonName = name.toLowerCase();
+        // Extract just the moon name (first word) for matching
+        const moonNameOnly = name.split(/\s+/)[0];
+        const normalizedMoonName = moonNameOnly.toLowerCase();
         
         if (supportedMoons.includes(normalizedMoonName)) {
           // Use scientifically accurate prompt for known moons
-          console.log(`[Generate Space Image API] Using accurate prompt for moon: ${name}`);
-          return SpacePromptBuilder.buildAccurateMoonPrompt(name);
+          console.log(`[Generate Space Image API] Using accurate prompt for moon: ${moonNameOnly}`);
+          return SpacePromptBuilder.buildAccurateMoonPrompt(moonNameOnly);
         }
       }
 
