@@ -273,38 +273,38 @@ export default function SpaceTimeline({
       case 'mission':
         return {
           icon: '🚀',
-          color: 'border-[#00CED1] bg-[#00CED1]/10',
-          dotColor: 'bg-[#00CED1]',
-          textColor: 'text-[#00CED1]',
+          color: 'border-[var(--color-event-mission)] bg-[var(--color-event-mission)]/10',
+          dotColor: 'bg-[var(--color-event-mission)]',
+          textColor: 'text-[var(--color-event-mission)]',
         };
       case 'discovery':
         return {
           icon: '🔭',
-          color: 'border-[#FFD700] bg-[#FFD700]/10',
-          dotColor: 'bg-[#FFD700]',
-          textColor: 'text-[#FFD700]',
+          color: 'border-[var(--color-event-discovery)] bg-[var(--color-event-discovery)]/10',
+          dotColor: 'bg-[var(--color-event-discovery)]',
+          textColor: 'text-[var(--color-event-discovery)]',
         };
       case 'observation':
         return {
           icon: '👁️',
-          color: 'border-[#9370DB] bg-[#9370DB]/10',
-          dotColor: 'bg-[#9370DB]',
-          textColor: 'text-[#9370DB]',
+          color: 'border-[var(--color-event-observation)] bg-[var(--color-event-observation)]/10',
+          dotColor: 'bg-[var(--color-event-observation)]',
+          textColor: 'text-[var(--color-event-observation)]',
         };
       default:
         return {
           icon: '⭐',
-          color: 'border-[#4169E1] bg-[#4169E1]/10',
-          dotColor: 'bg-[#4169E1]',
-          textColor: 'text-[#4169E1]',
+          color: 'border-[var(--color-primary)] bg-[var(--color-primary)]/10',
+          dotColor: 'bg-[var(--color-primary)]',
+          textColor: 'text-[var(--color-primary)]',
         };
     }
   };
 
   if (processedEvents.length === 0) {
     return (
-      <div className="w-full p-6 bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] border-4 border-[#4169E1] rounded-lg pixel-border">
-        <h2 className="text-2xl font-pixel text-[#4169E1] glow-text-subtle uppercase tracking-wider">
+      <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] to-[var(--color-bg-card)] border-4 border-[var(--color-primary)] rounded-lg pixel-border">
+        <h2 className="text-2xl font-pixel text-[var(--color-primary)] glow-text-subtle uppercase tracking-wider">
           {title}
         </h2>
         <p className="mt-4 font-pixel text-sm text-gray-400">No events to display</p>
@@ -315,27 +315,27 @@ export default function SpaceTimeline({
   // Render horizontal layout
   if (layout === 'horizontal') {
     return (
-      <div className="w-full p-6 bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] border-4 border-[#4169E1] rounded-lg pixel-border scanline-container">
+      <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] to-[var(--color-bg-card)] border-4 border-[var(--color-primary)] rounded-lg pixel-border scanline-container">
         {/* Timeline Title */}
         <div className="mb-6">
-          <h2 className="text-2xl font-pixel text-[#4169E1] glow-text-subtle uppercase tracking-wider flex items-center gap-3">
-            <span className="text-[#00CED1]">⏱️</span>
+          <h2 className="text-2xl font-pixel text-[var(--color-primary)] glow-text-subtle uppercase tracking-wider flex items-center gap-3">
+            <span className="text-[var(--color-secondary)]">⏱️</span>
             {title}
           </h2>
-          <div className="mt-2 h-1 w-24 bg-gradient-to-r from-[#4169E1] to-transparent"></div>
+          <div className="mt-2 h-1 w-24 bg-gradient-to-r from-[var(--color-primary)] to-transparent"></div>
           
           {/* Timeline info */}
           <div className="mt-3 flex flex-wrap gap-3 text-xs font-pixel text-gray-400">
             <div className="flex items-center gap-2">
-              <span className="text-[#00CED1]">📅</span>
+              <span className="text-[var(--color-secondary)]">📅</span>
               <span>{processedEvents.length} events</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[#FFD700]">⚡</span>
+              <span className="text-[var(--color-accent)]">⚡</span>
               <span>Scale: {scaleType}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[#9370DB]">↔️</span>
+              <span className="text-[var(--color-purple)]">↔️</span>
               <span>Scroll horizontally to explore</span>
             </div>
           </div>
@@ -347,7 +347,7 @@ export default function SpaceTimeline({
             
             {/* Horizontal timeline axis - centered exactly at 50% */}
             <div
-              className="absolute left-0 right-0 h-3 bg-gradient-to-r from-[#4169E1] via-[#9370DB] to-[#00CED1] rounded-full shadow-[0_0_20px_rgba(65,105,225,0.5)]"
+              className="absolute left-0 right-0 h-3 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-purple)] to-[var(--color-secondary)] rounded-full shadow-[0_0_20px_rgba(65,105,225,0.5)]"
               style={{
                 top: '50%',
                 transform: 'translateY(-50%)',
@@ -366,9 +366,9 @@ export default function SpaceTimeline({
                   transform: 'translateY(10px)'
                 }}
               >
-                <div className="w-0.5 h-4 bg-[#4169E1] opacity-50 mb-1"></div>
+                <div className="w-0.5 h-4 bg-[var(--color-primary)] opacity-50 mb-1"></div>
                 <span
-                  className="text-[10px] font-pixel text-[#4169E1] opacity-70 whitespace-nowrap"
+                  className="text-[10px] font-pixel text-[var(--color-primary)] opacity-70 whitespace-nowrap"
                   style={{
                     transform: 'rotate(45deg)',
                     transformOrigin: 'top left',
@@ -445,7 +445,7 @@ export default function SpaceTimeline({
                     onMouseLeave={() => setHoveredIndex(null)}
                   >
                     <div
-                      className={`bg-[#0a0e27] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 relative ${
+                      className={`bg-[var(--color-bg-dark)] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 relative ${
                         isHovered
                           ? 'border-opacity-100 z-10 p-4'
                           : 'hover:border-opacity-100 group-hover:scale-102 p-3'
@@ -507,8 +507,8 @@ export default function SpaceTimeline({
 
                         {/* Time gap indicator */}
                         {showRelativeTime && event.timeGap && (
-                          <div className="mt-2 pt-2 border-t border-[#4169E1]/30">
-                            <div className="flex items-center gap-2 text-[10px] font-pixel text-[#4169E1]">
+                          <div className="mt-2 pt-2 border-t border-[var(--color-primary)]/30">
+                            <div className="flex items-center gap-2 text-[10px] font-pixel text-[var(--color-primary)]">
                               <span>⏱️</span>
                               <span>+{event.timeGap}</span>
                             </div>
@@ -530,8 +530,8 @@ export default function SpaceTimeline({
                 transform: 'translate(-50%, -50%)'
               }}
             >
-              <div className="w-6 h-6 rounded-full border-2 border-[#4169E1] bg-[#0a0e27] flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-[#4169E1] animate-pulse"></div>
+              <div className="w-6 h-6 rounded-full border-2 border-[var(--color-primary)] bg-[var(--color-bg-dark)] flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
               </div>
             </div>
 
@@ -543,27 +543,27 @@ export default function SpaceTimeline({
                 transform: 'translate(50%, -50%)'
               }}
             >
-              <div className="w-6 h-6 rounded-full border-2 border-[#00CED1] bg-[#0a0e27] flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-[#00CED1] animate-pulse"></div>
+              <div className="w-6 h-6 rounded-full border-2 border-[var(--color-secondary)] bg-[var(--color-bg-dark)] flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-[var(--color-secondary)] animate-pulse"></div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="mt-6 pt-4 border-t-2 border-[#4169E1]/30">
+        <div className="mt-6 pt-4 border-t-2 border-[var(--color-primary)]/30">
           <div className="flex flex-wrap gap-4 justify-center text-xs font-pixel">
             <div className="flex items-center gap-2">
               <span className="text-lg">🚀</span>
-              <span className="text-[#00CED1]">Mission</span>
+              <span className="text-[var(--color-event-mission)]">Mission</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg">🔭</span>
-              <span className="text-[#FFD700]">Discovery</span>
+              <span className="text-[var(--color-event-discovery)]">Discovery</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg">👁️</span>
-              <span className="text-[#9370DB]">Observation</span>
+              <span className="text-[var(--color-event-observation)]">Observation</span>
             </div>
           </div>
         </div>
@@ -587,28 +587,28 @@ export default function SpaceTimeline({
 
   // Render vertical layout (original)
   return (
-    <div className="w-full p-6 bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] border-4 border-[#4169E1] rounded-lg pixel-border scanline-container">
+    <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] to-[var(--color-bg-card)] border-4 border-[var(--color-primary)] rounded-lg pixel-border scanline-container">
       {/* Timeline Title */}
       <div className="mb-6">
-        <h2 className="text-2xl font-pixel text-[#4169E1] glow-text-subtle uppercase tracking-wider flex items-center gap-3">
-          <span className="text-[#00CED1]">⏱️</span>
+        <h2 className="text-2xl font-pixel text-[var(--color-primary)] glow-text-subtle uppercase tracking-wider flex items-center gap-3">
+          <span className="text-[var(--color-secondary)]">⏱️</span>
           {title}
         </h2>
-        <div className="mt-2 h-1 w-24 bg-gradient-to-r from-[#4169E1] to-transparent"></div>
+        <div className="mt-2 h-1 w-24 bg-gradient-to-r from-[var(--color-primary)] to-transparent"></div>
         
         {/* Timeline info */}
         <div className="mt-3 flex flex-wrap gap-3 text-xs font-pixel text-gray-400">
           <div className="flex items-center gap-2">
-            <span className="text-[#00CED1]">📅</span>
+            <span className="text-[var(--color-secondary)]">📅</span>
             <span>{processedEvents.length} events</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[#FFD700]">⚡</span>
+            <span className="text-[var(--color-accent)]">⚡</span>
             <span>Scale: {scaleType}</span>
           </div>
           {showTimeAxis && (
             <div className="flex items-center gap-2">
-              <span className="text-[#9370DB]">📊</span>
+              <span className="text-[var(--color-purple)]">📊</span>
               <span>Time axis enabled</span>
             </div>
           )}
@@ -618,7 +618,7 @@ export default function SpaceTimeline({
       {/* Timeline Container */}
       <div className="relative" style={{ minHeight: `${minHeight}px` }}>
         {/* Vertical timeline line with glow effect */}
-        <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-[#4169E1] via-[#9370DB] to-[#4169E1] opacity-50 glow-line"></div>
+        <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--color-primary)] via-[var(--color-purple)] to-[var(--color-primary)] opacity-50 glow-line"></div>
 
         {/* Time axis markers */}
         {showTimeAxis && timeAxisMarkers.map((marker, index) => (
@@ -627,8 +627,8 @@ export default function SpaceTimeline({
             className="absolute left-0 flex items-center"
             style={{ top: `${marker.position}px` }}
           >
-            <div className="w-4 h-0.5 bg-[#4169E1] opacity-50"></div>
-            <span className="ml-2 text-[10px] font-pixel text-[#4169E1] opacity-70">
+            <div className="w-4 h-0.5 bg-[var(--color-primary)] opacity-50"></div>
+            <span className="ml-2 text-[10px] font-pixel text-[var(--color-primary)] opacity-70">
               {marker.label}
             </span>
           </div>
@@ -650,10 +650,10 @@ export default function SpaceTimeline({
               {/* Time gap indicator */}
               {showRelativeTime && event.timeGap && (
                 <div className="absolute left-6 -top-6 transform -translate-x-1/2">
-                  <div className="px-2 py-1 bg-[#0a0e27] border border-[#4169E1]/30 rounded text-[10px] font-pixel text-[#4169E1] whitespace-nowrap">
+                  <div className="px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-primary)]/30 rounded text-[10px] font-pixel text-[var(--color-primary)] whitespace-nowrap">
                     +{event.timeGap}
                   </div>
-                  <div className="absolute left-1/2 top-full w-0.5 h-6 bg-gradient-to-b from-[#4169E1] to-transparent opacity-30 transform -translate-x-1/2"></div>
+                  <div className="absolute left-1/2 top-full w-0.5 h-6 bg-gradient-to-b from-[var(--color-primary)] to-transparent opacity-30 transform -translate-x-1/2"></div>
                 </div>
               )}
 
@@ -676,7 +676,7 @@ export default function SpaceTimeline({
 
               {/* Event content */}
               <div
-                className={`p-4 bg-[#0a0e27] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 ${
+                className={`p-4 bg-[var(--color-bg-dark)] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 ${
                   isHovered
                     ? 'border-opacity-100 translate-x-2 shadow-lg shadow-current/20'
                     : 'hover:border-opacity-100 group-hover:translate-x-1'
@@ -706,8 +706,8 @@ export default function SpaceTimeline({
 
                 {/* Expanded details on hover */}
                 {isHovered && event.timeGap && (
-                  <div className="mt-3 pt-3 border-t border-[#4169E1]/30">
-                    <div className="flex items-center gap-2 text-[10px] font-pixel text-[#4169E1]">
+                  <div className="mt-3 pt-3 border-t border-[var(--color-primary)]/30">
+                    <div className="flex items-center gap-2 text-[10px] font-pixel text-[var(--color-primary)]">
                       <span>⏱️</span>
                       <span>{event.timeGap} after previous event</span>
                     </div>
@@ -724,12 +724,12 @@ export default function SpaceTimeline({
           style={{ top: `${processedEvents[processedEvents.length - 1].position + 100}px` }}
         >
           <div className="absolute left-0 flex items-center">
-            <div className="w-12 h-12 rounded-full border-2 border-[#4169E1] bg-[#0a0e27] flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-[#4169E1] animate-pulse"></div>
+            <div className="w-12 h-12 rounded-full border-2 border-[var(--color-primary)] bg-[var(--color-bg-dark)] flex items-center justify-center">
+              <div className="w-3 h-3 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
             </div>
           </div>
-          <div className="p-3 bg-[#0a0e27]/50 border border-[#4169E1]/30 rounded pixel-border">
-            <p className="font-pixel text-xs text-[#4169E1] italic">
+          <div className="p-3 bg-[var(--color-bg-dark)]/50 border border-[var(--color-primary)]/30 rounded pixel-border">
+            <p className="font-pixel text-xs text-[var(--color-primary)] italic">
               Timeline continues...
             </p>
           </div>
@@ -737,19 +737,19 @@ export default function SpaceTimeline({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-4 border-t-2 border-[#4169E1]/30">
+      <div className="mt-6 pt-4 border-t-2 border-[var(--color-primary)]/30">
         <div className="flex flex-wrap gap-4 justify-center text-xs font-pixel">
           <div className="flex items-center gap-2">
             <span className="text-lg">🚀</span>
-            <span className="text-[#00CED1]">Mission</span>
+            <span className="text-[var(--color-event-mission)]">Mission</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-lg">🔭</span>
-            <span className="text-[#FFD700]">Discovery</span>
+            <span className="text-[var(--color-event-discovery)]">Discovery</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-lg">👁️</span>
-            <span className="text-[#9370DB]">Observation</span>
+            <span className="text-[var(--color-event-observation)]">Observation</span>
           </div>
         </div>
       </div>

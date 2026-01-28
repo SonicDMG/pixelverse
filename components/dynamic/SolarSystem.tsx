@@ -31,7 +31,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 3.285e23,
     orbitalRadius: 0.39,
     orbitalPeriod: 88,
-    color: '#8C7853',
+    color: 'var(--color-planet-mercury)',
     description: 'Smallest planet, closest to the Sun'
   },
   {
@@ -41,7 +41,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 4.867e24,
     orbitalRadius: 0.72,
     orbitalPeriod: 225,
-    color: '#FFC649',
+    color: 'var(--color-planet-venus)',
     description: 'Hottest planet with thick atmosphere'
   },
   {
@@ -51,7 +51,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 5.972e24,
     orbitalRadius: 1.0,
     orbitalPeriod: 365.25,
-    color: '#4169E1',
+    color: 'var(--color-planet-earth)',
     description: 'Our home planet with liquid water'
   },
   {
@@ -61,7 +61,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 6.39e23,
     orbitalRadius: 1.52,
     orbitalPeriod: 687,
-    color: '#CD5C5C',
+    color: 'var(--color-planet-mars)',
     description: 'The Red Planet with polar ice caps'
   },
   {
@@ -71,7 +71,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 1.898e27,
     orbitalRadius: 5.20,
     orbitalPeriod: 4333,
-    color: '#DAA520',
+    color: 'var(--color-planet-jupiter)',
     description: 'Largest planet with Great Red Spot'
   },
   {
@@ -81,7 +81,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 5.683e26,
     orbitalRadius: 9.54,
     orbitalPeriod: 10759,
-    color: '#F4A460',
+    color: 'var(--color-planet-saturn)',
     description: 'Famous for its spectacular ring system'
   },
   {
@@ -91,7 +91,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 8.681e25,
     orbitalRadius: 19.19,
     orbitalPeriod: 30687,
-    color: '#4FD0E0',
+    color: 'var(--color-planet-uranus)',
     description: 'Ice giant tilted on its side'
   },
   {
@@ -101,7 +101,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
     mass: 1.024e26,
     orbitalRadius: 30.07,
     orbitalPeriod: 60190,
-    color: '#4169E1',
+    color: 'var(--color-planet-neptune)',
     description: 'Farthest planet with supersonic winds'
   }
 ];
@@ -183,10 +183,10 @@ export default function SolarSystem({
     : null;
 
   return (
-    <div className="w-full p-6 bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border relative overflow-hidden">
+    <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] via-[var(--color-bg-card)] to-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] rounded-lg pixel-border relative overflow-hidden">
       {/* Header */}
       <div className="mb-4">
-        <h2 className="text-2xl font-pixel text-[#FFD700] glow-text uppercase tracking-wider">
+        <h2 className="text-2xl font-pixel text-[var(--color-accent)] glow-text uppercase tracking-wider">
           {name}
         </h2>
         {description && (
@@ -195,7 +195,7 @@ export default function SolarSystem({
       </div>
 
       {/* Solar System Visualization */}
-      <div className="relative bg-[#0a0e27] rounded-lg border-2 border-[#4169E1]/30 overflow-hidden" style={{ height: '600px' }}>
+      <div className="relative bg-[var(--color-bg-dark)] rounded-lg border-2 border-[var(--color-primary)]/30 overflow-hidden" style={{ height: '600px' }}>
         <svg
           viewBox="-500 -500 1000 1000"
           className="w-full h-full"
@@ -204,9 +204,9 @@ export default function SolarSystem({
           {/* Starfield background */}
           <defs>
             <radialGradient id="sunGlow">
-              <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-              <stop offset="50%" stopColor="#FFD700" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#FFD700" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="1" />
+              <stop offset="50%" stopColor="var(--color-accent)" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -235,7 +235,7 @@ export default function SolarSystem({
               cy="0"
               r={planet.scaledRadius}
               fill="none"
-              stroke={selectedPlanet === planet.name ? '#00CED1' : '#4169E1'}
+              stroke={selectedPlanet === planet.name ? 'var(--color-secondary)' : 'var(--color-primary)'}
               strokeWidth={selectedPlanet === planet.name ? 2 : 1}
               strokeDasharray="5,5"
               opacity={selectedPlanet === planet.name ? 0.8 : 0.3}
@@ -253,7 +253,7 @@ export default function SolarSystem({
             cx="0"
             cy="0"
             r="15"
-            fill="#FFD700"
+            fill="var(--color-accent)"
           />
 
           {/* Planets */}
@@ -275,7 +275,7 @@ export default function SolarSystem({
                 cy={planet.y}
                 r={planet.size}
                 fill={planet.color}
-                stroke={selectedPlanet === planet.name ? '#00CED1' : 'none'}
+                stroke={selectedPlanet === planet.name ? 'var(--color-secondary)' : 'none'}
                 strokeWidth="2"
                 className="cursor-pointer transition-all duration-200 hover:opacity-80"
                 onClick={() => handlePlanetClick(planet.name)}
@@ -302,9 +302,9 @@ export default function SolarSystem({
 
         {/* Info overlay for selected planet */}
         {selectedPlanetData && (
-          <div className="absolute top-4 right-4 w-64 bg-[#1a1f3a] border-2 border-[#00CED1] rounded-lg pixel-border p-4 space-y-2">
+          <div className="absolute top-4 right-4 w-64 bg-[var(--color-bg-card)] border-2 border-[var(--color-secondary)] rounded-lg pixel-border p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-pixel text-[#FFD700]">
+              <h3 className="text-lg font-pixel text-[var(--color-accent)]">
                 {selectedPlanetData.name}
               </h3>
               <button
@@ -321,19 +321,19 @@ export default function SolarSystem({
 
             <div className="space-y-1 text-xs font-pixel">
               <div className="flex justify-between">
-                <span className="text-[#4169E1]">Type:</span>
+                <span className="text-[var(--color-primary)]">Type:</span>
                 <span className="text-white capitalize">{selectedPlanetData.type}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#4169E1]">Radius:</span>
+                <span className="text-[var(--color-primary)]">Radius:</span>
                 <span className="text-white">{selectedPlanetData.radius.toLocaleString()} km</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#4169E1]">Distance:</span>
+                <span className="text-[var(--color-primary)]">Distance:</span>
                 <span className="text-white">{selectedPlanetData.orbitalRadius} AU</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#4169E1]">Orbit Period:</span>
+                <span className="text-[var(--color-primary)]">Orbit Period:</span>
                 <span className="text-white">{selectedPlanetData.orbitalPeriod.toLocaleString()} days</span>
               </div>
             </div>
@@ -342,11 +342,11 @@ export default function SolarSystem({
       </div>
 
       {/* Controls */}
-      <div className="mt-4 flex items-center justify-center gap-4 p-3 bg-[#1a1f3a] border-2 border-[#4169E1]/30 rounded-lg pixel-border">
+      <div className="mt-4 flex items-center justify-center gap-4 p-3 bg-[var(--color-bg-card)] border-2 border-[var(--color-primary)]/30 rounded-lg pixel-border">
         {/* Play/Pause */}
         <button
           onClick={() => setIsPaused(!isPaused)}
-          className="px-4 py-2 bg-[#4169E1] hover:bg-[#00CED1] text-white font-pixel text-sm rounded pixel-border transition-colors"
+          className="px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-secondary)] text-white font-pixel text-sm rounded pixel-border transition-colors"
         >
           {isPaused ? '▶ Play' : '⏸ Pause'}
         </button>
@@ -357,7 +357,7 @@ export default function SolarSystem({
           <select
             value={speed}
             onChange={(e) => setSpeed(Number(e.target.value))}
-            className="px-2 py-1 bg-[#0a0e27] border border-[#4169E1] text-white font-pixel text-xs rounded"
+            className="px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-primary)] text-white font-pixel text-xs rounded"
           >
             <option value="1">1x</option>
             <option value="10">10x</option>
@@ -377,7 +377,7 @@ export default function SolarSystem({
             setTime(0);
             setSelectedPlanet(null);
           }}
-          className="px-3 py-1 bg-[#9370DB] hover:bg-[#9370DB]/80 text-white font-pixel text-xs rounded pixel-border transition-colors"
+          className="px-3 py-1 bg-[var(--color-purple)] hover:bg-[var(--color-purple)]/80 text-white font-pixel text-xs rounded pixel-border transition-colors"
         >
           ↺ Reset
         </button>

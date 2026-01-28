@@ -133,15 +133,15 @@ export default function DynamicUIRenderer({ components, onSetQuestion }: Dynamic
 
         case 'alert-box':
           const severityColors = {
-            info: 'border-[#4169E1] text-[#4169E1]',
-            warning: 'border-[#FFD700] text-[#FFD700]',
-            success: 'border-[#00CED1] text-[#00CED1]',
-            error: 'border-[#ff0000] text-[#ff0000]',
+            info: 'border-[var(--color-info)] text-[var(--color-info)]',
+            warning: 'border-[var(--color-warning)] text-[var(--color-warning)]',
+            success: 'border-[var(--color-success)] text-[var(--color-success)]',
+            error: 'border-[var(--color-error)] text-[var(--color-error)]',
           };
           return (
             <div
               key={key}
-              className={`p-4 border-4 pixel-border ${severityColors[spec.props.severity]} bg-[#0a0e27]`}
+              className={`p-4 border-4 pixel-border ${severityColors[spec.props.severity]} bg-[var(--color-bg-dark)]`}
             >
               {spec.props.title && (
                 <h4 className="font-pixel text-sm mb-2">{spec.props.title}</h4>
@@ -211,9 +211,9 @@ export default function DynamicUIRenderer({ components, onSetQuestion }: Dynamic
           return (
             <div
               key={key}
-              className="p-4 border-2 border-[#ff0000] bg-[#0a0e27] pixel-border"
+              className="p-4 border-2 border-[var(--color-error)] bg-[var(--color-bg-dark)] pixel-border"
             >
-              <p className="font-pixel text-xs text-[#ff0000]">
+              <p className="font-pixel text-xs text-[var(--color-error)]">
                 Unknown component type: {(spec as any).type}
               </p>
             </div>
@@ -224,9 +224,9 @@ export default function DynamicUIRenderer({ components, onSetQuestion }: Dynamic
       return (
         <div
           key={key}
-          className="p-4 border-2 border-[#ff0000] bg-[#0a0e27] pixel-border"
+          className="p-4 border-2 border-[var(--color-error)] bg-[var(--color-bg-dark)] pixel-border"
         >
-          <p className="font-pixel text-xs text-[#ff0000]">
+          <p className="font-pixel text-xs text-[var(--color-error)]">
             Error rendering {spec.type}
           </p>
         </div>

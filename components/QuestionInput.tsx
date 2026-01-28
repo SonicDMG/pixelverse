@@ -39,14 +39,14 @@ export default function QuestionInput({ onSubmit, loadingStatus, question, setQu
       {/* Example Questions */}
       {exampleQuestions.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[#FFD700] text-xs font-pixel">Try these examples:</p>
+          <p className="text-[var(--color-accent)] text-xs font-pixel">Try these examples:</p>
           <div className="flex flex-wrap gap-2">
             {exampleQuestions.map((example, index) => (
               <button
                 key={index}
                 onClick={() => handleExampleClick(example)}
                 disabled={isLoading}
-                className="px-3 py-2 bg-[#1a1f3a] border-2 border-[#4169E1] text-[#4169E1] text-xs font-pixel hover:bg-[#4169E1] hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
+                className="px-3 py-2 bg-[var(--color-bg-card)] border-2 border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-pixel hover:bg-[var(--color-primary)] hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
               >
                 {example}
               </button>
@@ -63,12 +63,12 @@ export default function QuestionInput({ onSubmit, loadingStatus, question, setQu
           onChange={(e) => setQuestion(e.target.value)}
           placeholder={placeholder}
           disabled={isLoading}
-          className="flex-1 px-4 py-3 bg-[#0a0e27] border-4 border-[#4169E1] text-[#4169E1] placeholder-[#4169E1]/50 font-pixel text-sm focus:outline-none focus:border-[#00CED1] disabled:opacity-50 pixel-border"
+          className="flex-1 px-4 py-3 bg-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] text-[var(--color-primary)] placeholder-[var(--color-primary)]/50 font-pixel text-sm focus:outline-none focus:border-[var(--color-secondary)] disabled:opacity-50 pixel-border"
         />
         <button
           type="submit"
           disabled={isLoading || !question.trim()}
-          className="px-6 py-3 bg-[#4169E1] border-4 border-[#4169E1] text-white font-pixel text-sm hover:bg-[#00CED1] hover:border-[#00CED1] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
+          className="px-6 py-3 bg-[var(--color-primary)] border-4 border-[var(--color-primary)] text-white font-pixel text-sm hover:bg-[var(--color-secondary)] hover:border-[var(--color-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border"
         >
           {isLoading ? (
             <span className="inline-flex">

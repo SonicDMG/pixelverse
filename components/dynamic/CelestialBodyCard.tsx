@@ -26,54 +26,54 @@ const BODY_THEMES = {
   planet: {
     icon: '🪐',
     colors: {
-      primary: '#9370DB',
-      secondary: '#4169E1',
-      accent: '#00CED1',
+      primary: 'var(--color-body-planet-primary)',
+      secondary: 'var(--color-body-planet-secondary)',
+      accent: 'var(--color-body-planet-accent)',
     },
     glow: 'shadow-[0_0_20px_rgba(147,112,219,0.5)]',
   },
   moon: {
     icon: '🌙',
     colors: {
-      primary: '#C0C0C0',
-      secondary: '#808080',
-      accent: '#E8E8E8',
+      primary: 'var(--color-body-moon-primary)',
+      secondary: 'var(--color-body-moon-secondary)',
+      accent: 'var(--color-body-moon-accent)',
     },
     glow: 'shadow-[0_0_20px_rgba(192,192,192,0.5)]',
   },
   star: {
     icon: '⭐',
     colors: {
-      primary: '#FFD700',
-      secondary: '#FFA500',
-      accent: '#FFFF00',
+      primary: 'var(--color-body-star-primary)',
+      secondary: 'var(--color-body-star-secondary)',
+      accent: 'var(--color-body-star-accent)',
     },
     glow: 'shadow-[0_0_30px_rgba(255,215,0,0.7)]',
   },
   galaxy: {
     icon: '🌌',
     colors: {
-      primary: '#8B00FF',
-      secondary: '#4B0082',
-      accent: '#9400D3',
+      primary: 'var(--color-body-galaxy-primary)',
+      secondary: 'var(--color-body-galaxy-secondary)',
+      accent: 'var(--color-body-galaxy-accent)',
     },
     glow: 'shadow-[0_0_25px_rgba(139,0,255,0.6)]',
   },
   'black-hole': {
     icon: '⚫',
     colors: {
-      primary: '#000000',
-      secondary: '#1a1a1a',
-      accent: '#FF4500',
+      primary: 'var(--color-body-blackhole-primary)',
+      secondary: 'var(--color-body-blackhole-secondary)',
+      accent: 'var(--color-body-blackhole-accent)',
     },
     glow: 'shadow-[0_0_35px_rgba(255,69,0,0.8)]',
   },
   nebula: {
     icon: '☁️',
     colors: {
-      primary: '#FF1493',
-      secondary: '#00CED1',
-      accent: '#7B68EE',
+      primary: 'var(--color-body-nebula-primary)',
+      secondary: 'var(--color-body-nebula-secondary)',
+      accent: 'var(--color-body-nebula-accent)',
     },
     glow: 'shadow-[0_0_30px_rgba(255,20,147,0.6)]',
   },
@@ -306,8 +306,8 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
   }
 
   return (
-    <div 
-      className={`w-full p-6 bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] border-4 rounded-lg pixel-border hover:border-[${theme.colors.accent}] transition-all duration-300 glitch-hover scanline-container ${theme.glow}`}
+    <div
+      className={`w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] to-[var(--color-bg-card)] border-4 rounded-lg pixel-border transition-all duration-300 glitch-hover scanline-container ${theme.glow}`}
       style={{ borderColor: theme.colors.primary }}
     >
       <div className="space-y-4">
@@ -347,7 +347,7 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
             style={{ borderColor: `${theme.colors.secondary}80` }}
           >
             {isGenerating ? (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-[#0a0e27]/80">
+              <div className="w-full h-full flex flex-col items-center justify-center bg-[var(--color-bg-dark)]/80">
                 <div className="relative">
                   <div 
                     className="w-16 h-16 border-4 border-t-4 rounded-full animate-spin"
@@ -393,7 +393,7 @@ export default function CelestialBodyCard(props: CelestialBodyCardProps) {
                   alt={name}
                   className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e27] to-transparent opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] to-transparent opacity-50" />
                 {localGeneratedUrl && (
                   <div 
                     className="absolute top-2 right-2 px-2 py-1 border rounded pixel-border"

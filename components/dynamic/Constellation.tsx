@@ -90,13 +90,13 @@ export default function Constellation({
   const spectralClassToColor = (spectralClass: string): string => {
     const upperClass = spectralClass.toUpperCase().charAt(0);
     const spectralColors: Record<string, string> = {
-      'O': '#8BB0FF', // Blue - hottest stars
-      'B': '#B0C4FF', // Blue-white
-      'A': '#E0E8FF', // White
-      'F': '#FFF8E7', // Yellow-white
-      'G': '#FFEB7B', // Yellow (like our Sun)
-      'K': '#FFB347', // Orange
-      'M': '#FF6B4A', // Red-orange - coolest stars (Betelgeuse)
+      'O': 'var(--color-spectral-o)', // Blue - hottest stars
+      'B': 'var(--color-spectral-b)', // Blue-white
+      'A': 'var(--color-spectral-a)', // White
+      'F': 'var(--color-spectral-f)', // Yellow-white
+      'G': 'var(--color-spectral-g)', // Yellow (like our Sun)
+      'K': 'var(--color-spectral-k)', // Orange
+      'M': 'var(--color-spectral-m)', // Red-orange - coolest stars (Betelgeuse)
     };
     return spectralColors[upperClass] || '#FFFFFF';
   };
@@ -115,9 +115,9 @@ export default function Constellation({
     
     // Fallback to magnitude-based coloring
     const brightness = Math.max(0, Math.min(5, 6 - star.magnitude));
-    if (brightness > 3) return '#FFD700';
-    if (brightness > 1) return '#00CED1';
-    return '#9370DB';
+    if (brightness > 3) return 'var(--color-accent)';
+    if (brightness > 1) return 'var(--color-secondary)';
+    return 'var(--color-purple)';
   };
 
   // Helper to get star size based on magnitude and optional size multiplier
@@ -149,12 +149,12 @@ export default function Constellation({
   };
 
   return (
-    <div className="w-full p-6 bg-gradient-to-br from-[#0a0e27] via-[#1a1f3a] to-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border hover:border-[#9370DB] transition-all duration-300 glitch-hover relative overflow-hidden">
+    <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] via-[var(--color-bg-card)] to-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] rounded-lg pixel-border hover:border-[var(--color-purple)] transition-all duration-300 glitch-hover relative overflow-hidden">
       {/* Starfield background effect */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div className="absolute top-4 left-8 w-1 h-1 bg-white rounded-full animate-pulse"></div>
-        <div className="absolute top-12 right-16 w-1 h-1 bg-[#00CED1] rounded-full animate-pulse delay-100"></div>
-        <div className="absolute bottom-8 left-20 w-1 h-1 bg-[#9370DB] rounded-full animate-pulse delay-200"></div>
+        <div className="absolute top-12 right-16 w-1 h-1 bg-[var(--color-secondary)] rounded-full animate-pulse delay-100"></div>
+        <div className="absolute bottom-8 left-20 w-1 h-1 bg-[var(--color-purple)] rounded-full animate-pulse delay-200"></div>
         <div className="absolute top-20 right-8 w-1 h-1 bg-white rounded-full animate-pulse delay-300"></div>
       </div>
 
@@ -162,22 +162,22 @@ export default function Constellation({
         {/* Constellation Header */}
         <div className="flex items-baseline justify-between flex-wrap gap-2">
           <div className="flex items-baseline gap-3">
-            <h2 className="text-3xl font-pixel text-[#FFD700] glow-text uppercase tracking-wider">
+            <h2 className="text-3xl font-pixel text-[var(--color-accent)] glow-text uppercase tracking-wider">
               {name}
             </h2>
-            <span className="text-lg font-pixel text-[#4169E1] opacity-80">
+            <span className="text-lg font-pixel text-[var(--color-primary)] opacity-80">
               ({abbreviation})
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-2xl text-[#FFD700] animate-pulse">✦</span>
-            <span className="text-xl text-[#00CED1] animate-pulse delay-100">✦</span>
-            <span className="text-lg text-[#9370DB] animate-pulse delay-200">✦</span>
+            <span className="text-2xl text-[var(--color-accent)] animate-pulse">✦</span>
+            <span className="text-xl text-[var(--color-secondary)] animate-pulse delay-100">✦</span>
+            <span className="text-lg text-[var(--color-purple)] animate-pulse delay-200">✦</span>
           </div>
         </div>
 
         {/* Description */}
-        <p className="font-pixel text-sm text-gray-300 leading-relaxed border-l-4 border-[#4169E1] pl-4 bg-[#0a0e27]/50 py-2">
+        <p className="font-pixel text-sm text-gray-300 leading-relaxed border-l-4 border-[var(--color-primary)] pl-4 bg-[var(--color-bg-dark)]/50 py-2">
           {description}
         </p>
 
@@ -185,8 +185,8 @@ export default function Constellation({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
           {/* Brightest Star */}
           {brightestStar && (
-            <div className="p-3 bg-[#1a1f3a] border-2 border-[#FFD700]/30 rounded pixel-border">
-              <div className="text-xs font-pixel text-[#FFD700] uppercase tracking-wide mb-1">
+            <div className="p-3 bg-[var(--color-bg-card)] border-2 border-[var(--color-accent)]/30 rounded pixel-border">
+              <div className="text-xs font-pixel text-[var(--color-accent)] uppercase tracking-wide mb-1">
                 ⭐ Brightest Star
               </div>
               <div className="text-lg font-pixel text-white">
@@ -196,8 +196,8 @@ export default function Constellation({
           )}
 
           {/* Visibility */}
-          <div className="p-3 bg-[#1a1f3a] border-2 border-[#00CED1]/30 rounded pixel-border">
-            <div className="text-xs font-pixel text-[#00CED1] uppercase tracking-wide mb-1">
+          <div className="p-3 bg-[var(--color-bg-card)] border-2 border-[var(--color-secondary)]/30 rounded pixel-border">
+            <div className="text-xs font-pixel text-[var(--color-secondary)] uppercase tracking-wide mb-1">
               🌍 Visibility
             </div>
             <div className="text-sm font-pixel text-white">
@@ -207,10 +207,10 @@ export default function Constellation({
         </div>
 
         {/* Hybrid Layout: Star List + SVG Visualization */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pt-4 border-t-2 border-[#4169E1]/30">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pt-4 border-t-2 border-[var(--color-primary)]/30">
           {/* Left Side: Star List (2 columns on large screens) */}
           <div className="lg:col-span-2">
-            <h3 className="text-sm font-pixel text-[#4169E1] uppercase mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-pixel text-[var(--color-primary)] uppercase mb-3 flex items-center gap-2">
               <span>Notable Stars</span>
               <span className="text-xs text-gray-500">({stars.length})</span>
             </h3>
@@ -218,12 +218,12 @@ export default function Constellation({
               {starsWithCoords.map((star, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2 bg-[#0a0e27]/80 border border-[#4169E1]/20 rounded hover:border-[#00CED1]/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-2 bg-[var(--color-bg-dark)]/80 border border-[var(--color-primary)]/20 rounded hover:border-[var(--color-secondary)]/50 transition-colors cursor-pointer"
                   onMouseEnter={() => setHoveredStar(index)}
                   onMouseLeave={() => setHoveredStar(null)}
                   onClick={() => handleStarClick(index)}
                   style={{
-                    borderColor: clickedStar === index ? '#FFD700' : hoveredStar === index ? '#00CED1' : undefined,
+                    borderColor: clickedStar === index ? 'var(--color-accent)' : hoveredStar === index ? 'var(--color-secondary)' : undefined,
                     backgroundColor: clickedStar === index ? 'rgba(255, 215, 0, 0.1)' : undefined,
                   }}
                 >
@@ -233,7 +233,7 @@ export default function Constellation({
                       {star.name}
                     </span>
                   </div>
-                  <span className="font-pixel text-xs text-[#9370DB]">
+                  <span className="font-pixel text-xs text-[var(--color-purple)]">
                     mag {star.magnitude.toFixed(1)}
                   </span>
                 </div>
@@ -246,13 +246,13 @@ export default function Constellation({
 
           {/* Right Side: SVG Constellation Visualization (3 columns on large screens) */}
           <div className="lg:col-span-3">
-            <h3 className="text-sm font-pixel text-[#4169E1] uppercase mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-pixel text-[var(--color-primary)] uppercase mb-3 flex items-center gap-2">
               <span>🌌 Sky View</span>
               <span className="text-xs text-gray-500">(as seen from Earth)</span>
             </h3>
             
             {hasCoordinates ? (
-              <div className="relative bg-gradient-to-b from-[#000814] to-[#0a0e27] border-2 border-[#4169E1]/30 rounded-lg p-6 overflow-hidden">
+              <div className="relative bg-gradient-to-b from-[var(--color-bg-darker)] to-[var(--color-bg-dark)] border-2 border-[var(--color-primary)]/30 rounded-lg p-6 overflow-hidden">
                 {/* Background stars - using deterministic positions */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none">
                   {[...Array(50)].map((_, i) => {
@@ -295,7 +295,7 @@ export default function Constellation({
                         y1={fromStar.y}
                         x2={toStar.x}
                         y2={toStar.y}
-                        stroke="#4169E1"
+                        stroke="var(--color-primary)"
                         strokeWidth="1.5"
                         opacity="0.6"
                         className="transition-opacity duration-300"
@@ -325,7 +325,7 @@ export default function Constellation({
                               cy={star.y}
                               r={radius * 4}
                               fill="none"
-                              stroke="#FFD700"
+                              stroke="var(--color-accent)"
                               strokeWidth="2"
                               opacity="0.6"
                               className="animate-pulse"
@@ -335,7 +335,7 @@ export default function Constellation({
                               cy={star.y}
                               r={radius * 5}
                               fill="none"
-                              stroke="#FFD700"
+                              stroke="var(--color-accent)"
                               strokeWidth="1"
                               opacity="0.3"
                               className="animate-pulse"
@@ -379,7 +379,7 @@ export default function Constellation({
                             x={star.x}
                             y={star.y - radius - 8}
                             textAnchor="middle"
-                            fill="#FFD700"
+                            fill="var(--color-accent)"
                             fontSize="10"
                             fontFamily="monospace"
                             className="font-pixel pointer-events-none"
@@ -395,21 +395,21 @@ export default function Constellation({
                 {/* Legend */}
                 <div className="mt-4 flex justify-center gap-4 text-xs font-pixel text-gray-400">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#FFD700]"></div>
+                    <div className="w-2 h-2 rounded-full bg-[var(--color-accent)]"></div>
                     <span>Bright</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#00CED1]"></div>
+                    <div className="w-2 h-2 rounded-full bg-[var(--color-secondary)]"></div>
                     <span>Medium</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#9370DB]"></div>
+                    <div className="w-2 h-2 rounded-full bg-[var(--color-purple)]"></div>
                     <span>Dim</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="relative bg-gradient-to-b from-[#000814] to-[#0a0e27] border-2 border-[#4169E1]/30 rounded-lg p-6 overflow-hidden aspect-square flex items-center justify-center">
+              <div className="relative bg-gradient-to-b from-[var(--color-bg-darker)] to-[var(--color-bg-dark)] border-2 border-[var(--color-primary)]/30 rounded-lg p-6 overflow-hidden aspect-square flex items-center justify-center">
                 <div className="text-center space-y-3">
                   <div className="text-4xl">🌟</div>
                   <p className="font-pixel text-xs text-gray-400">
@@ -423,11 +423,11 @@ export default function Constellation({
 
         {/* Decorative constellation pattern */}
         <div className="flex justify-center items-center gap-3 pt-2 opacity-40">
-          <span className="text-[#FFD700] text-sm">★</span>
-          <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#4169E1] to-transparent"></div>
-          <span className="text-[#00CED1] text-lg">★</span>
-          <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#4169E1] to-transparent"></div>
-          <span className="text-[#9370DB] text-sm">★</span>
+          <span className="text-[var(--color-accent)] text-sm">★</span>
+          <div className="w-8 h-px bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"></div>
+          <span className="text-[var(--color-secondary)] text-lg">★</span>
+          <div className="w-8 h-px bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"></div>
+          <span className="text-[var(--color-purple)] text-sm">★</span>
         </div>
       </div>
     </div>

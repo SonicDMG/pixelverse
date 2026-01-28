@@ -245,7 +245,7 @@ export default function Home() {
     <div className="h-screen flex items-center justify-center p-4">
       <div className="h-full w-full max-w-7xl flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="py-4 md:py-6 px-2 md:px-4 border-b-4 pixel-border flex-shrink-0" style={{ borderColor: `${theme.colors.primary}30` }}>
+        <header className="py-4 md:py-6 px-2 md:px-4 border-b-4 border-[var(--color-primary)]/20 pixel-border flex-shrink-0">
           <div className="max-w-7xl mx-auto">
             {/* Mobile Layout: Stacked vertically (below lg breakpoint) */}
             <div className="flex flex-col gap-4 lg:hidden">
@@ -256,17 +256,9 @@ export default function Home() {
                   onClick={() => window.location.href = '?app=ticker'}
                   className={`flex-shrink-0 px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
                     appMode === 'ticker'
-                      ? 'text-[#0a0e27]'
-                      : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-gray-500'
+                      ? 'bg-[var(--color-ticker-primary)] border-[var(--color-ticker-primary)] text-[var(--color-bg-dark)] shadow-[0_0_10px_var(--color-ticker-primary)]'
+                      : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500 hover:border-gray-500'
                   }`}
-                  style={appMode === 'ticker' ? {
-                    backgroundColor: '#00ff41',
-                    borderColor: '#00ff41',
-                    boxShadow: '0 0 10px #00ff41',
-                  } : {
-                    backgroundColor: '#0a0e27',
-                    borderColor: '#4a5568',
-                  }}
                   title="Switch to TICKER"
                 >
                   📈 TICKER
@@ -277,17 +269,9 @@ export default function Home() {
                   onClick={() => window.location.href = '?app=space'}
                   className={`flex-shrink-0 px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
                     appMode === 'space'
-                      ? 'text-[#0a0e27]'
-                      : 'bg-[#0a0e27] border-gray-600 text-gray-500 hover:border-gray-500'
+                      ? 'bg-[var(--color-ticker-secondary)] border-[var(--color-ticker-secondary)] text-[var(--color-bg-dark)] shadow-[0_0_10px_var(--color-ticker-secondary)]'
+                      : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500 hover:border-gray-500'
                   }`}
-                  style={appMode === 'space' ? {
-                    backgroundColor: '#00d4ff',
-                    borderColor: '#00d4ff',
-                    boxShadow: '0 0 10px #00d4ff',
-                  } : {
-                    backgroundColor: '#0a0e27',
-                    borderColor: '#4a5568',
-                  }}
                   title="Switch to SPACE"
                 >
                   🚀 SPACE
@@ -313,8 +297,8 @@ export default function Home() {
                   disabled={!isReady}
                   className={`flex-1 px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                     isPlaying
-                      ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
-                      : 'bg-[#0a0e27] border-gray-600 text-gray-500'
+                      ? 'bg-[var(--color-bg-dark)] border-[var(--color-success)] text-[var(--color-success)]'
+                      : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                   title={isPlaying ? "Stop background music" : "Play background music"}
                 >
@@ -328,8 +312,8 @@ export default function Home() {
                     disabled={!isVoiceSupported}
                     className={`flex-1 px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                       isVoiceEnabled
-                        ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
-                        : 'bg-[#0a0e27] border-gray-600 text-gray-500'
+                        ? 'bg-[var(--color-bg-dark)] border-[var(--color-success)] text-[var(--color-success)]'
+                        : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                     title={isVoiceEnabled ? "Disable voice announcements" : "Enable voice announcements"}
                   >
@@ -418,7 +402,7 @@ export default function Home() {
                   <button
                     onClick={handleClearConversation}
                     disabled={loadingStatus !== null && loadingStatus !== 'done'}
-                    className="px-4 py-2 bg-[#1a1f3a] border-2 text-xs font-pixel hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
+                    className="px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
                     style={{
                       borderColor: theme.colors.accent,
                       color: theme.colors.accent,
@@ -444,8 +428,8 @@ export default function Home() {
                       disabled={!isReady}
                       className={`w-full px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                         isPlaying
-                          ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
-                          : 'bg-[#0a0e27] border-gray-600 text-gray-500'
+                          ? 'bg-[var(--color-bg-dark)] border-[var(--color-success)] text-[var(--color-success)]'
+                          : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                       title={isPlaying ? "Stop background music" : "Play background music"}
                     >
@@ -485,8 +469,8 @@ export default function Home() {
                         disabled={!isVoiceSupported}
                         className={`w-full px-4 py-2 border-2 text-xs font-pixel transition-colors pixel-border ${
                           isVoiceEnabled
-                            ? 'bg-[#0a0e27] border-[#00ff41] text-[#00ff41]'
-                            : 'bg-[#0a0e27] border-gray-600 text-gray-500'
+                            ? 'bg-[var(--color-bg-dark)] border-[var(--color-success)] text-[var(--color-success)]'
+                            : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                         title={isVoiceEnabled ? "Disable voice announcements" : "Enable voice announcements"}
                       >
@@ -557,7 +541,7 @@ export default function Home() {
                   <button
                     onClick={handleClearConversation}
                     disabled={loadingStatus !== null && loadingStatus !== 'done'}
-                    className="px-4 py-2 bg-[#1a1f3a] border-2 text-xs font-pixel hover:text-[#0a0e27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
+                    className="px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
                     style={{
                       borderColor: theme.colors.accent,
                       color: theme.colors.accent,
@@ -574,7 +558,7 @@ export default function Home() {
 
         {/* Loading State - Between Header and Main */}
         {loadingStatus !== null && loadingStatus !== 'done' && (
-          <div className="flex flex-col items-center justify-center pt-24 pb-8 border-b-4 pixel-border flex-shrink-0" style={{ borderColor: `${theme.colors.primary}30` }}>
+          <div className="flex flex-col items-center justify-center pt-24 pb-8 border-b-4 border-[var(--color-primary)]/20 pixel-border flex-shrink-0">
             <LoadingSpinner status={loadingStatus} />
           </div>
         )}
@@ -606,7 +590,7 @@ export default function Home() {
         </main>
 
         {/* Question Input - Fixed above footer */}
-        <div className="flex-shrink-0 bg-[#0a0e27]/95 p-4 mt-4 border-t-4 pixel-border backdrop-blur-sm" style={{ borderColor: theme.colors.primary }}>
+        <div className="flex-shrink-0 bg-[var(--color-bg-dark)]/95 p-4 mt-4 border-t-4 pixel-border backdrop-blur-sm" style={{ borderColor: theme.colors.primary }}>
           <QuestionInput
             key={appMode}
             onSubmit={handleQuestion}
@@ -617,7 +601,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="text-center py-4 px-4 border-t-4 pixel-border flex-shrink-0 space-y-2" style={{ borderColor: `${theme.colors.primary}30` }}>
+        <footer className="text-center py-4 px-4 border-t-4 border-[var(--color-primary)]/20 pixel-border flex-shrink-0 space-y-2">
           {/* Music Attribution */}
           <MusicAttribution
             currentSong={currentSong}

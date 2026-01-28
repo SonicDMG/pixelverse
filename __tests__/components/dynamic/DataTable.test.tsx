@@ -231,7 +231,7 @@ describe('DataTable', () => {
       );
 
       const headers = container.querySelectorAll('thead th');
-      expect(headers[1]).toHaveClass('text-[#00CED1]');
+      expect(headers[1]).toHaveClass('text-[var(--color-secondary)]');
     });
 
     it('should not highlight other columns in headers', () => {
@@ -245,8 +245,8 @@ describe('DataTable', () => {
       );
 
       const headers = container.querySelectorAll('thead th');
-      expect(headers[0]).toHaveClass('text-[#4169E1]');
-      expect(headers[2]).toHaveClass('text-[#4169E1]');
+      expect(headers[0]).toHaveClass('text-[var(--color-primary)]');
+      expect(headers[2]).toHaveClass('text-[var(--color-primary)]');
     });
 
     it('should highlight specified column in data cells', () => {
@@ -261,7 +261,7 @@ describe('DataTable', () => {
 
       const firstRow = container.querySelector('tbody tr');
       const cells = firstRow?.querySelectorAll('td');
-      expect(cells?.[1]).toHaveClass('text-[#00CED1]');
+      expect(cells?.[1]).toHaveClass('text-[var(--color-secondary)]');
       expect(cells?.[1]).toHaveClass('font-bold');
     });
 
@@ -276,7 +276,7 @@ describe('DataTable', () => {
 
       const headers = container.querySelectorAll('thead th');
       headers.forEach(header => {
-        expect(header).toHaveClass('text-[#4169E1]');
+        expect(header).toHaveClass('text-[var(--color-primary)]');
       });
     });
 
@@ -291,7 +291,7 @@ describe('DataTable', () => {
       );
 
       const headers = container.querySelectorAll('thead th');
-      expect(headers[0]).toHaveClass('text-[#00CED1]');
+      expect(headers[0]).toHaveClass('text-[var(--color-secondary)]');
     });
   });
 
@@ -306,9 +306,9 @@ describe('DataTable', () => {
       );
 
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveClass('bg-[#0a0e27]');
+      expect(wrapper).toHaveClass('bg-[var(--color-bg-dark)]');
       expect(wrapper).toHaveClass('border-4');
-      expect(wrapper).toHaveClass('border-[#4169E1]');
+      expect(wrapper).toHaveClass('border-[var(--color-primary)]');
       expect(wrapper).toHaveClass('pixel-border');
     });
 
@@ -349,7 +349,7 @@ describe('DataTable', () => {
 
       const rows = container.querySelectorAll('tbody tr');
       rows.forEach(row => {
-        expect(row).toHaveClass('hover:bg-[#1a1f3a]');
+        expect(row).toHaveClass('hover:bg-[var(--color-bg-card)]');
         expect(row).toHaveClass('transition-colors');
       });
     });

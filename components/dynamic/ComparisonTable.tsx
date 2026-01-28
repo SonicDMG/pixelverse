@@ -28,7 +28,7 @@ export default function ComparisonTable({
   const formatChange = (change?: number) => {
     if (change === undefined) return null;
     const sign = change >= 0 ? '+' : '';
-    const color = change >= 0 ? 'text-[#00CED1]' : 'text-[#ff0000]';
+    const color = change >= 0 ? 'text-[var(--color-secondary)]' : 'text-[var(--color-error)]';
     return (
       <span className={`${color} text-xs ml-2`}>
         ({sign}{change.toFixed(2)}%)
@@ -37,19 +37,19 @@ export default function ComparisonTable({
   };
 
   return (
-    <div className="w-full p-6 bg-[#0a0e27] border-4 border-[#4169E1] rounded-lg pixel-border">
-      <h3 className="text-lg font-pixel text-[#4169E1] mb-4 glow-text-subtle">{title}</h3>
+    <div className="w-full p-6 bg-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] rounded-lg pixel-border">
+      <h3 className="text-lg font-pixel text-[var(--color-primary)] mb-4 glow-text-subtle">{title}</h3>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b-2 border-[#4169E1]">
-              <th className="px-4 py-3 text-left font-pixel text-xs text-[#4169E1]">
+            <tr className="border-b-2 border-[var(--color-primary)]">
+              <th className="px-4 py-3 text-left font-pixel text-xs text-[var(--color-primary)]">
                 Metric
               </th>
-              <th className="px-4 py-3 text-right font-pixel text-xs text-[#4169E1]">
+              <th className="px-4 py-3 text-right font-pixel text-xs text-[var(--color-primary)]">
                 {column1Label}
               </th>
-              <th className="px-4 py-3 text-right font-pixel text-xs text-[#00CED1]">
+              <th className="px-4 py-3 text-right font-pixel text-xs text-[var(--color-secondary)]">
                 {column2Label}
               </th>
             </tr>
@@ -58,15 +58,15 @@ export default function ComparisonTable({
             {items.map((item, index) => (
               <tr
                 key={index}
-                className="border-b border-[#4169E1]/30 hover:bg-[#1a1f3a] transition-colors"
+                className="border-b border-[var(--color-primary)]/30 hover:bg-[var(--color-bg-card)] transition-colors"
               >
                 <td className="px-4 py-3 font-pixel text-xs text-white">
                   {item.label}
                 </td>
-                <td className="px-4 py-3 font-pixel text-xs text-right text-[#4169E1]">
+                <td className="px-4 py-3 font-pixel text-xs text-right text-[var(--color-primary)]">
                   {formatValue(item.value1)}
                 </td>
-                <td className="px-4 py-3 font-pixel text-xs text-right text-[#00CED1]">
+                <td className="px-4 py-3 font-pixel text-xs text-right text-[var(--color-secondary)]">
                   {formatValue(item.value2)}
                   {formatChange(item.change)}
                 </td>

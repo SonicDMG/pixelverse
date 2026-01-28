@@ -10,6 +10,75 @@
   --color-darker-bg: #050814;
   --color-card-bg: #1a1f3a;
   
+  /* Primary theme colors */
+  --color-primary: #4169E1;
+  --color-secondary: #00CED1;
+  --color-accent: #FFD700;
+  --color-purple: #9370DB;
+  
+  /* Background colors */
+  --color-bg-dark: #0a0e27;
+  --color-bg-darker: #050814;
+  --color-bg-card: #1a1f3a;
+  
+  /* Semantic colors */
+  --color-success: #00ff41;
+  --color-error: #ff0000;
+  --color-warning: #FFD700;
+  --color-info: #00CED1;
+  
+  /* Ticker mode colors */
+  --color-ticker-primary: #00ff41;
+  --color-ticker-secondary: #00d4ff;
+  
+  /* Space mode colors */
+  --color-space-primary: #4169E1;
+  --color-space-secondary: #00CED1;
+  
+  /* Planet colors for SolarSystem */
+  --color-planet-mercury: #8c7853;
+  --color-planet-venus: #ffc649;
+  --color-planet-earth: #4169e1;
+  --color-planet-mars: #cd5c5c;
+  --color-planet-jupiter: #daa520;
+  --color-planet-saturn: #f4a460;
+  --color-planet-uranus: #4fd0e7;
+  --color-planet-neptune: #4169e1;
+  
+  /* Spectral colors for Constellation */
+  --color-spectral-o: #9bb0ff;
+  --color-spectral-b: #aabfff;
+  --color-spectral-a: #cad7ff;
+  --color-spectral-f: #f8f7ff;
+  --color-spectral-g: #fff4ea;
+  --color-spectral-k: #ffd2a1;
+  --color-spectral-m: #ffcc6f;
+  
+  /* Event type colors for SpaceTimeline */
+  --color-event-mission: #00CED1;
+  --color-event-discovery: #FFD700;
+  --color-event-observation: #9370DB;
+  
+  /* Celestial body theme colors */
+  --color-body-planet-primary: #9370DB;
+  --color-body-planet-secondary: #4169E1;
+  --color-body-planet-accent: #00CED1;
+  --color-body-moon-primary: #C0C0C0;
+  --color-body-moon-secondary: #808080;
+  --color-body-moon-accent: #E8E8E8;
+  --color-body-star-primary: #FFD700;
+  --color-body-star-secondary: #FFA500;
+  --color-body-star-accent: #FFFF00;
+  --color-body-galaxy-primary: #8B00FF;
+  --color-body-galaxy-secondary: #4B0082;
+  --color-body-galaxy-accent: #9400D3;
+  --color-body-blackhole-primary: #000000;
+  --color-body-blackhole-secondary: #1a1a1a;
+  --color-body-blackhole-accent: #FF4500;
+  --color-body-nebula-primary: #FF1493;
+  --color-body-nebula-secondary: #00CED1;
+  --color-body-nebula-accent: #7B68EE;
+  
   /* Custom animations */
   --animate-loading-bar: loading-bar 2s ease-in-out infinite;
   --animate-fade-in: fade-in 0.5s ease-in-out;
