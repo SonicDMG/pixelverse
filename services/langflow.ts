@@ -107,8 +107,13 @@ function parseStockData(responseText: string, data?: unknown): StockDataPoint[] 
  * Query Langflow with a question for a specific theme
  * @param question - The question to ask
  * @param theme - The theme to use for selecting the appropriate flow ID (default: 'ticker')
+ * @param sessionId - Optional session ID for conversation tracking. If not provided, a new UUID will be generated.
  */
-export async function queryLangflow(question: string, theme: LangflowTheme = 'ticker'): Promise<StockQueryResult> {
+export async function queryLangflow(
+  question: string,
+  theme: LangflowTheme = 'ticker',
+  sessionId?: string
+): Promise<StockQueryResult> {
   try {
     // Get the appropriate flow ID for the theme
     const flowId = getFlowIdForTheme(theme);
@@ -119,11 +124,15 @@ export async function queryLangflow(question: string, theme: LangflowTheme = 'ti
       input_type: 'chat',
     };
 
-    // Add session_id for conversation tracking
+    // Use provided session ID or generate fallback (for backward compatibility)
     const payload = {
       ...request,
-      session_id: randomUUID(),
+      session_id: sessionId || randomUUID(),
     };
+
+    // Log session info for debugging
+    console.log('[Langflow] Using session_id:', payload.session_id);
+    console.log('[Langflow] Session provided by client:', !!sessionId);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

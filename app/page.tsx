@@ -14,6 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Message, StockQueryResult, ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useCyberpunkVoice } from '@/hooks/useCyberpunkVoice';
+import { useSession } from '@/hooks/useSession';
 
 /**
  * API Error response interface
@@ -32,6 +33,9 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [question, setQuestion] = useState('');
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  
+  // Session management for conversation tracking
+  const { sessionId, resetSession } = useSession();
   
   // Use MP3 background music
   const {
@@ -119,9 +123,12 @@ export default function Home() {
     timeoutsRef.current.push(timeout2);
 
     try {
-      console.log('[Home] Sending request to:', theme.apiEndpoint);
-      const response = await axios.post<StockQueryResult>(theme.apiEndpoint, {
+      const apiEndpoint = theme.apiEndpoint;
+      console.log('[Home] Sending request to:', apiEndpoint);
+      console.log('[Home] Using session ID:', sessionId);
+      const response = await axios.post<StockQueryResult>(apiEndpoint, {
         question: questionText,
+        session_id: sessionId,
       });
 
       const result = response.data;
@@ -225,12 +232,14 @@ export default function Home() {
       timeoutsRef.current = [];
       setLoadingStatus(null);
     }
-  }, [announce, isVoiceSupported, theme]);
+  }, [announce, isVoiceSupported, sessionId, theme.apiEndpoint]);
 
   const handleClearConversation = useCallback(() => {
     setConversationGroups([]);
     setError(null);
-  }, []);
+    // Reset session when clearing conversation to start fresh
+    resetSession();
+  }, [resetSession]);
 
   return (
     <div className="h-screen flex items-center justify-center p-4">

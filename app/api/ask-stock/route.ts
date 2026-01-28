@@ -36,7 +36,7 @@ function validateQuestion(question: unknown): { valid: boolean; error?: string; 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { question } = body;
+    const { question, session_id } = body;
 
     // Validate and sanitize input
     const validation = validateQuestion(question);
@@ -47,8 +47,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate session_id if provided (OWASP security: input validation)
+    if (session_id !== undefined && typeof session_id !== 'string') {
+      return NextResponse.json<ApiErrorResponse>(
+        { error: 'session_id must be a string' },
+        { status: 400 }
+      );
+    }
+
     // Query Langflow with sanitized input using the 'ticker' theme
-    const result = await queryLangflow(validation.sanitized!, 'ticker');
+    // Pass session_id for conversation tracking (backward compatible - optional parameter)
+    const result = await queryLangflow(validation.sanitized!, 'ticker', session_id);
 
     if (result.error) {
       return NextResponse.json<ApiErrorResponse>(

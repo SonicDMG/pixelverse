@@ -689,7 +689,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[Space API] Received POST request');
     const body = await request.json();
-    const { question } = body;
+    const { question, session_id } = body;
     console.log('[Space API] Raw question from body:', question);
 
     // Validate and sanitize input
@@ -702,7 +702,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate session_id if provided (OWASP security: input validation)
+    if (session_id !== undefined && typeof session_id !== 'string') {
+      return NextResponse.json<ApiErrorResponse>(
+        { error: 'session_id must be a string' },
+        { status: 400 }
+      );
+    }
+
     console.log('[Space API] Validation passed. Sanitized question:', validation.sanitized);
+    console.log('[Space API] Session ID provided:', !!session_id);
 
     // Query Langflow with sanitized input using the 'space' theme
     // Falls back to mock responses if Langflow is not configured or fails
@@ -710,7 +719,7 @@ export async function POST(request: NextRequest) {
     
     try {
       console.log('[Space API] Attempting Langflow query with space theme');
-      result = await queryLangflow(validation.sanitized!, 'space');
+      result = await queryLangflow(validation.sanitized!, 'space', session_id);
       console.log('[Space API] Langflow response received:', {
         hasAnswer: !!result.answer,
         answerLength: result.answer?.length,
