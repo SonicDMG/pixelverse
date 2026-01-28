@@ -1,7 +1,7 @@
 'use client';
 
 import { ConversationGroup as ConversationGroupType, LoadingStatus } from '@/types';
-import ConversationGroup from '@/components/ConversationGroup';
+import { ConversationGroup } from '@/components/ConversationGroup';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 /**

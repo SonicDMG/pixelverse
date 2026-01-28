@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import TextBlock from '@/components/dynamic/TextBlock';
+import { TextBlock } from '@/components/dynamic/TextBlock';
 
 describe('TextBlock', () => {
   describe('plain text format', () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import DataTable from '@/components/dynamic/DataTable';
+import { DataTable } from '@/components/dynamic/DataTable';
 
 describe('DataTable', () => {
   const mockHeaders = ['Name', 'Price', 'Volume'];

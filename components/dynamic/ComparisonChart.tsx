@@ -16,7 +16,7 @@ interface ComparisonChartProps {
   }>;
 }
 
-export default function ComparisonChart({ title, datasets }: ComparisonChartProps) {
+export function ComparisonChart({ title, datasets }: ComparisonChartProps) {
   const dataLength = datasets[0]?.data.length || 0;
   const animationProgress = useChartAnimation(dataLength);
 

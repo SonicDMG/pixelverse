@@ -25,7 +25,7 @@ const STATUS_CONFIG = {
   },
 };
 
-export default function LoadingSpinner({ status = 'choosing_agent' }: LoadingSpinnerProps) {
+export function LoadingSpinner({ status = 'choosing_agent' }: LoadingSpinnerProps) {
   const config = status && status !== 'done' ? STATUS_CONFIG[status] : STATUS_CONFIG.choosing_agent;
 
   return (

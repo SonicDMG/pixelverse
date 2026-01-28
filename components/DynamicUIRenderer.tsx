@@ -1,17 +1,17 @@
 'use client';
 
 import { ComponentSpec } from '@/types/ui-spec';
-import StockChart from './StockChart';
-import ComparisonChart from './dynamic/ComparisonChart';
-import DataTable from './dynamic/DataTable';
-import ComparisonTable from './dynamic/ComparisonTable';
-import MetricCard from './dynamic/MetricCard';
-import MetricGrid from './dynamic/MetricGrid';
-import CelestialBodyCard from './dynamic/CelestialBodyCard';
-import Constellation from './dynamic/Constellation';
-import SpaceTimeline from './dynamic/SpaceTimeline';
-import SolarSystem from './dynamic/SolarSystem';
-import TextBlock from './dynamic/TextBlock';
+import { StockChart } from './StockChart';
+import { ComparisonChart } from './dynamic/ComparisonChart';
+import { DataTable } from './dynamic/DataTable';
+import { ComparisonTable } from './dynamic/ComparisonTable';
+import { MetricCard } from './dynamic/MetricCard';
+import { MetricGrid } from './dynamic/MetricGrid';
+import { CelestialBodyCard } from './dynamic/CelestialBodyCard';
+import { Constellation } from './dynamic/Constellation';
+import { SpaceTimeline } from './dynamic/SpaceTimeline';
+import { SolarSystem } from './dynamic/SolarSystem';
+import { TextBlock } from './dynamic/TextBlock';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
@@ -25,7 +25,7 @@ interface DynamicUIRendererProps {
  * with validated props. This prevents arbitrary code execution while allowing the
  * Langflow agent to dynamically compose UIs from safe building blocks.
  */
-export default function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRendererProps) {
+export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRendererProps) {
   console.log('[DynamicUIRenderer] Rendering components:', {
     count: components.length,
     types: components.map(c => c.type),

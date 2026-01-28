@@ -16,7 +16,7 @@ interface AudioVisualizerProps {
  * Uses Web Audio API AnalyserNode to get frequency data
  * Renders cyberpunk-themed frequency bars
  */
-export default function AudioVisualizer({
+export function AudioVisualizer({
   analyserNode,
   isPlaying,
   width,

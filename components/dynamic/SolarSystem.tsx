@@ -106,7 +106,7 @@ const SOLAR_SYSTEM_DATA: PlanetData[] = [
   }
 ];
 
-export default function SolarSystem({
+export function SolarSystem({
   name = 'Solar System',
   description = 'Our home planetary system',
   autoPlay = true,

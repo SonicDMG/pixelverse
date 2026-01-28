@@ -1,7 +1,7 @@
 'use client';
 
 import { ThemeConfig } from '@/constants/theme';
-import AudioVisualizer from '@/components/AudioVisualizer';
+import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { SongSelector } from '@/components/SongSelector';
 import { SongInfo } from '@/hooks/useBackgroundMusic';
 

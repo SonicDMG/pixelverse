@@ -1,74 +1,74 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import DynamicUIRenderer from '@/components/DynamicUIRenderer';
+import { DynamicUIRenderer } from '@/components/DynamicUIRenderer';
 import { ComponentSpec } from '@/types/ui-spec';
 
-// Mock all child components
-jest.mock('@/components/StockChart', () => {
-  return function MockStockChart({ symbol }: any) {
+// Mock all child components with named exports
+jest.mock('@/components/StockChart', () => ({
+  StockChart: function MockStockChart({ symbol }: any) {
     return <div data-testid="stock-chart">StockChart: {symbol}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/ComparisonChart', () => {
-  return function MockComparisonChart({ title }: any) {
+jest.mock('@/components/dynamic/ComparisonChart', () => ({
+  ComparisonChart: function MockComparisonChart({ title }: any) {
     return <div data-testid="comparison-chart">ComparisonChart: {title}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/DataTable', () => {
-  return function MockDataTable({ title }: any) {
+jest.mock('@/components/dynamic/DataTable', () => ({
+  DataTable: function MockDataTable({ title }: any) {
     return <div data-testid="data-table">DataTable: {title}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/ComparisonTable', () => {
-  return function MockComparisonTable({ title }: any) {
+jest.mock('@/components/dynamic/ComparisonTable', () => ({
+  ComparisonTable: function MockComparisonTable({ title }: any) {
     return <div data-testid="comparison-table">ComparisonTable: {title}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/MetricCard', () => {
-  return function MockMetricCard({ title, value }: any) {
+jest.mock('@/components/dynamic/MetricCard', () => ({
+  MetricCard: function MockMetricCard({ title, value }: any) {
     return <div data-testid="metric-card">MetricCard: {title} - {value}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/MetricGrid', () => {
-  return function MockMetricGrid({ metrics }: any) {
+jest.mock('@/components/dynamic/MetricGrid', () => ({
+  MetricGrid: function MockMetricGrid({ metrics }: any) {
     return <div data-testid="metric-grid">MetricGrid: {metrics.length} metrics</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/CelestialBodyCard', () => {
-  return function MockCelestialBodyCard({ name }: any) {
+jest.mock('@/components/dynamic/CelestialBodyCard', () => ({
+  CelestialBodyCard: function MockCelestialBodyCard({ name }: any) {
     return <div data-testid="celestial-body-card">CelestialBodyCard: {name}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/Constellation', () => {
-  return function MockConstellation({ name }: any) {
+jest.mock('@/components/dynamic/Constellation', () => ({
+  Constellation: function MockConstellation({ name }: any) {
     return <div data-testid="constellation">Constellation: {name}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/SpaceTimeline', () => {
-  return function MockSpaceTimeline({ title }: any) {
+jest.mock('@/components/dynamic/SpaceTimeline', () => ({
+  SpaceTimeline: function MockSpaceTimeline({ title }: any) {
     return <div data-testid="space-timeline">SpaceTimeline: {title}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/SolarSystem', () => {
-  return function MockSolarSystem({ name }: any) {
+jest.mock('@/components/dynamic/SolarSystem', () => ({
+  SolarSystem: function MockSolarSystem({ name }: any) {
     return <div data-testid="solar-system">SolarSystem: {name}</div>;
-  };
-});
+  }
+}));
 
-jest.mock('@/components/dynamic/TextBlock', () => {
-  return function MockTextBlock({ content }: any) {
+jest.mock('@/components/dynamic/TextBlock', () => ({
+  TextBlock: function MockTextBlock({ content }: any) {
     return <div data-testid="text-block">TextBlock: {content}</div>;
-  };
-});
+  }
+}));
 
 describe('DynamicUIRenderer', () => {
   let consoleLogSpy: jest.SpyInstance;

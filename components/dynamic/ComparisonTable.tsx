@@ -16,7 +16,7 @@ interface ComparisonTableProps {
   column2Label: string;
 }
 
-export default function ComparisonTable({
+export function ComparisonTable({
   title,
   items,
   column1Label,

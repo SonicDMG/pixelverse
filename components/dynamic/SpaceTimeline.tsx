@@ -34,7 +34,7 @@ interface ProcessedEvent {
   laneIndex?: number;
 }
 
-export default function SpaceTimeline({ 
+export function SpaceTimeline({ 
   title, 
   events,
   layout = 'horizontal',

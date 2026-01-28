@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import MetricCard from '@/components/dynamic/MetricCard';
+import { MetricCard } from '@/components/dynamic/MetricCard';
 
 describe('MetricCard', () => {
   describe('basic rendering', () => {

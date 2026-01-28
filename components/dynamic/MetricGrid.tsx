@@ -1,6 +1,6 @@
 'use client';
 
-import MetricCard from './MetricCard';
+import { MetricCard } from './MetricCard';
 
 interface MetricGridProps {
   metrics: Array<{
@@ -11,7 +11,7 @@ interface MetricGridProps {
   }>;
 }
 
-export default function MetricGrid({ metrics }: MetricGridProps) {
+export function MetricGrid({ metrics }: MetricGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {metrics.map((metric, index) => (

@@ -92,7 +92,7 @@ const PROPERTY_CONFIG = {
   nebula: ['nebulaType', 'diameter', 'distanceFromEarth'],
 };
 
-export default function CelestialBodyCard(props: CelestialBodyCardProps) {
+export function CelestialBodyCard(props: CelestialBodyCardProps) {
   const {
     name,
     description,

@@ -10,7 +10,7 @@ interface QuestionInputProps {
   setQuestion: (question: string) => void;
 }
 
-export default function QuestionInput({ onSubmit, loadingStatus, question, setQuestion }: QuestionInputProps) {
+export function QuestionInput({ onSubmit, loadingStatus, question, setQuestion }: QuestionInputProps) {
   const { theme } = useTheme();
   const isLoading = loadingStatus !== null && loadingStatus !== 'done';
 

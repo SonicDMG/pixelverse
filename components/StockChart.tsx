@@ -10,7 +10,7 @@ interface StockChartProps {
   symbol?: string;
 }
 
-export default function StockChart({ data, symbol }: StockChartProps) {
+export function StockChart({ data, symbol }: StockChartProps) {
   const animationProgress = useChartAnimation(data.length);
 
   const visibleDataCount = Math.floor(data.length * animationProgress);

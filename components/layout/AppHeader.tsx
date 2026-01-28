@@ -1,7 +1,7 @@
 'use client';
 
 import { ThemeConfig } from '@/constants/theme';
-import AppSwitcher from '@/components/AppSwitcher';
+import { AppSwitcher } from '@/components/AppSwitcher';
 import { LoadingStatus } from '@/types';
 
 /**

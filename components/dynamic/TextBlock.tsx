@@ -16,7 +16,7 @@ interface TextBlockProps {
  * - Proper spacing and typography
  * - Responsive design
  */
-export default function TextBlock({ content, format = 'plain' }: TextBlockProps) {
+export function TextBlock({ content, format = 'plain' }: TextBlockProps) {
   // Simple markdown parser for basic formatting
   const formattedContent = useMemo(() => {
     if (format === 'plain') {

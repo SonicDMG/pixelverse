@@ -9,7 +9,7 @@ interface DataTableProps {
   highlightColumn?: number;
 }
 
-export default function DataTable({ title, headers, rows, highlightColumn }: DataTableProps) {
+export function DataTable({ title, headers, rows, highlightColumn }: DataTableProps) {
   return (
     <PixelTable
       title={title}

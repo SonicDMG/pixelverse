@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import DynamicUIRenderer from '@/components/DynamicUIRenderer';
+import { DynamicUIRenderer } from '@/components/DynamicUIRenderer';
 import mockResponse from './mock-response.json';
 
 export default function TestSolarSystemPage() {

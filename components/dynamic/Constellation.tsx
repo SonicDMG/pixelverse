@@ -30,7 +30,7 @@ interface ConstellationProps {
   onStarClick?: (star: Star) => void;
 }
 
-export default function Constellation({
+export function Constellation({
   name,
   abbreviation,
   description,

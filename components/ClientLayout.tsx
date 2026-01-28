@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
-export default function ClientLayout({
+export function ClientLayout({
   children,
 }: {
   children: React.ReactNode;

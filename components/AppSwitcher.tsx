@@ -10,7 +10,7 @@ import { getAllThemes } from '@/constants/theme';
  * Automatically supports any number of themes without code changes
  * Uses URL query parameter (?app=themeId)
  */
-export default function AppSwitcher() {
+export function AppSwitcher() {
   const router = useRouter();
   const { appMode } = useTheme();
   const themes = getAllThemes();

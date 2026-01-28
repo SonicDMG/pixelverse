@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import QuestionInput from '@/components/QuestionInput';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { QuestionInput } from '@/components/QuestionInput';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { MusicAttribution } from '@/components/MusicAttribution';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSession } from '@/hooks/useSession';

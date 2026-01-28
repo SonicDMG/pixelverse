@@ -1,7 +1,7 @@
 import { Message } from '@/types';
 import { ComponentSpec } from '@/types/ui-spec';
-import DynamicUIRenderer from './DynamicUIRenderer';
-import StockChart from './StockChart';
+import { DynamicUIRenderer } from './DynamicUIRenderer';
+import { StockChart } from './StockChart';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ConversationGroupProps {
@@ -17,7 +17,7 @@ interface ConversationGroupProps {
  * ConversationGroup - Groups a user question, assistant response, and any related visualizations
  * This creates clear visual separation between different conversation exchanges
  */
-export default function ConversationGroup({
+export function ConversationGroup({
   userMessage,
   assistantMessage,
   components,
