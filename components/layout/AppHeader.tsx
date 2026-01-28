@@ -7,12 +7,13 @@ import { LoadingStatus } from '@/types';
 /**
  * AppHeader Component
  * 
- * Main header for the application containing:
- * - App mode switcher (TICKER/SPACE)
+ * Main header content for the application containing:
+ * - App mode switcher (TICKER/SPACE) - mobile only
  * - Application title and tagline
  * - Clear conversation button
  * 
- * Displays differently on mobile (stacked) vs desktop (three-column grid).
+ * On desktop, only renders center (title) and right (switcher + clear) columns.
+ * The parent creates the grid and renders audio controls in the left column.
  */
 interface AppHeaderProps {
   appMode: string;
@@ -30,109 +31,79 @@ export function AppHeader({
   onClearConversation,
 }: AppHeaderProps) {
   return (
-    <header className="py-4 md:py-6 px-2 md:px-4 border-b-4 border-[var(--color-primary)]/20 pixel-border flex-shrink-0">
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile Layout: Stacked vertically (below lg breakpoint) */}
-        <div className="flex flex-col gap-4 lg:hidden">
-          {/* 1. App Switcher Buttons - Full width row */}
-          <div className="flex items-center justify-center gap-2 px-2">
-            {/* TICKER button */}
+    <>
+      {/* Mobile Layout: Stacked vertically (below lg breakpoint) */}
+      <div className="flex flex-col gap-4 lg:hidden">
+        {/* App Switcher Buttons */}
+        <div className="flex items-center justify-center">
+          <AppSwitcher />
+        </div>
+
+        {/* Title and Tagline */}
+        <div className="flex flex-col items-center text-center w-full px-2">
+          <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-pixel glow-text leading-tight whitespace-nowrap" style={{ color: theme.colors.primary }}>
+            {theme.name.toUpperCase()}
+          </h1>
+          <p className="text-xs md:text-sm font-pixel mt-1 break-words w-full" style={{ color: theme.colors.accent }}>
+            {'>'} {theme.tagline}
+          </p>
+        </div>
+
+        {/* Clear Button */}
+        {hasConversation && (
+          <div className="flex justify-center mb-8">
             <button
-              onClick={() => window.location.href = '?app=ticker'}
-              className={`flex-shrink-0 px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
-                appMode === 'ticker'
-                  ? 'bg-[var(--color-ticker-primary)] border-[var(--color-ticker-primary)] text-[var(--color-bg-dark)] shadow-[0_0_10px_var(--color-ticker-primary)]'
-                  : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500 hover:border-gray-500'
-              }`}
-              title="Switch to TICKER"
+              onClick={onClearConversation}
+              disabled={loadingStatus !== null && loadingStatus !== 'done'}
+              className="px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
+              style={{
+                borderColor: theme.colors.accent,
+                color: theme.colors.accent,
+              }}
+              title="Clear conversation history"
             >
-              📈 TICKER
-            </button>
-            
-            {/* SPACE button */}
-            <button
-              onClick={() => window.location.href = '?app=space'}
-              className={`flex-shrink-0 px-3 py-2 border-2 text-xs font-pixel transition-all pixel-border ${
-                appMode === 'space'
-                  ? 'bg-[var(--color-ticker-secondary)] border-[var(--color-ticker-secondary)] text-[var(--color-bg-dark)] shadow-[0_0_10px_var(--color-ticker-secondary)]'
-                  : 'bg-[var(--color-bg-dark)] border-gray-600 text-gray-500 hover:border-gray-500'
-              }`}
-              title="Switch to SPACE"
-            >
-              🚀 SPACE
+              CLEAR
             </button>
           </div>
+        )}
+      </div>
 
-          {/* 2. Title and Tagline - Full width, no constraints */}
-          <div className="flex flex-col items-center text-center w-full px-2">
-            <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-pixel glow-text leading-tight whitespace-nowrap" style={{ color: theme.colors.primary }}>
-              {theme.name.toUpperCase()}
-            </h1>
-            {/* Tagline - can wrap to multiple lines */}
-            <p className="text-xs md:text-sm font-pixel mt-1 break-words w-full" style={{ color: theme.colors.accent }}>
-              {'>'} {theme.tagline}
-            </p>
+      {/* Desktop Layout: Center and Right columns only (grid created by parent) */}
+      <>
+        {/* Center Column: Title */}
+        <div className="hidden lg:flex lg:flex-col lg:items-center lg:justify-center lg:text-center lg:mx-auto">
+          <h1 className="text-4xl md:text-5xl font-pixel glow-text" style={{ color: theme.colors.primary }}>
+            {theme.name.toUpperCase()}
+          </h1>
+          <p className="text-sm md:text-base font-pixel mt-2" style={{ color: theme.colors.accent }}>
+            {'>'} {theme.tagline}
+          </p>
+        </div>
+
+        {/* Right Column: App Switcher + Clear Button - matches audio panel width */}
+        <div className="hidden lg:flex lg:flex-col lg:gap-4 lg:w-[240px] lg:justify-self-end">
+          <div className="w-full flex justify-end">
+            <AppSwitcher />
           </div>
-
-          {/* Clear Button */}
+          
+          {/* Clear Button (right column on desktop, under app switcher, full width) */}
           {hasConversation && (
-            <div className="flex justify-center mb-8">
-              <button
-                onClick={onClearConversation}
-                disabled={loadingStatus !== null && loadingStatus !== 'done'}
-                className="px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
-                style={{
-                  borderColor: theme.colors.accent,
-                  color: theme.colors.accent,
-                }}
-                title="Clear conversation history"
-              >
-                CLEAR
-              </button>
-            </div>
+            <button
+              onClick={onClearConversation}
+              disabled={loadingStatus !== null && loadingStatus !== 'done'}
+              className="w-full px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
+              style={{
+                borderColor: theme.colors.accent,
+                color: theme.colors.accent,
+              }}
+              title="Clear conversation history"
+            >
+              CLEAR
+            </button>
           )}
         </div>
-
-        {/* Desktop Layout: Three-column grid (lg breakpoint and above) */}
-        <div className="hidden lg:grid lg:grid-cols-[1fr_2fr_1fr] lg:gap-8 lg:items-start">
-          {/* Left Column: Placeholder for audio controls (rendered separately) */}
-          <div className="flex flex-col gap-4 max-w-[240px]">
-            {/* Audio controls will be rendered here by parent */}
-          </div>
-
-          {/* Center Column: Title */}
-          <div className="flex flex-col items-center justify-center text-center mx-auto">
-            <h1 className="text-4xl md:text-5xl font-pixel glow-text" style={{ color: theme.colors.primary }}>
-              {theme.name.toUpperCase()}
-            </h1>
-            <p className="text-sm md:text-base font-pixel mt-2" style={{ color: theme.colors.accent }}>
-              {'>'} {theme.tagline}
-            </p>
-          </div>
-
-          {/* Right Column: App Switcher + Clear Button */}
-          <div className="flex flex-col gap-4 items-end max-w-[240px] ml-auto">
-            <AppSwitcher />
-            
-            {/* Clear Button (right column on desktop, under app switcher) */}
-            {hasConversation && (
-              <button
-                onClick={onClearConversation}
-                disabled={loadingStatus !== null && loadingStatus !== 'done'}
-                className="px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border whitespace-nowrap"
-                style={{
-                  borderColor: theme.colors.accent,
-                  color: theme.colors.accent,
-                }}
-                title="Clear conversation history"
-              >
-                CLEAR
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </header>
+      </>
+    </>
   );
 }
 

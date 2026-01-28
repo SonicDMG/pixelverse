@@ -20,7 +20,7 @@ export default function AppSwitcher() {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-end">
+    <div className="flex flex-wrap gap-2 items-center justify-center lg:justify-end">
       {themes.map((theme, index) => (
         <div key={theme.id} className="flex gap-2 items-center">
           <button
