@@ -1,7 +1,7 @@
 # Celestial Body Card - Agent Prompt Guide
 
 ## Overview
-Create celestial-body-card components for planets, moons, stars, galaxies, black holes, and nebulae.
+Create celestial-body-card components for planets, moons, stars, galaxies, black holes, nebulae, comets, and asteroids.
 
 ## Response Structure
 
@@ -12,7 +12,7 @@ Create celestial-body-card components for planets, moons, stars, galaxies, black
     "type": "celestial-body-card",
     "props": {
       "name": "string",
-      "bodyType": "planet|moon|star|galaxy|black-hole|nebula",
+      "bodyType": "planet|moon|star|galaxy|black-hole|nebula|comet|asteroid",
       "description": "Educational/scientific description (2-3 sentences)",
       "visualDescription": "Visual characteristics only (colors, size, appearance)",
       "enableImageGeneration": true,
@@ -211,6 +211,54 @@ Create celestial-body-card components for planets, moons, stars, galaxies, black
 }
 ```
 
+### COMET
+**Required**: name, bodyType, description, visualDescription
+**Recommended**: diameter, mass, orbitalPeriod, perihelion, aphelion, cometType (Short-period|Long-period|Halley-type), enableImageGeneration
+
+**Example - Halley's Comet**:
+```json
+{
+  "type": "celestial-body-card",
+  "props": {
+    "name": "Halley's Comet",
+    "bodyType": "comet",
+    "description": "The most famous periodic comet, visible from Earth every 75-76 years. Last seen in 1986, it will return in 2061. Named after astronomer Edmond Halley who predicted its return.",
+    "visualDescription": "icy nucleus with bright glowing coma and long streaming tail of gas and dust",
+    "diameter": "11 km",
+    "mass": "2.2 × 10¹⁴ kg",
+    "orbitalPeriod": "75-76 years",
+    "perihelion": "0.586 AU",
+    "aphelion": "35.1 AU",
+    "cometType": "Halley-type",
+    "enableImageGeneration": true
+  }
+}
+```
+
+### ASTEROID
+**Required**: name, bodyType, description, visualDescription
+**Recommended**: diameter, mass, orbitalPeriod, distanceFrom, distanceFromLabel ("Distance from Sun"), asteroidType (C-type|S-type|M-type), enableImageGeneration
+
+**Example - Ceres**:
+```json
+{
+  "type": "celestial-body-card",
+  "props": {
+    "name": "Ceres",
+    "bodyType": "asteroid",
+    "description": "The largest object in the asteroid belt between Mars and Jupiter, classified as a dwarf planet. NASA's Dawn mission revealed bright spots of salt deposits and possible subsurface water.",
+    "visualDescription": "spherical gray rocky body with cratered surface and bright white salt deposits",
+    "diameter": "939 km",
+    "mass": "9.38 × 10²⁰ kg",
+    "orbitalPeriod": "4.6 Earth years",
+    "distanceFrom": "413.7 million km",
+    "distanceFromLabel": "Distance from Sun",
+    "asteroidType": "C-type",
+    "enableImageGeneration": true
+  }
+}
+```
+
 ## Visual Themes
 
 The component automatically applies different visual themes based on `bodyType`:
@@ -221,6 +269,8 @@ The component automatically applies different visual themes based on `bodyType`:
 - **Galaxies**: Deep purple theme with 🌌 icon
 - **Black Holes**: Black/red theme with ⚫ icon
 - **Nebulae**: Pink/cyan theme with ☁️ icon
+- **Comets**: Ice blue theme with ☄️ icon
+- **Asteroids**: Gray/brown theme with 🪨 icon
 
 ## Rules
 

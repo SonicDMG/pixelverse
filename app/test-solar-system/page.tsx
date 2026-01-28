@@ -13,16 +13,16 @@ export default function TestSolarSystemPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-pixel text-[#FFD700] glow-text mb-4">
-            🌌 SOLAR SYSTEM TEST
+            🌌 SOLAR SYSTEM COMPONENT TEST
           </h1>
           <p className="text-sm font-pixel text-gray-400 mb-4">
-            Testing the interactive solar system visualization
+            Testing three preset configurations + one custom configuration of the SolarSystem component
           </p>
           <button
             onClick={() => setShowMock(!showMock)}
             className="px-4 py-2 bg-[#4169E1] hover:bg-[#00CED1] text-white font-pixel text-sm rounded pixel-border transition-colors"
           >
-            {showMock ? 'Hide' : 'Show'} Solar System
+            {showMock ? 'Hide' : 'Show'} All Presets
           </button>
         </div>
 
@@ -55,11 +55,15 @@ export default function TestSolarSystemPage() {
             📝 How to Test:
           </h3>
           <ul className="space-y-2 text-sm font-pixel text-gray-400">
-            <li>• Click any planet to view its details</li>
+            <li>• <strong className="text-[#00CED1]">Solar System:</strong> Click any planet to view details, see all 8 planets orbiting the Sun</li>
+            <li>• <strong className="text-[#00CED1]">Galilean Moons:</strong> Explore Jupiter's four largest moons with different orbital periods</li>
+            <li>• <strong className="text-[#00CED1]">Milky Way:</strong> View our galaxy's structure with Sagittarius A* at the center</li>
+            <li>• <strong className="text-[#00CED1]">Earth-Moon System (Custom):</strong> Custom configuration showing Earth with the Moon orbiting</li>
             <li>• Use Play/Pause to control the animation</li>
             <li>• Adjust speed from 1x to 1000x</li>
             <li>• Click Reset to return to day 0</li>
-            <li>• Hover over planets to see glow effects</li>
+            <li>• Hover over celestial bodies to see glow effects</li>
+            <li>• Check browser console for custom preset validation logs</li>
           </ul>
         </div>
 

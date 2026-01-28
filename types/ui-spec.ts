@@ -220,6 +220,40 @@ export interface SpaceTimelineSpec extends UIComponentSpec {
 export interface SolarSystemSpec extends UIComponentSpec {
   type: 'solar-system';
   props: {
+    // Custom configuration
+    bodies?: Array<{
+      name: string;
+      type: 'planet' | 'moon' | 'star' | 'dwarf-planet' | 'asteroid' | 'comet';
+      radius: number;
+      mass: number;
+      orbitalRadius: number;
+      orbitalPeriod: number;
+      color: string;
+      description: string;
+      satellites?: any[]; // Recursive type
+    }>;
+    centralBody?: {
+      name: string;
+      type: 'star' | 'planet' | 'black-hole' | 'galaxy-core';
+      radius: number;
+      color: string;
+      glowColor?: string;
+      description?: string;
+    };
+    units?: {
+      distance?: { unit: string; label: string; };
+      time?: { unit: string; label: string; };
+      mass?: { unit: string; label: string; };
+      radius?: { unit: string; label: string; };
+    };
+    scaling?: {
+      type?: 'linear' | 'logarithmic';
+      distanceScale?: number;
+      sizeScale?: number;
+    };
+    preset?: 'solar-system' | 'moon-system' | 'galaxy' | 'custom';
+    
+    // Display options (existing)
     name?: string;
     description?: string;
     autoPlay?: boolean;

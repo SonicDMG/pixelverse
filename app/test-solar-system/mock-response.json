@@ -1,14 +1,74 @@
 {
-  "text": "Here's an interactive visualization of our solar system! You can see all 8 planets orbiting the Sun. Click on any planet to learn more about it, and use the controls at the bottom to adjust the animation speed or pause the simulation.",
+  "text": "Here are four different orbital system visualizations showcasing the versatility of the SolarSystem component! The first three use preset configurations, and the fourth demonstrates a custom Earth-Moon system configuration.",
   "components": [
     {
       "type": "solar-system",
       "id": "solar-system-1",
       "props": {
+        "preset": "solar-system",
         "name": "Solar System",
-        "description": "Our home planetary system with 8 planets",
+        "description": "Our home planetary system with 8 planets orbiting the Sun",
         "autoPlay": true,
         "timeScale": 10
+      }
+    },
+    {
+      "type": "solar-system",
+      "id": "moon-system-1",
+      "props": {
+        "preset": "moon-system",
+        "name": "Galilean Moons",
+        "description": "Jupiter's four largest moons discovered by Galileo",
+        "autoPlay": true,
+        "timeScale": 0.05
+      }
+    },
+    {
+      "type": "solar-system",
+      "id": "galaxy-1",
+      "props": {
+        "preset": "galaxy",
+        "name": "Milky Way Structure",
+        "description": "Simplified visualization of our galaxy's structure",
+        "autoPlay": true,
+        "timeScale": 1
+      }
+    },
+    {
+      "type": "solar-system",
+      "id": "earth-moon-custom",
+      "props": {
+        "preset": "custom",
+        "name": "Earth-Moon System",
+        "centralBody": {
+          "name": "Earth",
+          "type": "planet",
+          "radius": 6371,
+          "color": "#2E86C1",
+          "glowColor": "#A9CCE3",
+          "description": "Our home planet"
+        },
+        "bodies": [
+          {
+            "name": "Moon",
+            "type": "moon",
+            "radius": 1737,
+            "mass": 7.35e22,
+            "orbitalRadius": 0.384,
+            "orbitalPeriod": 27.3,
+            "color": "#C0C0C0",
+            "description": "Earth's natural satellite"
+          }
+        ],
+        "units": {
+          "distance": { "unit": "AU", "label": "AU" },
+          "time": { "unit": "days", "label": "days" }
+        },
+        "scaling": {
+          "type": "logarithmic"
+        },
+        "autoPlay": true,
+        "timeScale": 0.1
       }
     }
   ]

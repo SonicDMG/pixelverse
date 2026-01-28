@@ -199,10 +199,7 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <SolarSystem
               key={key}
-              name={spec.props.name}
-              description={spec.props.description}
-              autoPlay={spec.props.autoPlay}
-              timeScale={spec.props.timeScale}
+              {...spec.props}
             />
           );
 
