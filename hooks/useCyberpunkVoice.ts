@@ -168,9 +168,18 @@ export function useCyberpunkVoice(
 
   /**
    * Toggle voice enabled/disabled
+   * When disabling, stop any ongoing speech immediately
    */
   const toggleEnabled = useCallback(() => {
-    setIsEnabled(prev => !prev);
+    setIsEnabled(prev => {
+      const newValue = !prev;
+      // If disabling voice, stop any ongoing speech
+      if (!newValue && ttsRef.current) {
+        ttsRef.current.stop();
+        isSpeakingRef.current = false;
+      }
+      return newValue;
+    });
   }, []);
 
   /**
