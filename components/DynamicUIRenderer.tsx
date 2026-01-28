@@ -55,6 +55,17 @@ export default function DynamicUIRenderer({ components, onSetQuestion }: Dynamic
     });
 
     try {
+      // Normalize component type aliases before type checking
+      // Cast to any to handle unknown component types from the agent
+      const rawType = (spec as any).type;
+      
+      // Map "key-metrics" to "metric-grid" for backward compatibility
+      // The agent may interpret "key financial metrics" as a component type
+      if (rawType === 'key-metrics') {
+        console.log('[DynamicUIRenderer] Normalizing "key-metrics" to "metric-grid"');
+        (spec as any).type = 'metric-grid';
+      }
+      
       switch (spec.type) {
         case 'line-chart':
           return (
