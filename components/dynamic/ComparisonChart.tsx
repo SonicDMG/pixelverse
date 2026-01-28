@@ -1,31 +1,8 @@
 'use client';
 
-import { useRef } from 'react';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
 import { useChartAnimation } from '@/hooks/useChartAnimation';
 import { getBaseChartOptions, getDatasetConfig, CHART_COLORS, PIXEL_FONT } from '@/utils/chart-config';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { BaseChart } from '@/components/shared';
 
 interface ComparisonChartProps {
   title: string;
@@ -40,7 +17,6 @@ interface ComparisonChartProps {
 }
 
 export default function ComparisonChart({ title, datasets }: ComparisonChartProps) {
-  const chartRef = useRef<ChartJS<'line'>>(null);
   const dataLength = datasets[0]?.data.length || 0;
   const animationProgress = useChartAnimation(dataLength);
 
@@ -77,11 +53,7 @@ export default function ComparisonChart({ title, datasets }: ComparisonChartProp
     },
   };
 
-  return (
-    <div className="w-full h-[400px] p-6 bg-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] rounded-lg pixel-border">
-      <Line ref={chartRef} data={chartData} options={options} />
-    </div>
-  );
+  return <BaseChart data={chartData} options={options} />;
 }
 
 // Made with Bob

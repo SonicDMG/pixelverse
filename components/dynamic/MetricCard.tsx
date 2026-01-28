@@ -1,5 +1,9 @@
 'use client';
 
+import { formatValue } from '@/utils/formatters';
+import { ChangeIndicator } from '@/components/shared';
+import { CARD_STYLES, TEXT_STYLES } from '@/constants/styles';
+
 interface MetricCardProps {
   title: string;
   value: string | number;
@@ -15,39 +19,20 @@ export default function MetricCard({
   changeLabel,
   subtitle,
 }: MetricCardProps) {
-  const formatValue = (val: string | number) => {
-    if (typeof val === 'number') {
-      return val.toLocaleString();
-    }
-    return val;
-  };
-
-  const getChangeColor = (change?: number) => {
-    if (change === undefined) return '';
-    return change >= 0 ? 'text-[var(--color-secondary)]' : 'text-[var(--color-error)]';
-  };
-
-  const getChangeIcon = (change?: number) => {
-    if (change === undefined) return '';
-    return change >= 0 ? '▲' : '▼';
-  };
-
   return (
-    <div className="p-6 bg-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] rounded-lg pixel-border hover:border-[var(--color-secondary)] transition-colors glitch-hover">
+    <div className={CARD_STYLES.glow}>
       <div className="space-y-3">
-        <h4 className="text-xs font-pixel text-[var(--color-primary)] uppercase">{title}</h4>
-        <div className="text-2xl font-pixel text-white glitch-hover">
+        <h4 className={TEXT_STYLES.label}>{title}</h4>
+        <div className={TEXT_STYLES.value}>
           {formatValue(value)}
         </div>
         {change !== undefined && (
-          <div className={`flex items-center gap-2 text-xs font-pixel ${getChangeColor(change)}`}>
-            <span>{getChangeIcon(change)}</span>
-            <span>{Math.abs(change).toFixed(2)}%</span>
-            {changeLabel && <span className="text-gray-400">({changeLabel})</span>}
+          <div className="flex items-center gap-2 text-xs font-pixel">
+            <ChangeIndicator value={change} label={changeLabel} />
           </div>
         )}
         {subtitle && (
-          <p className="text-xs font-pixel text-gray-400">{subtitle}</p>
+          <p className={TEXT_STYLES.subtitle}>{subtitle}</p>
         )}
       </div>
     </div>
