@@ -1,31 +1,36 @@
 'use client';
 
 import { LoadingStatus } from '@/types';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getTheme } from '@/constants/theme';
 
 interface LoadingSpinnerProps {
   status?: LoadingStatus;
 }
 
-const STATUS_CONFIG = {
-  choosing_agent: {
-    text: 'CHOOSING AGENT',
-    progress: 25,
-  },
-  getting_data: {
-    text: 'GETTING STOCK DATA',
-    progress: 50,
-  },
-  processing: {
-    text: 'PROCESSING DATA',
-    progress: 75,
-  },
-  done: {
-    text: 'COMPLETE',
-    progress: 100,
-  },
-};
-
 export function LoadingSpinner({ status = 'choosing_agent' }: LoadingSpinnerProps) {
+  const { appMode } = useTheme();
+  const theme = getTheme(appMode);
+  
+  const STATUS_CONFIG = {
+    choosing_agent: {
+      text: 'CHOOSING AGENT',
+      progress: 25,
+    },
+    getting_data: {
+      text: `GETTING ${theme?.loadingDataText || 'DATA'}`,
+      progress: 50,
+    },
+    processing: {
+      text: 'PROCESSING DATA',
+      progress: 75,
+    },
+    done: {
+      text: 'COMPLETE',
+      progress: 100,
+    },
+  };
+  
   const config = status && status !== 'done' ? STATUS_CONFIG[status] : STATUS_CONFIG.choosing_agent;
 
   return (

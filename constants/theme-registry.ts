@@ -23,6 +23,9 @@ export interface ThemeConfig {
   /** Music folder name for background music */
   musicDirectory: string;
   
+  /** Loading message text for data fetching state */
+  loadingDataText: string;
+  
   /** Optional emoji/icon for UI representation */
   icon?: string;
   
@@ -74,6 +77,7 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
     tagline: 'RETRO STOCK ANALYSIS POWERED BY LANGFLOW + MCP',
     apiEndpoint: '/api/ask-stock',
     musicDirectory: 'ticker',
+    loadingDataText: 'STOCK DATA',
     icon: '📈',
     colors: {
       primary: '#00ff9f',      // Neon cyan - stock ticker green
@@ -116,6 +120,7 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
     tagline: 'RETRO SPACE EXPLORATION POWERED BY LANGFLOW + OPENRAG',
     apiEndpoint: '/api/ask-space',
     musicDirectory: 'space',
+    loadingDataText: 'SPACE DATA',
     icon: '🚀',
     colors: {
       primary: '#4169E1',      // Royal blue - deep space
@@ -207,6 +212,7 @@ export function validateThemeConfig(config: Partial<ThemeConfig>): config is The
     'tagline',
     'apiEndpoint',
     'musicDirectory',
+    'loadingDataText',
   ];
   
   for (const field of requiredStrings) {
