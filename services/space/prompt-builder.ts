@@ -229,19 +229,23 @@ export class SpacePromptBuilder {
    * Build a generic prompt for any celestial object.
    * Useful for moons, stars, nebulae, and galaxies.
    *
-   * @param type - Type of celestial object
+   * @param type - Type of celestial object (for validation/API)
    * @param name - Object name
    * @param description - Optional description or characteristics
+   * @param displayType - Optional original body type for display in prompt (e.g., "comet" instead of "nebula")
    * @returns Formatted prompt string
    */
   static buildGenericCelestialPrompt(
     type: 'moon' | 'star' | 'nebula' | 'galaxy' | 'black-hole',
     name: string,
-    description?: string
+    description?: string,
+    displayType?: string
   ): string {
     const characteristics = description ? [description] : [];
+    // Use displayType if provided, otherwise use the mapped type
+    const promptType = displayType || type;
     return this.buildCelestialPrompt({
-      type,
+      type: promptType as any, // Allow any string for displayType
       name,
       characteristics,
     });

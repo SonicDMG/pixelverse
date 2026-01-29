@@ -28,6 +28,7 @@ interface GenerateImageRequest {
   description: string;
   planetType?: 'terrestrial' | 'gas-giant' | 'ice-giant' | 'dwarf';
   celestialType?: 'moon' | 'star' | 'galaxy' | 'nebula' | 'black-hole';
+  displayType?: string; // Original body type for display in prompt (e.g., "comet" instead of mapped "nebula")
   style?: 'pixel-art' | 'realistic';
   seed?: number;
 }
@@ -120,6 +121,15 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
     }
   }
 
+  // Validate displayType if provided
+  let sanitizedDisplayType: string | undefined;
+  if (req.displayType && typeof req.displayType === 'string') {
+    const trimmedDisplayType = req.displayType.trim();
+    if (trimmedDisplayType.length > 0 && trimmedDisplayType.length <= 50) {
+      sanitizedDisplayType = trimmedDisplayType.replace(/[\x00-\x1F\x7F]/g, '');
+    }
+  }
+
   return {
     valid: true,
     data: {
@@ -128,6 +138,7 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
       description: sanitizedDescription,
       planetType: req.planetType,
       celestialType: req.celestialType,
+      displayType: sanitizedDisplayType,
       style: req.style || 'pixel-art',
       seed: req.seed,
     },
@@ -138,7 +149,7 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
  * Build appropriate prompt based on object type and parameters
  */
 function buildPrompt(request: GenerateImageRequest): string {
-  const { objectType, name: providedName, description, planetType, celestialType, style } = request;
+  const { objectType, name: providedName, description, planetType, celestialType, displayType, style } = request;
 
   // Use provided name if available, otherwise extract from description
   const name = providedName || description.split(/[,.]/).shift()?.trim() || 'Unknown';
@@ -284,7 +295,8 @@ function buildPrompt(request: GenerateImageRequest): string {
       return SpacePromptBuilder.buildGenericCelestialPrompt(
         determinedCelestialType,
         name,
-        description
+        description,
+        displayType
       );
 
     default:
@@ -309,6 +321,7 @@ export async function POST(request: NextRequest) {
       descriptionLength: body.description?.length,
       planetType: body.planetType,
       celestialType: body.celestialType,
+      displayType: body.displayType,
       style: body.style,
       hasSeed: !!body.seed,
     });

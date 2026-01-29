@@ -77,6 +77,33 @@ const BODY_THEMES = {
     },
     glow: 'shadow-[0_0_30px_rgba(255,20,147,0.6)]',
   },
+  comet: {
+    icon: '☄️',
+    colors: {
+      primary: 'var(--color-body-comet-primary, #00CED1)',
+      secondary: 'var(--color-body-comet-secondary, #4682B4)',
+      accent: 'var(--color-body-comet-accent, #87CEEB)',
+    },
+    glow: 'shadow-[0_0_25px_rgba(0,206,209,0.6)]',
+  },
+  asteroid: {
+    icon: '🪨',
+    colors: {
+      primary: 'var(--color-body-asteroid-primary, #A9A9A9)',
+      secondary: 'var(--color-body-asteroid-secondary, #696969)',
+      accent: 'var(--color-body-asteroid-accent, #D3D3D3)',
+    },
+    glow: 'shadow-[0_0_15px_rgba(169,169,169,0.5)]',
+  },
+  'dwarf-planet': {
+    icon: '🌑',
+    colors: {
+      primary: 'var(--color-body-dwarf-planet-primary, #B8860B)',
+      secondary: 'var(--color-body-dwarf-planet-secondary, #8B7355)',
+      accent: 'var(--color-body-dwarf-planet-accent, #DAA520)',
+    },
+    glow: 'shadow-[0_0_18px_rgba(184,134,11,0.5)]',
+  },
 };
 
 /**
@@ -90,6 +117,9 @@ const PROPERTY_CONFIG = {
   galaxy: ['galaxyType', 'diameter', 'starCount', 'distanceFromEarth'],
   'black-hole': ['blackHoleType', 'mass', 'eventHorizonRadius', 'distanceFromEarth'],
   nebula: ['nebulaType', 'diameter', 'distanceFromEarth'],
+  comet: ['cometType', 'diameter', 'orbitalPeriod', 'distanceFrom'],
+  asteroid: ['asteroidType', 'diameter', 'mass', 'orbitalPeriod', 'distanceFrom'],
+  'dwarf-planet': ['diameter', 'mass', 'distanceFrom', 'orbitalPeriod', 'satellites'],
 };
 
 export function CelestialBodyCard(props: CelestialBodyCardProps) {
@@ -120,6 +150,8 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
     starType,
     enableImageGeneration = true,
     generatedImageUrl,
+    cometType,
+    asteroidType,
   } = props;
 
   // State management for image generation
@@ -132,8 +164,8 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
   // Track if generation has been initiated to prevent duplicate calls
   const generationInitiatedRef = useRef(false);
 
-  // Get theme for current body type
-  const theme = BODY_THEMES[bodyType];
+  // Get theme for current body type, with fallback to planet theme
+  const theme = BODY_THEMES[bodyType] || BODY_THEMES.planet;
 
   // Debug logging
   console.log('[CelestialBodyCard] Component mounted/updated:', {
@@ -198,15 +230,42 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
         } else if (bodyType === 'nebula') {
           visualDesc = `${name} nebula`;
           if (nebulaType) visualDesc += `, ${nebulaType}`;
+        } else if (bodyType === 'comet') {
+          visualDesc = `${name} comet`;
+          if (cometType) visualDesc += `, ${cometType}`;
+        } else if (bodyType === 'asteroid') {
+          visualDesc = `${name} asteroid`;
+          if (asteroidType) visualDesc += `, ${asteroidType}`;
+        } else if (bodyType === 'dwarf-planet') {
+          visualDesc = `${name} dwarf planet`;
         }
       }
+      
+      // Map unsupported body types to supported API types for image generation
+      const getApiCelestialType = (type: string): string | undefined => {
+        if (type === 'planet') return undefined;
+        
+        // Map unsupported types to supported ones
+        const typeMapping: Record<string, string> = {
+          'comet': 'nebula',        // Comets have nebula-like tails
+          'asteroid': 'moon',       // Asteroids are rocky like moons
+          'dwarf-planet': 'moon',   // Dwarf planets are similar to moons
+        };
+        
+        return typeMapping[type] || type;
+      };
+      
+      // Determine if we need to send a displayType (when the original type differs from mapped type)
+      const apiCelestialType = bodyType !== 'planet' ? getApiCelestialType(bodyType) : undefined;
+      const needsDisplayType = apiCelestialType && apiCelestialType !== bodyType;
       
       const requestBody = {
         objectType: bodyType === 'planet' ? 'planet' : 'celestial',
         name: name,
         description: visualDesc,
         planetType: bodyType === 'planet' ? (planetType || 'terrestrial') : undefined,
-        celestialType: bodyType !== 'planet' ? bodyType : undefined,
+        celestialType: apiCelestialType,
+        displayType: needsDisplayType ? bodyType : undefined,
         style: 'pixel-art',
       };
       
@@ -248,8 +307,8 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
   const displayImageUrl = localGeneratedUrl || imageUrl;
   const showImageSection = displayImageUrl || isGenerating;
 
-  // Build properties to display based on body type
-  const propertiesToShow = PROPERTY_CONFIG[bodyType];
+  // Build properties to display based on body type, with fallback to empty array
+  const propertiesToShow = PROPERTY_CONFIG[bodyType] || [];
   const properties: Array<{ label: string; value: string; highlight?: boolean }> = [];
 
   if (propertiesToShow.includes('diameter') && diameter) {
@@ -303,6 +362,12 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
   }
   if (propertiesToShow.includes('nebulaType') && nebulaType) {
     properties.push({ label: 'Nebula Type', value: nebulaType });
+  }
+  if (propertiesToShow.includes('cometType') && cometType) {
+    properties.push({ label: 'Comet Type', value: cometType });
+  }
+  if (propertiesToShow.includes('asteroidType') && asteroidType) {
+    properties.push({ label: 'Asteroid Type', value: asteroidType });
   }
 
   return (

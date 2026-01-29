@@ -135,7 +135,7 @@ export interface CelestialBodyCardSpec extends UIComponentSpec {
     description: string;
     /** Visual characteristics only (colors, size, appearance) - used for image generation */
     visualDescription?: string;
-    bodyType: 'planet' | 'moon' | 'star' | 'galaxy' | 'black-hole' | 'nebula';
+    bodyType: 'planet' | 'moon' | 'star' | 'galaxy' | 'black-hole' | 'nebula' | 'comet' | 'asteroid' | 'dwarf-planet';
     
     // Physical properties (conditional based on bodyType)
     diameter?: string;
@@ -167,6 +167,12 @@ export interface CelestialBodyCardSpec extends UIComponentSpec {
     
     // Nebula-specific properties
     nebulaType?: string;          // e.g., "Emission", "Reflection", "Planetary", "Supernova Remnant"
+    
+    // Comet-specific properties
+    cometType?: string;           // e.g., "Short-period", "Long-period", "Halley-type"
+    
+    // Asteroid-specific properties
+    asteroidType?: string;        // e.g., "C-type", "S-type", "M-type"
     
     // Image generation (existing)
     imageUrl?: string;
