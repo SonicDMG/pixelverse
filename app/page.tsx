@@ -33,25 +33,24 @@ export default function Home() {
     // Announce request submission with voice
     await audio.announceWithVoice(`Processing your request: ${questionText}`, 'info');
 
-    // Submit question
-    const success = await conversation.submitQuestion(questionText);
+    // Submit question and get the newly created conversation group
+    const latestGroup = await conversation.submitQuestion(questionText);
 
-    if (success) {
+    if (latestGroup) {
       setQuestion(''); // Clear the question input after successful submission
       
       // Announce completion
       await audio.announceWithVoice('Request complete', 'info');
 
-      // Read the answer text with voice (get the latest conversation group)
-      const latestGroup = conversation.conversationGroups[conversation.conversationGroups.length - 1];
-      if (latestGroup?.assistantMessage?.content) {
+      // Read the answer text with voice using the returned group
+      if (latestGroup.assistantMessage?.content) {
         setTimeout(() => {
           audio.announceWithVoice(latestGroup.assistantMessage.content, 'info');
         }, 1000);
       }
 
       // Announce key information from the response (for stock data)
-      if (latestGroup?.stockData && latestGroup.stockData.length > 0) {
+      if (latestGroup.stockData && latestGroup.stockData.length > 0) {
         const latestData = latestGroup.stockData[latestGroup.stockData.length - 1];
         const priceAnnouncement = `${latestGroup.symbol || 'Stock'} price: ${latestData.price} dollars`;
         setTimeout(() => {

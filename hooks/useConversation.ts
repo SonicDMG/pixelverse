@@ -34,14 +34,14 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
   /**
    * Submit a question to the API and update conversation state
    */
-  const submitQuestion = useCallback(async (questionText: string): Promise<boolean> => {
+  const submitQuestion = useCallback(async (questionText: string): Promise<ConversationGroup | null> => {
     // Clear any existing timeouts
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
     timeoutsRef.current = [];
 
     setLoadingStatus('choosing_agent');
     setError(null);
-    let requestSuccessful = false;
+    let createdGroup: ConversationGroup | null = null;
 
     // Create user message
     const userMessage: Message = {
@@ -103,7 +103,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
       };
 
       setConversationGroups(prev => [...prev, newGroup]);
-      requestSuccessful = true;
+      createdGroup = newGroup;
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.error || err.message
@@ -127,6 +127,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
       };
 
       setConversationGroups(prev => [...prev, errorGroup]);
+      createdGroup = errorGroup;
     } finally {
       // Clear all timeouts
       timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
@@ -134,7 +135,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
       setLoadingStatus(null);
     }
 
-    return requestSuccessful;
+    return createdGroup;
   }, [sessionId, apiEndpoint]);
 
   /**
