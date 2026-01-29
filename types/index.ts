@@ -33,6 +33,7 @@ export interface ConversationGroup {
   stockData?: StockDataPoint[];
   symbol?: string;
   timestamp: Date;
+  durationSeconds?: number;
 }
 
 // Langflow API request

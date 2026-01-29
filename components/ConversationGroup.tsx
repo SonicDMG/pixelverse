@@ -10,6 +10,7 @@ interface ConversationGroupProps {
   components?: ComponentSpec[];
   stockData?: any[];
   symbol?: string;
+  durationSeconds?: number;
   onSetQuestion?: (question: string) => void;
 }
 
@@ -23,6 +24,7 @@ export function ConversationGroup({
   components,
   stockData,
   symbol,
+  durationSeconds,
   onSetQuestion,
 }: ConversationGroupProps) {
   const { theme } = useTheme();
@@ -40,13 +42,20 @@ export function ConversationGroup({
     <div className="conversation-group">
       {/* User Question */}
       <div className="p-4 border-4 pixel-border bg-[var(--color-bg-card)] border-[var(--color-primary)] ml-8 mb-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-pixel text-[var(--color-primary)]">
-            {'>'} USER
-          </span>
-          <span className="text-xs text-gray-500 font-pixel">
-            {new Date(userMessage.timestamp).toLocaleTimeString()}
-          </span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-pixel text-[var(--color-primary)]">
+              {'>'} USER
+            </span>
+            <span className="text-xs text-gray-500 font-pixel">
+              {new Date(userMessage.timestamp).toLocaleTimeString()}
+            </span>
+          </div>
+          {durationSeconds !== undefined && (
+            <span className="text-xs font-pixel text-cyan-400">
+              {durationSeconds.toFixed(1)}s
+            </span>
+          )}
         </div>
         <p className="text-sm text-white font-pixel leading-relaxed whitespace-pre-wrap">
           {userMessage.content}

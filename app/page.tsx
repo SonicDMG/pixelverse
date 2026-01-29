@@ -30,36 +30,53 @@ export default function Home() {
 
   // Handle question submission with voice announcements
   const handleQuestion = useCallback(async (questionText: string) => {
-    // Announce request submission with voice
-    await audio.announceWithVoice(`Processing your request: ${questionText}`, 'info');
+    const startTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Starting handleQuestion for: "${questionText}"`);
+    
+    // Start API call immediately (don't wait for voice)
+    console.log(`[${new Date().toISOString()}] Starting API request`);
+    const apiPromise = conversation.submitQuestion(questionText);
+    
+    // Queue voice announcement independently (fire and forget)
+    console.log(`[${new Date().toISOString()}] Starting voice announcement for query`);
+    audio.announceWithVoice(`Processing your request: ${questionText}`, 'info')
+      .then(() => console.log(`[${new Date().toISOString()}] Query voice announcement completed`));
 
-    // Submit question and get the newly created conversation group
-    const latestGroup = await conversation.submitQuestion(questionText);
+    // Wait only for API response
+    const latestGroup = await apiPromise;
+    const endTime = Date.now();
+    const durationSeconds = (endTime - startTime) / 1000;
+    
+    console.log(`[${new Date().toISOString()}] API request completed in ${durationSeconds.toFixed(1)}s`);
 
     if (latestGroup) {
+      // Add duration to the conversation group
+      latestGroup.durationSeconds = durationSeconds;
+      
       setQuestion(''); // Clear the question input after successful submission
       
-      // Announce completion
-      await audio.announceWithVoice('Request complete', 'info');
-
-      // Read the answer text with voice using the returned group
-      if (latestGroup.assistantMessage?.content) {
-        setTimeout(() => {
-          audio.announceWithVoice(latestGroup.assistantMessage.content, 'info');
-        }, 1000);
-      }
-
-      // Announce key information from the response (for stock data)
-      if (latestGroup.stockData && latestGroup.stockData.length > 0) {
-        const latestData = latestGroup.stockData[latestGroup.stockData.length - 1];
-        const priceAnnouncement = `${latestGroup.symbol || 'Stock'} price: ${latestData.price} dollars`;
-        setTimeout(() => {
-          audio.announceWithVoice(priceAnnouncement, 'price');
-        }, 2000);
-      }
+      // Chain voice announcements without blocking
+      console.log(`[${new Date().toISOString()}] Starting completion voice chain`);
+      audio.announceWithVoice('Request complete', 'info')
+        .then(() => {
+          console.log(`[${new Date().toISOString()}] "Request complete" announced`);
+          if (latestGroup.assistantMessage?.content) {
+            console.log(`[${new Date().toISOString()}] Starting assistant message voice announcement`);
+            return audio.announceWithVoice(latestGroup.assistantMessage.content, 'info');
+          }
+        })
+        .then(() => {
+          console.log(`[${new Date().toISOString()}] Assistant message voice announcement completed`);
+          if (latestGroup.stockData && latestGroup.stockData.length > 0) {
+            const latestData = latestGroup.stockData[latestGroup.stockData.length - 1];
+            const priceAnnouncement = `${latestGroup.symbol || 'Stock'} price: ${latestData.price} dollars`;
+            return audio.announceWithVoice(priceAnnouncement, 'price');
+          }
+        })
+        .then(() => console.log(`[${new Date().toISOString()}] All voice announcements completed`));
     } else {
       // Announce error with voice
-      await audio.announceWithVoice('Request failed. Error occurred.', 'alert');
+      audio.announceWithVoice('Request failed. Error occurred.', 'alert');
     }
   }, [conversation, audio]);
 

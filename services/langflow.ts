@@ -115,6 +115,8 @@ export async function queryLangflow(
   sessionId?: string
 ): Promise<StockQueryResult> {
   try {
+    console.log(`[${new Date().toISOString()}] [Langflow] Starting API request for: "${question}"`);
+    
     // Get the appropriate flow ID for the theme
     const flowId = getFlowIdForTheme(theme);
 
@@ -143,6 +145,7 @@ export async function queryLangflow(
       headers['x-api-key'] = LANGFLOW_API_KEY;
     }
 
+    console.log(`[${new Date().toISOString()}] [Langflow] Sending HTTP request to Langflow`);
     const response = await axios.post<LangflowResponse>(
       `${LANGFLOW_URL}/api/v1/run/${flowId}`,
       payload,
@@ -151,6 +154,7 @@ export async function queryLangflow(
         timeout: 120000, // 120 second (2 minute) timeout for complex queries
       }
     );
+    console.log(`[${new Date().toISOString()}] [Langflow] Received HTTP response from Langflow`);
 
     // Extract the response text
     const outputs = response.data.outputs?.[0]?.outputs?.[0]?.results;

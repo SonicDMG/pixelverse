@@ -214,23 +214,24 @@ export function useCyberpunkVoice(
       const voiceSettings = getVoiceSettings(type);
       const audioEffects = getAudioEffects(type);
 
-      console.log(`Announcing (${type}): ${processedText}`);
+      console.log(`[${new Date().toISOString()}] [Voice] Starting speech (${type}): "${processedText.substring(0, 50)}${processedText.length > 50 ? '...' : ''}"`);
 
       // Speak with effects
       await ttsRef.current.speak(processedText, voiceSettings, audioEffects);
 
+      console.log(`[${new Date().toISOString()}] [Voice] Speech completed (${type})`);
       isSpeakingRef.current = false;
     } catch (error) {
       isSpeakingRef.current = false;
       
       // Check if it's an interruption error (normal behavior)
       if (error instanceof Error && error.message.includes('interrupted')) {
-        console.log('[Voice] Speech interrupted (normal behavior)');
+        console.log(`[${new Date().toISOString()}] [Voice] Speech interrupted (normal behavior)`);
         return; // Don't throw for interruptions
       }
       
       // Log and throw actual errors
-      console.error('Failed to announce:', error);
+      console.error(`[${new Date().toISOString()}] [Voice] Failed to announce:`, error);
       throw error;
     }
   }, [isEnabled, preprocessText, getVoiceSettings, getAudioEffects]);

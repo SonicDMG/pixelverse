@@ -46,6 +46,7 @@ export function ConversationContainer({
             components={group.components}
             stockData={group.stockData}
             symbol={group.symbol}
+            durationSeconds={group.durationSeconds}
             onSetQuestion={onSetQuestion}
           />
         </ErrorBoundary>

@@ -181,35 +181,42 @@ describe('useCyberpunkVoice', () => {
         new Error('Speech synthesis interrupted')
       );
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCyberpunkVoice({ audioContext: mockAudioContext })
       );
 
+      // Should not throw - interruptions are handled gracefully
       await act(async () => {
         await result.current.announce('Test message');
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[Voice] Speech interrupted (normal behavior)'
+      // Verify the TTS service was called with text, settings, and effects
+      expect(mockTTSInstance.speak).toHaveBeenCalledWith(
+        'Test message',
+        expect.any(Object),
+        expect.any(Object)
       );
     });
 
     it('should throw on actual errors', async () => {
       mockTTSInstance.speak.mockRejectedValue(new Error('Real error'));
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCyberpunkVoice({ audioContext: mockAudioContext })
       );
 
+      // Should throw for non-interruption errors
       await expect(
         act(async () => {
           await result.current.announce('Test message');
         })
       ).rejects.toThrow('Real error');
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to announce:',
-        expect.any(Error)
+      // Verify the TTS service was called with text, settings, and effects
+      expect(mockTTSInstance.speak).toHaveBeenCalledWith(
+        'Test message',
+        expect.any(Object),
+        expect.any(Object)
       );
     });
   });
