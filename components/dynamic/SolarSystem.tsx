@@ -53,6 +53,9 @@ interface OrbitalSystemProps {
   description?: string;
   autoPlay?: boolean;
   timeScale?: number;
+  
+  // Interaction callbacks
+  onBodyClick?: (body: CelestialBody) => void;
 }
 
 // ============================================================================
@@ -314,7 +317,8 @@ export function SolarSystem({
   name: customName,
   description: customDescription,
   autoPlay = true,
-  timeScale = 1
+  timeScale = 1,
+  onBodyClick
 }: OrbitalSystemProps) {
   // Resolve configuration from preset or custom
   const config = useMemo(() => {
@@ -530,6 +534,14 @@ export function SolarSystem({
 
   const handleBodyClick = (bodyName: string) => {
     setSelectedBody(bodyName === selectedBody ? null : bodyName);
+    
+    // Trigger callback if provided
+    if (onBodyClick) {
+      const clickedBody = config.bodies.find(b => b.name === bodyName);
+      if (clickedBody) {
+        onBodyClick(clickedBody);
+      }
+    }
   };
 
   const selectedBodyData = selectedBody 

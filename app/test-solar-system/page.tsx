@@ -6,6 +6,7 @@ import mockResponse from './mock-response.json';
 
 export default function TestSolarSystemPage() {
   const [showMock, setShowMock] = useState(true);
+  const [clickedQuestion, setClickedQuestion] = useState<string>('');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] to-[#1a1f3a] p-8">
@@ -26,6 +27,21 @@ export default function TestSolarSystemPage() {
           </button>
         </div>
 
+        {/* Clicked Body Question Display */}
+        {clickedQuestion && (
+          <div className="p-6 bg-[#1a1f3a] border-2 border-[#FFD700] rounded-lg pixel-border">
+            <h2 className="text-xl font-pixel text-[#FFD700] mb-3 uppercase">
+              🪐 Body Click Demo:
+            </h2>
+            <p className="font-pixel text-sm text-gray-300 leading-relaxed">
+              Question generated: <span className="text-[#00CED1]">{clickedQuestion}</span>
+            </p>
+            <p className="font-pixel text-xs text-gray-400 mt-2">
+              (In the main app, this would populate the question input and you could submit it)
+            </p>
+          </div>
+        )}
+
         {/* Mock Response Display */}
         {showMock && (
           <div className="space-y-6">
@@ -44,7 +60,10 @@ export default function TestSolarSystemPage() {
               <h2 className="text-lg font-pixel text-[#00CED1]">
                 📊 Rendered Components:
               </h2>
-              <DynamicUIRenderer components={mockResponse.components as any} />
+              <DynamicUIRenderer
+                components={mockResponse.components as any}
+                onSetQuestion={setClickedQuestion}
+              />
             </div>
           </div>
         )}
@@ -55,10 +74,12 @@ export default function TestSolarSystemPage() {
             📝 How to Test:
           </h3>
           <ul className="space-y-2 text-sm font-pixel text-gray-400">
-            <li>• <strong className="text-[#00CED1]">Solar System:</strong> Click any planet to view details, see all 8 planets orbiting the Sun</li>
+            <li>• <strong className="text-[#00CED1]">Solar System:</strong> Click any planet to view details and generate a question, see all 8 planets orbiting the Sun</li>
             <li>• <strong className="text-[#00CED1]">Galilean Moons:</strong> Explore Jupiter's four largest moons with different orbital periods</li>
             <li>• <strong className="text-[#00CED1]">Milky Way:</strong> View our galaxy's structure with Sagittarius A* at the center</li>
             <li>• <strong className="text-[#00CED1]">Earth-Moon System (Custom):</strong> Custom configuration showing Earth with the Moon orbiting</li>
+            <li>• <strong className="text-[#FFD700]">NEW:</strong> Click any celestial body to generate a "Tell me about..." question</li>
+            <li>• The detail card will remain visible when you click a body</li>
             <li>• Use Play/Pause to control the animation</li>
             <li>• Adjust speed from 1x to 1000x</li>
             <li>• Click Reset to return to day 0</li>

@@ -200,6 +200,10 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
             <SolarSystem
               key={key}
               {...spec.props}
+              onBodyClick={onSetQuestion ? (body) => {
+                // Generate a question about the clicked celestial body
+                onSetQuestion(`Tell me about ${body.name}`);
+              } : undefined}
             />
           );
 
