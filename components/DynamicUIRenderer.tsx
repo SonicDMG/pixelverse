@@ -57,26 +57,26 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
     try {
       // Normalize component type aliases before type checking
       // Cast to any to handle unknown component types from the agent
-      const rawType = (spec as any).type;
+      const rawType = (normalizedSpec as any).type;
       
       // Map "key-metrics" to "metric-grid" for backward compatibility
       // The agent may interpret "key financial metrics" as a component type
       if (rawType === 'key-metrics') {
         console.log('[DynamicUIRenderer] Normalizing "key-metrics" to "metric-grid"');
-        (spec as any).type = 'metric-grid';
+        (normalizedSpec as any).type = 'metric-grid';
       }
       
-      switch (spec.type) {
+      switch (normalizedSpec.type) {
         case 'line-chart':
           return (
             <StockChart
               key={key}
-              data={spec.props.data.map((d: any) => ({
+              data={normalizedSpec.props.data.map((d: any) => ({
                 date: d.date,
                 price: d.value,
                 volume: d.volume,
               }))}
-              symbol={spec.props.symbol}
+              symbol={normalizedSpec.props.symbol}
             />
           );
 
@@ -84,8 +84,8 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <ComparisonChart
               key={key}
-              title={spec.props.title}
-              datasets={spec.props.datasets}
+              title={normalizedSpec.props.title}
+              datasets={normalizedSpec.props.datasets}
             />
           );
 
@@ -93,10 +93,10 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <DataTable
               key={key}
-              title={spec.props.title}
-              headers={spec.props.headers}
-              rows={spec.props.rows}
-              highlightColumn={spec.props.highlightColumn}
+              title={normalizedSpec.props.title}
+              headers={normalizedSpec.props.headers}
+              rows={normalizedSpec.props.rows}
+              highlightColumn={normalizedSpec.props.highlightColumn}
             />
           );
 
@@ -104,10 +104,10 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <ComparisonTable
               key={key}
-              title={spec.props.title}
-              items={spec.props.items}
-              column1Label={spec.props.column1Label}
-              column2Label={spec.props.column2Label}
+              title={normalizedSpec.props.title}
+              items={normalizedSpec.props.items}
+              column1Label={normalizedSpec.props.column1Label}
+              column2Label={normalizedSpec.props.column2Label}
             />
           );
 
@@ -115,11 +115,11 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <MetricCard
               key={key}
-              title={spec.props.title}
-              value={spec.props.value}
-              change={spec.props.change}
-              changeLabel={spec.props.changeLabel}
-              subtitle={spec.props.subtitle}
+              title={normalizedSpec.props.title}
+              value={normalizedSpec.props.value}
+              change={normalizedSpec.props.change}
+              changeLabel={normalizedSpec.props.changeLabel}
+              subtitle={normalizedSpec.props.subtitle}
             />
           );
 
@@ -127,7 +127,7 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <MetricGrid
               key={key}
-              metrics={spec.props.metrics}
+              metrics={normalizedSpec.props.metrics}
             />
           );
 
@@ -141,12 +141,12 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <div
               key={key}
-              className={`p-4 border-4 pixel-border ${severityColors[spec.props.severity]} bg-[var(--color-bg-dark)]`}
+              className={`p-4 border-4 pixel-border ${severityColors[normalizedSpec.props.severity]} bg-[var(--color-bg-dark)]`}
             >
-              {spec.props.title && (
-                <h4 className="font-pixel text-sm mb-2">{spec.props.title}</h4>
+              {normalizedSpec.props.title && (
+                <h4 className="font-pixel text-sm mb-2">{normalizedSpec.props.title}</h4>
               )}
-              <p className="font-pixel text-xs">{spec.props.message}</p>
+              <p className="font-pixel text-xs">{normalizedSpec.props.message}</p>
             </div>
           );
 
@@ -154,8 +154,8 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <TextBlock
               key={key}
-              content={spec.props.content}
-              format={spec.props.format}
+              content={normalizedSpec.props.content}
+              format={normalizedSpec.props.format}
             />
           );
 
@@ -163,7 +163,7 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <CelestialBodyCard
               key={key}
-              {...spec.props}
+              {...normalizedSpec.props}
             />
           );
 
@@ -171,13 +171,13 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <Constellation
               key={key}
-              name={spec.props.name}
-              abbreviation={spec.props.abbreviation}
-              description={spec.props.description}
-              brightestStar={spec.props.brightestStar}
-              visibility={spec.props.visibility}
-              stars={spec.props.stars}
-              lines={spec.props.lines}
+              name={normalizedSpec.props.name}
+              abbreviation={normalizedSpec.props.abbreviation}
+              description={normalizedSpec.props.description}
+              brightestStar={normalizedSpec.props.brightestStar}
+              visibility={normalizedSpec.props.visibility}
+              stars={normalizedSpec.props.stars}
+              lines={normalizedSpec.props.lines}
               onStarClick={onSetQuestion ? (star) => {
                 // Extract star name, removing designation in parentheses if present
                 const starName = star.name.split('(')[0].trim();
@@ -190,8 +190,8 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <SpaceTimeline
               key={key}
-              title={spec.props.title}
-              events={spec.props.events}
+              title={normalizedSpec.props.title}
+              events={normalizedSpec.props.events}
             />
           );
 
@@ -199,7 +199,7 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           return (
             <SolarSystem
               key={key}
-              {...spec.props}
+              {...normalizedSpec.props}
               onBodyClick={onSetQuestion ? (body) => {
                 // Generate a question about the clicked celestial body
                 onSetQuestion(`Tell me about ${body.name}`);
@@ -208,27 +208,27 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           );
 
         default:
-          console.warn(`Unknown component type: ${(spec as any).type}`);
+          console.warn(`Unknown component type: ${(normalizedSpec as any).type}`);
           return (
             <div
               key={key}
               className="p-4 border-2 border-[var(--color-error)] bg-[var(--color-bg-dark)] pixel-border"
             >
               <p className="font-pixel text-xs text-[var(--color-error)]">
-                Unknown component type: {(spec as any).type}
+                Unknown component type: {(normalizedSpec as any).type}
               </p>
             </div>
           );
       }
     } catch (error) {
-      console.error(`Error rendering component ${spec.type}:`, error);
+      console.error(`Error rendering component ${normalizedSpec.type}:`, error);
       return (
         <div
           key={key}
           className="p-4 border-2 border-[var(--color-error)] bg-[var(--color-bg-dark)] pixel-border"
         >
           <p className="font-pixel text-xs text-[var(--color-error)]">
-            Error rendering {spec.type}
+            Error rendering {normalizedSpec.type}
           </p>
         </div>
       );

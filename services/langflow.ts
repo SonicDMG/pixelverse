@@ -159,13 +159,25 @@ export async function queryLangflow(
 
     // Try to parse as UI specification response
     let uiResponse: any = null;
+    console.log('[Langflow] Raw messageText:', messageText.substring(0, 500)); // Log first 500 chars
+    console.log('[Langflow] messageText starts with {:', messageText.trim().startsWith('{'));
+    console.log('[Langflow] messageText starts with [:', messageText.trim().startsWith('['));
+    
     try {
       // Check if messageText is JSON with components
       if (messageText.trim().startsWith('{')) {
         uiResponse = JSON.parse(messageText);
+        console.log('[Langflow] Successfully parsed JSON response:', {
+          hasComponents: !!uiResponse.components,
+          componentCount: uiResponse.components?.length,
+          hasAnswer: !!uiResponse.answer,
+          hasText: !!uiResponse.text,
+          topLevelKeys: Object.keys(uiResponse)
+        });
       }
     } catch (e) {
-      // Not JSON, treat as plain text
+      console.error('[Langflow] Failed to parse messageText as JSON:', e);
+      console.log('[Langflow] Failed messageText:', messageText);
     }
 
     // If we have a UI response with components, use it
@@ -182,6 +194,8 @@ export async function queryLangflow(
         components: uiResponse.components,
         symbol: extractSymbol(question),
       };
+    } else {
+      console.log('[Langflow] No valid UI response found, falling back to stock data parsing');
     }
 
     // Otherwise, fall back to legacy stock data parsing

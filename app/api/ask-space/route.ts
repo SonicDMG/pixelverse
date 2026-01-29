@@ -420,6 +420,7 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
         {
           type: 'solar-system',
           props: {
+            preset: 'solar-system',
             name: 'Solar System',
             description: 'Our home planetary system with 8 planets',
             autoPlay: true,
