@@ -25,13 +25,9 @@ This document describes the expected response format for Langflow agents in the 
 **Title:** 2-Level Educational Explanations
 **Description:** Provides explanations at 2 knowledge levels (Kid Mode and Layperson) with related topics, citations, and follow-up questions. User's selected knowledge level persists via localStorage.
 
-**Use Cases:**
-- Educational explanations requiring multi-level breakdown
-- When user explicitly requests simplified or kid-friendly explanations
-- Teaching/learning contexts with "explain like I'm 5" or "break down" phrases
-- NOT for simple factual queries (use default route instead)
+## When to Use Explain-O-Matic
 
-**REQUIRED TRIGGER PHRASES (must contain one):**
+**Use Explain-O-Matic when the query contains trigger phrases requesting simplified or multi-level explanations:**
 - "Explain [topic] like I'm 5" or "ELI5"
 - "Explain [topic] at different levels"
 - "Simple explanation of [topic]"
@@ -39,11 +35,12 @@ This document describes the expected response format for Langflow agents in the 
 - "Break down [topic] for me"
 - "Teach me about [topic]"
 
-**DO NOT USE for:**
-- General "what is" or "how does" questions → use default route
+**Use Default Route (text-block) for:**
+- General factual questions: "What is...", "How does...", "Tell me about..."
+- Any question that doesn't explicitly request multi-level educational breakdown
 - Specific celestial body questions → use celestial-body-card
 - Timeline/history questions → use space-timeline
-- Other specialized components
+- Other specialized component requests
 
 **CRITICAL: You MUST generate content for BOTH knowledge levels (kid and layperson) in a single response.**
 

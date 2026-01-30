@@ -4,9 +4,10 @@
 The Explain-O-Matic component provides 2-level educational explanations for any topic. When users ask for explanations, you MUST return this component with content for BOTH knowledge levels so users can switch between them.
 
 ## When to Use
-Use the `explain-o-matic` component ONLY when users explicitly request educational explanations that would benefit from multiple knowledge levels:
 
-**REQUIRED TRIGGER PHRASES (must contain one of these):**
+Use the `explain-o-matic` component when the query contains trigger phrases requesting simplified or multi-level explanations:
+
+**Trigger Phrases:**
 - "Explain [topic] like I'm 5" or "ELI5"
 - "Explain [topic] at different levels"
 - "Simple explanation of [topic]"
@@ -14,18 +15,15 @@ Use the `explain-o-matic` component ONLY when users explicitly request education
 - "Break down [topic] for me"
 - "Teach me about [topic]"
 
+## When NOT to Use
+
 **DO NOT USE for:**
-- General "what is" questions → use default route
-- "How does" questions without educational context → use default route
+- General factual questions: "What is...", "How does...", "Tell me about..." → use default route (text-block)
 - Specific celestial body questions → use celestial-body-card
 - Timeline/history questions → use space-timeline
 - Constellation questions → use constellation
 - Orbital system questions → use solar-system
-- Simple factual queries → use default route
-
-**Key Distinction:**
-- Explain-O-Matic: Educational content with kid/layperson levels for learning
-- Default Route: Direct answers to questions without multi-level breakdown
+- Any question that doesn't explicitly request multi-level educational breakdown
 
 ## Agent System Prompt
 
