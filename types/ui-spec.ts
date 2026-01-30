@@ -236,7 +236,8 @@ export interface SolarSystemSpec extends UIComponentSpec {
       orbitalPeriod: number;
       color: string;
       description: string;
-      satellites?: any[]; // Recursive type
+      eccentricity?: number; // 0 = circular, 0.9 = highly elliptical
+      satellites?: any[]; // Recursive type for nested orbital systems
     }>;
     centralBody?: {
       name: string;

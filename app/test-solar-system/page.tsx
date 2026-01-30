@@ -75,10 +75,13 @@ export default function TestSolarSystemPage() {
           </h3>
           <ul className="space-y-2 text-sm font-pixel text-gray-400">
             <li>• <strong className="text-[#00CED1]">Solar System:</strong> Click any planet to view details and generate a question, see all 8 planets orbiting the Sun</li>
-            <li>• <strong className="text-[#00CED1]">Galilean Moons:</strong> Explore Jupiter's four largest moons with different orbital periods</li>
+            <li>• <strong className="text-[#00CED1]">Galilean Moons:</strong> Explore Jupiter's four largest moons with FIXED orbital speeds (no longer too fast!)</li>
             <li>• <strong className="text-[#00CED1]">Milky Way:</strong> View our galaxy's structure with Sagittarius A* at the center</li>
-            <li>• <strong className="text-[#00CED1]">Earth-Moon System (Custom):</strong> Custom configuration showing Earth with the Moon orbiting</li>
-            <li>• <strong className="text-[#FFD700]">NEW:</strong> Click any celestial body to generate a "Tell me about..." question</li>
+            <li>• <strong className="text-[#00CED1]">Earth-Moon System (Custom):</strong> NEW FEATURES demonstration!</li>
+            <li>• <strong className="text-[#FFD700]">NEW - Elliptical Orbits:</strong> Earth, Mars, and Moon now show realistic elliptical orbits (not perfect circles)</li>
+            <li>• <strong className="text-[#FFD700]">NEW - Nested Satellites:</strong> Moon orbits Earth, Phobos & Deimos orbit Mars (satellites of satellites!)</li>
+            <li>• <strong className="text-[#FFD700]">NEW - Fixed Moon Speeds:</strong> Moons now orbit at realistic visual speeds relative to planets</li>
+            <li>• Click any celestial body to generate a "Tell me about..." question</li>
             <li>• The detail card will remain visible when you click a body</li>
             <li>• Use Play/Pause to control the animation</li>
             <li>• Adjust speed from 1x to 1000x</li>

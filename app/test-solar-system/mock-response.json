@@ -1,5 +1,5 @@
 {
-  "text": "Here are four different orbital system visualizations showcasing the versatility of the SolarSystem component! The first three use preset configurations, and the fourth demonstrates a custom Earth-Moon system configuration.",
+  "text": "Here are four different orbital system visualizations with REAL-TIME orbital speeds! At 1x speed, time passes at real-world rate (1 second = 1 second). Use 10x, 100x, or 1000x to speed up time and see orbital motion more clearly.",
   "components": [
     {
       "type": "solar-system",
@@ -7,9 +7,9 @@
       "props": {
         "preset": "solar-system",
         "name": "Solar System",
-        "description": "Our home planetary system with 8 planets orbiting the Sun",
+        "description": "Our home planetary system with 8 planets orbiting the Sun (1x = real-time, try 100x to see motion)",
         "autoPlay": true,
-        "timeScale": 10
+        "timeScale": 1
       }
     },
     {
@@ -18,9 +18,9 @@
       "props": {
         "preset": "moon-system",
         "name": "Galilean Moons",
-        "description": "Jupiter's four largest moons discovered by Galileo",
+        "description": "Jupiter's four largest moons discovered by Galileo (1x = real-time, try 10x to see Io's fast orbit)",
         "autoPlay": true,
-        "timeScale": 0.05
+        "timeScale": 1
       }
     },
     {
@@ -29,46 +29,98 @@
       "props": {
         "preset": "galaxy",
         "name": "Milky Way Structure",
-        "description": "Simplified visualization of our galaxy's structure",
+        "description": "Simplified visualization of our galaxy's structure (1x = real-time, use 1000x for visible motion)",
         "autoPlay": true,
         "timeScale": 1
       }
     },
     {
       "type": "solar-system",
-      "id": "earth-moon-custom",
+      "id": "earth-moon-elliptical",
       "props": {
         "preset": "custom",
-        "name": "Earth-Moon System",
+        "name": "Earth-Moon System (NEW FEATURES)",
+        "description": "Demonstrates elliptical orbits and nested satellites (1x = real-time, try 100x to see orbits)",
         "centralBody": {
-          "name": "Earth",
-          "type": "planet",
-          "radius": 6371,
-          "color": "#2E86C1",
-          "glowColor": "#A9CCE3",
-          "description": "Our home planet"
+          "name": "Sun",
+          "type": "star",
+          "radius": 696000,
+          "color": "#FFD700",
+          "glowColor": "#FFA500",
+          "description": "Our star"
         },
         "bodies": [
           {
-            "name": "Moon",
-            "type": "moon",
-            "radius": 1737,
-            "mass": 7.35e22,
-            "orbitalRadius": 0.384,
-            "orbitalPeriod": 27.3,
-            "color": "#C0C0C0",
-            "description": "Earth's natural satellite"
+            "name": "Earth",
+            "type": "planet",
+            "radius": 6371,
+            "mass": 5.972e24,
+            "orbitalRadius": 1.0,
+            "orbitalPeriod": 365.25,
+            "eccentricity": 0.0167,
+            "color": "#4169E1",
+            "description": "Our home planet with slightly elliptical orbit",
+            "satellites": [
+              {
+                "name": "Moon",
+                "type": "moon",
+                "radius": 1737.4,
+                "mass": 7.342e22,
+                "orbitalRadius": 0.00257,
+                "orbitalPeriod": 27.3,
+                "eccentricity": 0.0549,
+                "color": "#C0C0C0",
+                "description": "Earth's natural satellite with elliptical orbit"
+              }
+            ]
+          },
+          {
+            "name": "Mars",
+            "type": "planet",
+            "radius": 3389.5,
+            "mass": 6.39e23,
+            "orbitalRadius": 1.52,
+            "orbitalPeriod": 687,
+            "eccentricity": 0.0934,
+            "color": "#CD5C5C",
+            "description": "The Red Planet with moderately elliptical orbit",
+            "satellites": [
+              {
+                "name": "Phobos",
+                "type": "moon",
+                "radius": 11.3,
+                "mass": 1.0659e16,
+                "orbitalRadius": 0.00006,
+                "orbitalPeriod": 0.319,
+                "color": "#8B7355",
+                "description": "Mars' larger moon"
+              },
+              {
+                "name": "Deimos",
+                "type": "moon",
+                "radius": 6.2,
+                "mass": 1.4762e15,
+                "orbitalRadius": 0.000157,
+                "orbitalPeriod": 1.263,
+                "color": "#A0826D",
+                "description": "Mars' smaller moon"
+              }
+            ]
           }
         ],
         "units": {
-          "distance": { "unit": "AU", "label": "AU" },
-          "time": { "unit": "days", "label": "days" }
+          "distance": { "unit": "AU", "label": "Astronomical Units" },
+          "time": { "unit": "days", "label": "Earth Days" },
+          "mass": { "unit": "kg", "label": "Kilograms" },
+          "radius": { "unit": "km", "label": "Kilometers" }
         },
         "scaling": {
-          "type": "logarithmic"
+          "type": "logarithmic",
+          "distanceScale": 1,
+          "sizeScale": 1
         },
         "autoPlay": true,
-        "timeScale": 0.1
+        "timeScale": 1
       }
     }
   ]

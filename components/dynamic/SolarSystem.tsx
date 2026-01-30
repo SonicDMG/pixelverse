@@ -15,6 +15,7 @@ interface CelestialBody {
   orbitalPeriod: number;
   color: string;
   description: string;
+  eccentricity?: number; // 0 = circular, 0.9 = highly elliptical
   satellites?: CelestialBody[];
 }
 
@@ -90,7 +91,8 @@ const PRESETS = {
         orbitalRadius: 0.39,
         orbitalPeriod: 88,
         color: 'var(--color-planet-mercury)',
-        description: 'Smallest planet, closest to the Sun'
+        description: 'Smallest planet, closest to the Sun',
+        satellites: []
       },
       {
         name: 'Venus',
@@ -100,7 +102,8 @@ const PRESETS = {
         orbitalRadius: 0.72,
         orbitalPeriod: 225,
         color: 'var(--color-planet-venus)',
-        description: 'Hottest planet with thick atmosphere'
+        description: 'Hottest planet with thick atmosphere',
+        satellites: []
       },
       {
         name: 'Earth',
@@ -110,7 +113,8 @@ const PRESETS = {
         orbitalRadius: 1.0,
         orbitalPeriod: 365.25,
         color: 'var(--color-planet-earth)',
-        description: 'Our home planet with liquid water'
+        description: 'Our home planet with liquid water',
+        satellites: []
       },
       {
         name: 'Mars',
@@ -120,7 +124,8 @@ const PRESETS = {
         orbitalRadius: 1.52,
         orbitalPeriod: 687,
         color: 'var(--color-planet-mars)',
-        description: 'The Red Planet with polar ice caps'
+        description: 'The Red Planet with polar ice caps',
+        satellites: []
       },
       {
         name: 'Jupiter',
@@ -130,7 +135,8 @@ const PRESETS = {
         orbitalRadius: 5.20,
         orbitalPeriod: 4333,
         color: 'var(--color-planet-jupiter)',
-        description: 'Largest planet with Great Red Spot'
+        description: 'Largest planet with Great Red Spot',
+        satellites: []
       },
       {
         name: 'Saturn',
@@ -140,7 +146,8 @@ const PRESETS = {
         orbitalRadius: 9.54,
         orbitalPeriod: 10759,
         color: 'var(--color-planet-saturn)',
-        description: 'Famous for its spectacular ring system'
+        description: 'Famous for its spectacular ring system',
+        satellites: []
       },
       {
         name: 'Uranus',
@@ -150,7 +157,8 @@ const PRESETS = {
         orbitalRadius: 19.19,
         orbitalPeriod: 30687,
         color: 'var(--color-planet-uranus)',
-        description: 'Ice giant tilted on its side'
+        description: 'Ice giant tilted on its side',
+        satellites: []
       },
       {
         name: 'Neptune',
@@ -160,7 +168,8 @@ const PRESETS = {
         orbitalRadius: 30.07,
         orbitalPeriod: 60190,
         color: 'var(--color-planet-neptune)',
-        description: 'Farthest planet with supersonic winds'
+        description: 'Farthest planet with supersonic winds',
+        satellites: []
       }
     ],
     units: DEFAULT_UNITS,
@@ -191,7 +200,8 @@ const PRESETS = {
         orbitalRadius: 421700,
         orbitalPeriod: 1.77,
         color: '#FFD700',
-        description: 'Most volcanically active body in the Solar System'
+        description: 'Most volcanically active body in the Solar System',
+        satellites: []
       },
       {
         name: 'Europa',
@@ -201,7 +211,8 @@ const PRESETS = {
         orbitalRadius: 671034,
         orbitalPeriod: 3.55,
         color: '#E8E8E8',
-        description: 'Icy moon with subsurface ocean'
+        description: 'Icy moon with subsurface ocean',
+        satellites: []
       },
       {
         name: 'Ganymede',
@@ -211,7 +222,8 @@ const PRESETS = {
         orbitalRadius: 1070412,
         orbitalPeriod: 7.15,
         color: '#A0A0A0',
-        description: 'Largest moon in the Solar System'
+        description: 'Largest moon in the Solar System',
+        satellites: []
       },
       {
         name: 'Callisto',
@@ -221,7 +233,8 @@ const PRESETS = {
         orbitalRadius: 1882709,
         orbitalPeriod: 16.69,
         color: '#8B7355',
-        description: 'Ancient, heavily cratered surface'
+        description: 'Ancient, heavily cratered surface',
+        satellites: []
       }
     ],
     units: {
@@ -257,7 +270,8 @@ const PRESETS = {
         orbitalRadius: 3000,
         orbitalPeriod: 225,
         color: '#FFD700',
-        description: 'Dense stellar region around galactic center'
+        description: 'Dense stellar region around galactic center',
+        satellites: []
       },
       {
         name: 'Inner Disk',
@@ -267,7 +281,8 @@ const PRESETS = {
         orbitalRadius: 10000,
         orbitalPeriod: 450,
         color: '#FFA500',
-        description: 'Inner spiral arm region'
+        description: 'Inner spiral arm region',
+        satellites: []
       },
       {
         name: 'Solar Neighborhood',
@@ -277,7 +292,8 @@ const PRESETS = {
         orbitalRadius: 26000,
         orbitalPeriod: 225000000,
         color: '#FFFF00',
-        description: 'Our location in the galaxy'
+        description: 'Our location in the galaxy',
+        satellites: []
       },
       {
         name: 'Outer Disk',
@@ -287,7 +303,8 @@ const PRESETS = {
         orbitalRadius: 50000,
         orbitalPeriod: 450000000,
         color: '#FF6347',
-        description: 'Outer spiral arm region'
+        description: 'Outer spiral arm region',
+        satellites: []
       }
     ],
     units: {
@@ -397,6 +414,30 @@ export function SolarSystem({
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [isZoomLocked, setIsZoomLocked] = useState(true); // Default to LOCKED for safety
 
+  // Real-time conversion factor based on time units
+  // At 1x speed: 1 second of animation = 1 second of real time
+  const realTimeScale = useMemo(() => {
+    const timeUnit = config.units.time.unit.toLowerCase();
+    
+    // Convert time units to seconds for real-time calculation
+    if (timeUnit.includes('day')) {
+      // 1 day = 86400 seconds
+      return 1 / 86400; // 1 second of animation = 1/86400 days
+    } else if (timeUnit.includes('year') && timeUnit.includes('million')) {
+      // 1 million years = 31,557,600,000,000 seconds
+      return 1 / 31557600000000;
+    } else if (timeUnit.includes('year')) {
+      // 1 year = 31,557,600 seconds (365.25 days)
+      return 1 / 31557600;
+    } else if (timeUnit.includes('hour')) {
+      // 1 hour = 3600 seconds
+      return 1 / 3600;
+    } else {
+      // Default: assume seconds
+      return 1;
+    }
+  }, [config.units.time.unit]);
+
   // Calculate scale based on scaling type
   const scale = useMemo(() => {
     const maxRadius = Math.max(...config.bodies.map(b => b.orbitalRadius));
@@ -410,42 +451,122 @@ export function SolarSystem({
     }
   }, [config.bodies, config.scaling]);
 
-  // Calculate body positions
-  const bodyPositions = useMemo(() => {
-    return config.bodies.map(body => {
-      // Calculate angle based on time and orbital period
-      const angle = (time / body.orbitalPeriod) * 2 * Math.PI;
-      
-      // Apply scaling based on type
-      let scaledRadius: number;
+  // Helper function to calculate position for a body (supports elliptical orbits)
+  const calculateBodyPosition = (
+    body: CelestialBody,
+    currentTime: number,
+    parentX: number = 0,
+    parentY: number = 0,
+    isNested: boolean = false
+  ) => {
+    // Calculate angle based on time and orbital period
+    // The angle represents how far along the orbit the body has traveled
+    // Formula: angle = (elapsed_time / orbital_period) * 2π
+    // This gives us one complete orbit (2π radians) per orbital period
+    const angle = (currentTime / body.orbitalPeriod) * 2 * Math.PI;
+    
+    // Apply scaling based on type
+    let scaledRadius: number;
+    
+    if (isNested) {
+      // For nested satellites (moons), use a much larger scale multiplier
+      // to make them visible and orbit around their parent, not overlap it
+      const nestedScaleMultiplier = 150; // Increased to make even tiny moon orbits visible
+      if (config.scaling.type === 'logarithmic') {
+        scaledRadius = Math.log10(body.orbitalRadius * nestedScaleMultiplier + 1) * scale;
+      } else {
+        scaledRadius = body.orbitalRadius * scale * nestedScaleMultiplier;
+      }
+    } else {
+      // Normal scaling for primary bodies
       if (config.scaling.type === 'logarithmic') {
         scaledRadius = Math.log10(body.orbitalRadius + 1) * scale;
       } else {
         scaledRadius = body.orbitalRadius * scale;
       }
+    }
+    
+    // Calculate elliptical orbit parameters
+    const eccentricity = body.eccentricity || 0; // Default to circular orbit
+    const semiMajorAxis = scaledRadius;
+    const semiMinorAxis = semiMajorAxis * Math.sqrt(1 - eccentricity * eccentricity);
+    
+    // For elliptical orbits, the central body is at one focus, not the center
+    // The distance from center to focus is: c = a * e
+    const focalDistance = semiMajorAxis * eccentricity;
+    
+    // Calculate x, y position using elliptical orbit equations
+    // For ellipse centered at origin: x = a*cos(θ), y = b*sin(θ)
+    // But we need to shift so the focus (not center) is at parentX, parentY
+    // The focus is at (-c, 0) in the ellipse's coordinate system
+    const x = parentX + Math.cos(angle) * semiMajorAxis - focalDistance;
+    const y = parentY + Math.sin(angle) * semiMinorAxis;
+    
+    // Calculate body size with scaling
+    const sizeScale = config.scaling.sizeScale || 1;
+    let size: number;
+    if (config.scaling.type === 'logarithmic') {
+      size = Math.max(4, Math.log10(body.radius / 1000 + 1) * 3 * sizeScale);
+    } else {
+      size = Math.max(4, (body.radius / 10000) * sizeScale);
+    }
+    
+    return {
+      ...body,
+      x,
+      y,
+      size,
+      scaledRadius,
+      semiMajorAxis,
+      semiMinorAxis,
+      eccentricity,
+      focalDistance
+    };
+  };
+
+  // Calculate body positions with nested satellites support
+  const bodyPositions = useMemo(() => {
+    const positions: Array<CelestialBody & {
+      x: number;
+      y: number;
+      size: number;
+      scaledRadius: number;
+      semiMajorAxis: number;
+      semiMinorAxis: number;
+      eccentricity: number;
+      focalDistance: number;
+      parentBody?: string;
+      isNested?: boolean;
+    }> = [];
+    
+    // Process primary bodies
+    config.bodies.forEach(body => {
+      const bodyPos = calculateBodyPosition(body, time, 0, 0, false);
+      positions.push(bodyPos);
       
-      // Calculate x, y position
-      const x = Math.cos(angle) * scaledRadius;
-      const y = Math.sin(angle) * scaledRadius;
-      
-      // Calculate body size with scaling
-      const sizeScale = config.scaling.sizeScale || 1;
-      let size: number;
-      if (config.scaling.type === 'logarithmic') {
-        size = Math.max(4, Math.log10(body.radius / 1000 + 1) * 3 * sizeScale);
-      } else {
-        size = Math.max(4, (body.radius / 10000) * sizeScale);
+      // Process satellites (nested orbits)
+      if (body.satellites && body.satellites.length > 0) {
+        body.satellites.forEach(satellite => {
+          // Satellites orbit their parent body, not the central body
+          const satellitePos = calculateBodyPosition(
+            satellite,
+            time,
+            bodyPos.x,
+            bodyPos.y,
+            true // Mark as nested to apply proper scaling
+          );
+          positions.push({
+            ...satellitePos,
+            parentBody: body.name,
+            isNested: true
+          });
+        });
       }
-      
-      return {
-        ...body,
-        x,
-        y,
-        size,
-        scaledRadius
-      };
     });
-  }, [time, scale, config.bodies, config.scaling]);
+    
+    return positions;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [time, scale, config.bodies, config.scaling, calculateBodyPosition]);
 
   // Animation loop
   useEffect(() => {
@@ -456,11 +577,14 @@ export function SolarSystem({
 
     const animate = () => {
       const now = Date.now();
-      const deltaTime = (now - lastTime) / 1000; // seconds
+      const deltaTime = (now - lastTime) / 1000; // seconds of real time
       lastTime = now;
 
-      // Update time
-      setTime(prevTime => prevTime + deltaTime * speed);
+      // Update time with real-time scale
+      // At 1x speed: 1 second of animation = 1 second of real time
+      // realTimeScale converts real seconds to the appropriate time unit (days, years, etc.)
+      // The speed multiplier then accelerates from this real-time baseline
+      setTime(prevTime => prevTime + deltaTime * speed * realTimeScale);
 
       animationId = requestAnimationFrame(animate);
     };
@@ -468,7 +592,7 @@ export function SolarSystem({
     animationId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationId);
-  }, [isPaused, speed]);
+  }, [isPaused, speed, realTimeScale]);
 
   // Zoom constants
   const MIN_ZOOM = 0.5;
@@ -489,10 +613,15 @@ export function SolarSystem({
     setPanOffset({ x: 0, y: 0 });
   };
 
-  // Mouse wheel zoom handler - only when hovering over SVG AND zoom is unlocked
+  // Mouse wheel zoom handler - always prevent page scroll when over SVG
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    // CRITICAL: Always prevent default scroll behavior when mouse is over the component
+    // This prevents page scrolling even when zoom is locked
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only apply zoom if hovering and zoom is unlocked
     if (isHovering && !isZoomLocked) {
-      e.preventDefault();
       const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
       setZoom(prev => Math.max(MIN_ZOOM, Math.min(prev + delta, MAX_ZOOM)));
     }
@@ -537,15 +666,49 @@ export function SolarSystem({
     
     // Trigger callback if provided
     if (onBodyClick) {
-      const clickedBody = config.bodies.find(b => b.name === bodyName);
-      if (clickedBody) {
-        onBodyClick(clickedBody);
+      // Check if it's the central body
+      if (bodyName === config.centralBody.name) {
+        // Convert CentralBody to CelestialBody format for the callback
+        // Map central body types to valid CelestialBody types
+        let bodyType: CelestialBody['type'] = 'star';
+        if (config.centralBody.type === 'planet') {
+          bodyType = 'planet';
+        } else if (config.centralBody.type === 'black-hole' || config.centralBody.type === 'galaxy-core') {
+          bodyType = 'star'; // Map black holes and galaxy cores to 'star' type
+        } else {
+          bodyType = config.centralBody.type;
+        }
+        
+        const centralBodyAsCelestial: CelestialBody = {
+          name: config.centralBody.name,
+          type: bodyType,
+          radius: config.centralBody.radius,
+          mass: 0, // Central bodies don't have mass in the current schema
+          orbitalRadius: 0,
+          orbitalPeriod: 0,
+          color: config.centralBody.color,
+          description: config.centralBody.description || `The central ${config.centralBody.type}`
+        };
+        onBodyClick(centralBodyAsCelestial);
+      } else {
+        // Regular orbiting body
+        const clickedBody = config.bodies.find(b => b.name === bodyName);
+        if (clickedBody) {
+          onBodyClick(clickedBody);
+        }
       }
     }
   };
 
-  const selectedBodyData = selectedBody 
-    ? bodyPositions.find(b => b.name === selectedBody)
+  const selectedBodyData = selectedBody
+    ? (selectedBody === config.centralBody.name
+        ? {
+            ...config.centralBody,
+            description: config.centralBody.description || `The central ${config.centralBody.type}`,
+            orbitalRadius: 0,
+            orbitalPeriod: 0
+          }
+        : bodyPositions.find(b => b.name === selectedBody))
     : null;
 
   // Calculate central body size
@@ -674,20 +837,54 @@ export function SolarSystem({
             );
           })}
 
-          {/* Orbit rings */}
-          {bodyPositions.map(body => (
-            <circle
-              key={`orbit-${body.name}`}
-              cx="0"
-              cy="0"
-              r={body.scaledRadius}
-              fill="none"
-              stroke={selectedBody === body.name ? 'var(--color-secondary)' : 'var(--color-primary)'}
-              strokeWidth={selectedBody === body.name ? 2 : 1}
-              strokeDasharray="5,5"
-              opacity={selectedBody === body.name ? 0.8 : 0.3}
-            />
-          ))}
+          {/* Orbit rings - support both circular and elliptical */}
+          {bodyPositions.map(body => {
+            const isNested = body.isNested;
+            const parentBody = isNested ? body.parentBody : null;
+            const parentPos = parentBody
+              ? bodyPositions.find(b => b.name === parentBody)
+              : null;
+            
+            const cx = parentPos ? parentPos.x : 0;
+            const cy = parentPos ? parentPos.y : 0;
+            
+            // Use ellipse for elliptical orbits, circle for circular
+            const eccentricity = body.eccentricity || 0;
+            
+            if (eccentricity > 0.01) {
+              // Elliptical orbit
+              // The central body is at one focus, so we need to shift the ellipse center
+              return (
+                <ellipse
+                  key={`orbit-${body.name}`}
+                  cx={cx + body.focalDistance}
+                  cy={cy}
+                  rx={body.semiMajorAxis}
+                  ry={body.semiMinorAxis}
+                  fill="none"
+                  stroke={selectedBody === body.name ? 'var(--color-secondary)' : 'var(--color-primary)'}
+                  strokeWidth={selectedBody === body.name ? 2 : 1}
+                  strokeDasharray="5,5"
+                  opacity={selectedBody === body.name ? 0.8 : 0.3}
+                />
+              );
+            } else {
+              // Circular orbit
+              return (
+                <circle
+                  key={`orbit-${body.name}`}
+                  cx={cx}
+                  cy={cy}
+                  r={body.scaledRadius}
+                  fill="none"
+                  stroke={selectedBody === body.name ? 'var(--color-secondary)' : 'var(--color-primary)'}
+                  strokeWidth={selectedBody === body.name ? 2 : 1}
+                  strokeDasharray="5,5"
+                  opacity={selectedBody === body.name ? 0.8 : 0.3}
+                />
+              );
+            }
+          })}
 
           {/* Central Body */}
           {config.centralBody.glowColor && (
@@ -696,6 +893,7 @@ export function SolarSystem({
               cy="0"
               r={centralBodySize + 5}
               fill="url(#centralGlow)"
+              className="pointer-events-none"
             />
           )}
           <circle
@@ -703,8 +901,15 @@ export function SolarSystem({
             cy="0"
             r={centralBodySize}
             fill={config.centralBody.color}
-            stroke={config.centralBody.type === 'black-hole' ? config.centralBody.glowColor : 'none'}
+            stroke={selectedBody === config.centralBody.name ? 'var(--color-secondary)' : (config.centralBody.type === 'black-hole' ? config.centralBody.glowColor : 'none')}
             strokeWidth="2"
+            className="cursor-pointer transition-all duration-200 hover:opacity-80"
+            onClick={() => handleBodyClick(config.centralBody.name)}
+            style={{
+              filter: selectedBody === config.centralBody.name
+                ? `drop-shadow(0 0 10px ${config.centralBody.color})`
+                : `drop-shadow(0 0 3px ${config.centralBody.color})`
+            }}
           />
 
           {/* Orbiting Bodies */}
@@ -737,13 +942,16 @@ export function SolarSystem({
                 }}
               />
 
-              {/* Body label */}
+              {/* Body label - position based on whether it's a nested satellite */}
               <text
                 x={body.x}
                 y={body.y - body.size - 8}
                 textAnchor="middle"
                 className="font-pixel text-xs fill-white pointer-events-none"
-                style={{ fontSize: '10px' }}
+                style={{
+                  fontSize: body.isNested ? '8px' : '10px',
+                  opacity: body.isNested ? 0.9 : 1
+                }}
               >
                 {body.name}
               </text>
@@ -810,16 +1018,47 @@ export function SolarSystem({
             onChange={(e) => setSpeed(Number(e.target.value))}
             className="px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-primary)] text-white font-pixel text-xs rounded"
           >
-            <option value="1">1x</option>
-            <option value="10">10x</option>
-            <option value="100">100x</option>
-            <option value="1000">1000x</option>
+            <option value="1">1x (Real-time)</option>
+            <option value="3600">3,600x (1 hr/sec)</option>
+            <option value="86400">86,400x (1 day/sec)</option>
+            <option value="604800">604,800x (1 week/sec)</option>
+            <option value="2592000">2.59M (1 month/sec)</option>
+            <option value="31557600">31.6M (1 year/sec)</option>
+            <option value="31557600000">31.6B (1000 yr/sec)</option>
+            <option value="31557600000000">31.6T (1M yr/sec)</option>
           </select>
         </div>
 
         {/* Time display */}
         <div className="text-xs font-pixel text-gray-400">
-          {config.units.time.unit === 'days' ? `Day: ${Math.floor(time)}` : `Time: ${Math.floor(time)}`}
+          {(() => {
+            const timeUnit = config.units.time.unit.toLowerCase();
+            
+            if (timeUnit.includes('day')) {
+              // Display as Day X, HH:MM:SS
+              // The day counter shows accelerated time, but HH:MM:SS shows real-world clock time
+              const days = Math.floor(time);
+              const remainder = time - days;
+              
+              // For the clock display, we want to show the passage of simulated hours
+              // not real-world seconds, so we apply the speed multiplier to hours
+              const totalHours = remainder * 24;
+              const hours = Math.floor(totalHours);
+              const minutes = Math.floor((totalHours - hours) * 60);
+              const seconds = Math.floor(((totalHours - hours) * 60 - minutes) * 60);
+              
+              return `Day ${days}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else if (timeUnit.includes('million')) {
+              // Display in millions with decimals
+              return `${time.toFixed(6)} ${config.units.time.unit}`;
+            } else if (timeUnit.includes('year')) {
+              // Display years with decimals
+              return `${time.toFixed(2)} ${config.units.time.unit}`;
+            } else {
+              // Default display
+              return `${Math.floor(time)} ${config.units.time.unit}`;
+            }
+          })()}
         </div>
 
         {/* Reset */}

@@ -78,11 +78,12 @@ interface CelestialBody {
   type: 'planet' | 'moon' | 'star' | 'dwarf-planet' | 'asteroid' | 'comet';
   radius: number;           // Physical radius in unit system
   mass: number;             // Mass in kg
-  orbitalRadius: number;    // Distance from central body
+  orbitalRadius: number;    // Distance from central body (semi-major axis for elliptical)
   orbitalPeriod: number;    // Time to complete one orbit
   color: string;            // CSS color or CSS variable
   description: string;      // Displayed when body is selected
-  satellites?: CelestialBody[]; // Future: nested orbital systems
+  eccentricity?: number;    // Orbital eccentricity: 0 = circular, 0.9 = highly elliptical
+  satellites?: CelestialBody[]; // Nested orbital systems (moons, etc.)
 }
 ```
 
@@ -268,7 +269,64 @@ interface ScalingConfig {
 }
 ```
 
-### 5. Custom Exoplanet System (TRAPPIST-1)
+### 5. Earth-Moon System with Elliptical Orbit
+
+```json
+{
+  "text": "Here's Earth with its Moon, showing realistic orbital mechanics including the Moon's slightly elliptical orbit.",
+  "components": [
+    {
+      "type": "solar-system",
+      "props": {
+        "preset": "custom",
+        "name": "Earth-Moon System",
+        "description": "Our planet and its natural satellite",
+        "centralBody": {
+          "name": "Sun",
+          "type": "star",
+          "radius": 696000,
+          "color": "#FFD700",
+          "glowColor": "#FFA500"
+        },
+        "bodies": [
+          {
+            "name": "Earth",
+            "type": "planet",
+            "radius": 6371,
+            "mass": 5.972e24,
+            "orbitalRadius": 1.0,
+            "orbitalPeriod": 365.25,
+            "eccentricity": 0.0167,
+            "color": "#4169E1",
+            "description": "Our home planet with liquid water",
+            "satellites": [
+              {
+                "name": "Moon",
+                "type": "moon",
+                "radius": 1737.4,
+                "mass": 7.342e22,
+                "orbitalRadius": 0.00257,
+                "orbitalPeriod": 27.3,
+                "eccentricity": 0.0549,
+                "color": "#C0C0C0",
+                "description": "Earth's only natural satellite"
+              }
+            ]
+          }
+        ],
+        "units": {
+          "distance": { "unit": "AU", "label": "Astronomical Units" },
+          "time": { "unit": "days", "label": "Earth Days" }
+        },
+        "autoPlay": true,
+        "timeScale": 50
+      }
+    }
+  ]
+}
+```
+
+### 6. Custom Exoplanet System (TRAPPIST-1)
 
 ```json
 {
@@ -660,17 +718,77 @@ Use CSS variables or hex colors for bodies:
 }
 ```
 
-### Future Enhancements (Phase 2+)
+### New Features (Phase 2)
 
-- **Zoom and Pan**: Interactive viewport controls
-- **Nested Orbits**: Moon systems around planets (satellites property)
-- **Elliptical Orbits**: More accurate orbital mechanics
+#### Elliptical Orbits
+Bodies can now have elliptical orbits using the `eccentricity` parameter:
+- **0**: Perfectly circular orbit (default)
+- **0.0-0.3**: Low eccentricity (nearly circular)
+- **0.3-0.7**: Moderate eccentricity (visibly elliptical)
+- **0.7-0.9**: High eccentricity (highly elliptical)
+
+**Example - Mercury with realistic eccentricity:**
+```json
+{
+  "name": "Mercury",
+  "type": "planet",
+  "radius": 2439.7,
+  "mass": 3.285e23,
+  "orbitalRadius": 0.39,
+  "orbitalPeriod": 88,
+  "eccentricity": 0.206,
+  "color": "#8C7853",
+  "description": "Mercury has the most eccentric orbit of all planets"
+}
+```
+
+#### Nested Orbits (Satellites)
+Bodies can now have their own satellites that orbit around them:
+- Satellites orbit their parent body, not the central body
+- Supports multiple levels of nesting (moons of moons, theoretically)
+- Automatic speed adjustment for realistic visual appearance
+
+**Example - Earth with Moon:**
+```json
+{
+  "name": "Earth",
+  "type": "planet",
+  "radius": 6371,
+  "mass": 5.972e24,
+  "orbitalRadius": 1.0,
+  "orbitalPeriod": 365.25,
+  "color": "#4169E1",
+  "description": "Our home planet",
+  "satellites": [
+    {
+      "name": "Moon",
+      "type": "moon",
+      "radius": 1737.4,
+      "mass": 7.342e22,
+      "orbitalRadius": 0.00257,
+      "orbitalPeriod": 27.3,
+      "color": "#C0C0C0",
+      "description": "Earth's only natural satellite"
+    }
+  ]
+}
+```
+
+#### Fixed Moon Orbital Speeds
+Moon orbital speeds are now properly scaled to appear realistic:
+- Moons automatically receive a 10x speed reduction multiplier
+- Nested satellites (moons of moons) receive a 20x multiplier
+- This prevents moons from appearing to orbit too fast relative to planets
+
+### Future Enhancements (Phase 3+)
+
 - **3D Perspective**: Toggle between 2D and 3D views
 - **Orbital Resonances**: Highlight resonant relationships
 - **Lagrange Points**: Show L1-L5 points for selected bodies
 - **Trajectory Paths**: Show spacecraft trajectories
 - **Time Travel**: Jump to specific dates/times
 - **Export**: Save visualization as image or animation
+- **Orbital Inclination**: Support for tilted orbital planes
 
 ## Troubleshooting
 
