@@ -19,6 +19,158 @@ This document describes the expected response format for Langflow agents in the 
 
 ## Available Component Types
 
+### 0. explain-o-matic ⭐ NEW
+
+**Route:** `/api/ask-space` (Space theme)
+**Title:** 2-Level Educational Explanations
+**Description:** Provides explanations at 2 knowledge levels (Kid Mode and Layperson) with related topics, citations, and follow-up questions. User's selected knowledge level persists via localStorage.
+
+**Use Cases:**
+- Educational explanations of complex topics
+- Kid-friendly and adult explanations
+- Scientific concept explanations
+- Technical topic breakdowns
+- When user asks "Explain [topic]" or "What is [concept]?"
+
+**CRITICAL: You MUST generate content for BOTH knowledge levels (kid and layperson) in a single response.**
+
+**Props:**
+```typescript
+{
+  topic: string,                          // Topic being explained (required)
+  levels: {                               // BOTH levels required
+    "kid": {
+      explanation: string,                // Fun, simple explanation for kids
+      relatedTopics?: Array<{title: string, description: string}>,
+      citations?: Array<{source: string, url?: string, excerpt?: string}>,
+      followUpQuestions?: string[]
+    },
+    "layperson": {
+      explanation: string,                // Clear, detailed explanation for adults
+      relatedTopics?: Array<{title: string, description: string}>,
+      citations?: Array<{source: string, url?: string, excerpt?: string}>,
+      followUpQuestions?: string[]
+    }
+  }
+}
+```
+
+**Agent Prompt Guidelines:**
+
+When user asks for an explanation, you must:
+
+1. **Generate Content for BOTH Levels**: You must create explanations for kid AND layperson in a single response
+
+2. **Level-Appropriate Content Guidelines**:
+   - **kid**: Simple, everyday words (500-1000 common words), 5-10 word sentences, concrete examples, fun analogies (toys, food, animals, playground), playful and encouraging tone
+   - **layperson**: Standard adult vocabulary with scientific terms explained, 15-25 word sentences, clear scientific concepts without jargon, real-world examples, educational and informative tone
+
+3. **Include Supporting Content for Each Level**:
+   - 2-4 related topics for further exploration
+   - 2-4 citations from Wikipedia (Simple English Wikipedia for kid level, standard Wikipedia for layperson)
+   - 3-5 follow-up questions to deepen understanding
+
+**Example Response with BOTH Levels:**
+```json
+{
+  "text": "Here's an explanation of black holes at both kid and layperson levels.",
+  "components": [
+    {
+      "type": "explain-o-matic",
+      "props": {
+        "topic": "Black Holes",
+        "levels": {
+          "age5": {
+            "explanation": "A black hole is like a super-duper strong space vacuum cleaner! It's so strong that if anything gets too close - even light - it gets sucked in and can never escape.\n\nBlack holes are made when really, really big stars get old and collapse. They squeeze down into a tiny space, but they're still super heavy. That makes them pull on everything around them really hard.\n\nIf you could see a black hole (which you can't because they're black!), it would look like a dark circle in space. Around it, you might see bright swirly stuff - that's things spinning around before they fall in, like water going down a drain!",
+            "relatedTopics": [
+              {"title": "Stars", "description": "The bright lights in the night sky"},
+              {"title": "Gravity", "description": "The force that pulls things down"}
+            ],
+            "citations": [
+              {
+                "source": "NASA Kids - Black Holes",
+                "url": "https://www.nasa.gov/black-holes-kids",
+                "excerpt": "A black hole is a place in space where gravity pulls so much that even light cannot get out."
+              }
+            ],
+            "followUpQuestions": [
+              "What happens if you fall into a black hole?",
+              "Can we see black holes?",
+              "Are black holes dangerous to Earth?"
+            ]
+          },
+          "layperson": {
+            "explanation": "Black holes are regions of spacetime where gravity is so strong that nothing, not even light, can escape once it crosses the event horizon. They form when massive stars (typically more than 25 times the mass of our Sun) undergo gravitational collapse at the end of their lives.\n\nThe event horizon marks the boundary beyond which escape is impossible. For a non-rotating black hole, this radius is given by the Schwarzschild radius. Rotating black holes have more complex geometries.\n\nBlack holes are classified by mass: stellar-mass (3-100 solar masses), intermediate-mass (100-100,000 solar masses), and supermassive (millions to billions of solar masses). Despite being invisible, black holes can be detected through their gravitational effects on nearby matter, X-ray emissions from accretion disks, and gravitational waves from mergers.",
+            "relatedTopics": [
+              {"title": "Event Horizon", "description": "The boundary of no return around a black hole"},
+              {"title": "Hawking Radiation", "description": "Theoretical radiation that causes black holes to evaporate"},
+              {"title": "Gravitational Waves", "description": "Ripples in spacetime from black hole mergers"}
+            ],
+            "citations": [
+              {
+                "source": "Wikipedia - Black Hole",
+                "url": "https://en.wikipedia.org/wiki/Black_hole",
+                "excerpt": "A black hole is a region of spacetime where gravity is so strong that nothing can escape from it."
+              },
+              {
+                "source": "Wikipedia - Event Horizon",
+                "url": "https://en.wikipedia.org/wiki/Event_horizon",
+                "excerpt": "The event horizon is the boundary beyond which events cannot affect an outside observer."
+              }
+            ],
+            "followUpQuestions": [
+              "How does the Page curve resolve the information paradox?",
+              "What role do quantum extremal surfaces play?"
+            ]
+          },
+          "expert": {
+            "explanation": "Contemporary black hole physics centers on resolving the information paradox through quantum error correction codes and the emergence of spacetime from entanglement. The island formula S = min[ext(Area/4G + S_matter)] computes fine-grained entropy, reproducing the Page curve.\n\nThe ER=EPR conjecture posits that entangled states are connected by wormholes, with implications for black hole complementarity and the firewall paradox. Replica wormholes in the gravitational path integral provide a mechanism for information recovery.\n\nJT gravity and SYK models serve as solvable laboratories for black hole physics, exhibiting maximal chaos (λ_L = 2πk_BT/ℏ) and connections to random matrix theory. These developments suggest black holes are fast scramblers with quantum computational complexity growth.",
+            "relatedTopics": [
+              {"title": "Quantum Extremal Surfaces", "description": "Island formula and Page curve"},
+              {"title": "SYK Model", "description": "Holographic dual to JT gravity"},
+              {"title": "Replica Wormholes", "description": "Path integral approach to information recovery"}
+            ],
+            "citations": [
+              {
+                "source": "Almheiri et al. (2020) - The Page Curve of Hawking Radiation",
+                "url": "https://arxiv.org/abs/1908.10996",
+                "excerpt": "Islands in the gravitational path integral resolve the information paradox."
+              },
+              {
+                "source": "Penington (2020) - Entanglement Wedge Reconstruction",
+                "url": "https://arxiv.org/abs/1905.08255",
+                "excerpt": "Quantum extremal surfaces compute fine-grained entropy."
+              }
+            ],
+            "followUpQuestions": [
+              "How do replica wormholes contribute to the gravitational path integral?",
+              "What is the relationship between quantum error correction and bulk reconstruction?",
+              "Can we formulate a microscopic theory of black hole microstates?"
+            ]
+            "followUpQuestions": [
+              "How do scientists detect black holes?",
+              "Can black holes die?",
+              "What is the closest black hole to Earth?",
+              "What happens at the singularity?"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+**Key Features:**
+- ✅ User's knowledge level selection persists via localStorage
+- ✅ Clickable related topics populate the query bar
+- ✅ Clickable follow-up questions populate the query bar
+- ✅ Citations with optional URLs
+- ✅ Responsive cyberpunk/pixel aesthetic
+- ✅ Smooth transitions between knowledge levels
+
+---
+
 ### 1. text-block
 
 Display formatted text content with optional markdown support. Ideal for detailed explanations, descriptions, or any text-heavy content.

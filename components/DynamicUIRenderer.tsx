@@ -12,6 +12,7 @@ import { Constellation } from './dynamic/Constellation';
 import { SpaceTimeline } from './dynamic/SpaceTimeline';
 import { SolarSystem } from './dynamic/SolarSystem';
 import { TextBlock } from './dynamic/TextBlock';
+import { ExplainOMatic } from './dynamic/ExplainOMatic';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
@@ -207,6 +208,26 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
               onBodyClick={onSetQuestion ? (body) => {
                 // Generate a question about the clicked celestial body
                 onSetQuestion(`Tell me about ${body.name}`);
+              } : undefined}
+            />
+          );
+
+        case 'explain-o-matic':
+          return (
+            <ExplainOMatic
+              key={key}
+              topic={normalizedSpec.props.topic}
+              knowledgeLevel={normalizedSpec.props.knowledgeLevel}
+              explanation={normalizedSpec.props.explanation}
+              relatedTopics={normalizedSpec.props.relatedTopics}
+              citations={normalizedSpec.props.citations}
+              followUpQuestions={normalizedSpec.props.followUpQuestions}
+              levels={normalizedSpec.props.levels}
+              onRelatedTopicClick={onSetQuestion ? (topic) => {
+                onSetQuestion(`Explain ${topic}`);
+              } : undefined}
+              onFollowUpClick={onSetQuestion ? (question) => {
+                onSetQuestion(question);
               } : undefined}
             />
           );
