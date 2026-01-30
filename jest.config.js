@@ -58,6 +58,11 @@ const customJestConfig = {
         jsx: 'react-jsx',
       },
     }],
+    '^.+\\.(js|jsx)$': ['babel-jest', {
+      presets: [
+        ['@babel/preset-env', { targets: { node: 'current' } }]
+      ]
+    }],
   },
   
   // Module file extensions
@@ -69,9 +74,9 @@ const customJestConfig = {
     '<rootDir>/.next/',
   ],
   
-  // Transform ignore patterns - allow MSW and its dependencies to be transformed
+  // Transform ignore patterns - allow MSW, d3-geo and its dependencies to be transformed
   transformIgnorePatterns: [
-    '/node_modules/(?!(msw|@mswjs)/)',
+    'node_modules/(?!(msw|@mswjs|d3-geo|d3-geo-projection|d3-array|d3-path|internmap|delaunator|robust-predicates))',
     '^.+\\.module\\.(css|sass|scss)$',
   ],
 }

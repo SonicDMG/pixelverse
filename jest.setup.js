@@ -2,6 +2,9 @@
 import '@testing-library/jest-dom'
 
 // Import canvas mock for Chart.js
+// Mock d3-geo to avoid ES module issues in Jest
+jest.mock('d3-geo')
+
 import 'jest-canvas-mock'
 
 // Mock Next.js Request and Response for API route testing
