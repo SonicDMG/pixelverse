@@ -219,7 +219,15 @@ export interface SpaceTimelineSpec extends UIComponentSpec {
       title: string;
       description: string;
       type?: 'mission' | 'discovery' | 'observation';
+      details?: string; // Additional details for expanded view
+      relatedEvents?: string[]; // Related event titles
+      sources?: string[]; // Source citations
     }>;
+    layout?: 'vertical' | 'horizontal';
+    scaleType?: 'linear' | 'logarithmic';
+    showTimeAxis?: boolean;
+    showRelativeTime?: boolean;
+    minHeight?: number;
   };
 }
 

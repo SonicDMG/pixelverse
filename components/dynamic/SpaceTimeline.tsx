@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { scaleTime, scaleLog } from 'd3-scale';
 
 interface SpaceTimelineProps {
@@ -10,12 +10,15 @@ interface SpaceTimelineProps {
     title: string;
     description: string;
     type?: 'mission' | 'discovery' | 'observation';
+    details?: string; // Additional details for expanded view
+    relatedEvents?: string[]; // Related event titles
+    sources?: string[]; // Source citations
   }>;
-  layout?: 'vertical' | 'horizontal';
+  layout?: 'horizontal'; // Only horizontal layout supported
   scaleType?: 'linear' | 'logarithmic';
   showTimeAxis?: boolean;
   showRelativeTime?: boolean;
-  minHeight?: number;
+  minHeight?: number; // Not used in horizontal layout, kept for backward compatibility
 }
 
 interface ProcessedEvent {
@@ -23,6 +26,9 @@ interface ProcessedEvent {
   title: string;
   description: string;
   type?: 'mission' | 'discovery' | 'observation';
+  details?: string;
+  relatedEvents?: string[];
+  sources?: string[];
   parsedDate: Date;
   originalIndex: number;
   position: number;
@@ -34,16 +40,22 @@ interface ProcessedEvent {
   laneIndex?: number;
 }
 
-export function SpaceTimeline({ 
-  title, 
+export function SpaceTimeline({
+  title,
   events,
-  layout = 'horizontal',
+  layout = 'horizontal', // Only horizontal supported, kept for backward compatibility
   scaleType = 'linear',
   showTimeAxis = true,
   showRelativeTime = true,
-  minHeight = 600
+  minHeight = 600 // Not used, kept for backward compatibility
 }: SpaceTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [isZoomLocked, setIsZoomLocked] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const parseDate = (dateStr: string): Date => {
     // Try parsing as-is first
@@ -104,6 +116,104 @@ export function SpaceTimeline({
     return `${Math.floor(seconds)}s`;
   };
 
+  // Zoom constants
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 5;
+  const ZOOM_STEP = 0.25;
+
+  // Zoom handlers
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+    if (containerRef.current) {
+      containerRef.current.scrollLeft = 0;
+    }
+  };
+
+  const handleToggleZoomLock = () => {
+    setIsZoomLocked(prev => !prev);
+  };
+
+  // Mouse wheel zoom handler - prevent page scroll and center on mouse
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isZoomLocked && containerRef.current) {
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+      const newZoom = Math.max(MIN_ZOOM, Math.min(zoom + delta, MAX_ZOOM));
+      
+      if (newZoom !== zoom) {
+        const container = containerRef.current;
+        
+        // Get mouse position relative to the container
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const scrollLeft = container.scrollLeft;
+        
+        // Calculate the point in the content that's under the mouse
+        const contentX = mouseX + scrollLeft;
+        
+        // Calculate how much the content will grow/shrink
+        const zoomRatio = newZoom / zoom;
+        
+        // Calculate new scroll position to keep the point under the mouse stationary
+        const newScrollLeft = contentX * zoomRatio - mouseX;
+        
+        // Update zoom and scroll position synchronously
+        setZoom(newZoom);
+        container.scrollLeft = newScrollLeft;
+      }
+    }
+  };
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button === 0 && containerRef.current) {
+      setIsPanning(true);
+      setPanStart({
+        x: e.clientX + containerRef.current.scrollLeft,
+        y: e.clientY
+      });
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning && containerRef.current) {
+      const newScrollLeft = panStart.x - e.clientX;
+      containerRef.current.scrollLeft = newScrollLeft;
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsPanning(false);
+  };
+
+  // Click handler for event expansion
+  const handleEventClick = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  // Click outside to close expanded event
+  const handleContainerClick = () => {
+    if (expandedIndex !== null) {
+      setExpandedIndex(null);
+    }
+  };
+
   // Process events with parsed dates and calculate temporal positions
   const processedEvents = useMemo(() => {
     const eventsWithDates = events.map((event, index) => ({
@@ -127,7 +237,7 @@ export function SpaceTimeline({
 
     // Create scale based on type and layout
     let timeScale;
-    const scaleRange = layout === 'horizontal' ? [0, 100] : [0, minHeight];
+    const scaleRange = layout === 'horizontal' ? [0, 100] : [0, minHeight * zoom];
     
     if (scaleType === 'logarithmic' && timeRange > 0) {
       // For log scale, ensure we don't have zero or negative values
@@ -163,7 +273,7 @@ export function SpaceTimeline({
         paddedMaxDate
       };
     });
-  }, [events, scaleType, minHeight, layout]);
+  }, [events, scaleType, zoom]);
 
   // Multi-lane collision detection system
   const eventsWithVerticalPositions = useMemo((): ProcessedEvent[] => {
@@ -335,15 +445,72 @@ export function SpaceTimeline({
               <span>Scale: {scaleType}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[var(--color-purple)]">↔️</span>
-              <span>Scroll horizontally to explore</span>
+              <span className="text-[var(--color-purple)]">🔍</span>
+              <span>Zoom: {zoom.toFixed(1)}x</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--color-secondary)]">👆</span>
+              <span>Click events for details</span>
             </div>
           </div>
         </div>
 
+        {/* Zoom Controls */}
+        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 bg-[var(--color-bg-card)]/90 border-2 border-[var(--color-primary)] rounded-lg pixel-border p-2">
+          <button
+            onClick={handleToggleZoomLock}
+            className={`w-10 h-10 ${isZoomLocked ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white font-pixel text-lg rounded pixel-border transition-colors flex items-center justify-center`}
+            title={isZoomLocked ? "Unlock Zoom (Mouse Wheel Disabled)" : "Lock Zoom (Mouse Wheel Enabled)"}
+          >
+            {isZoomLocked ? '🔒' : '🔓'}
+          </button>
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= MAX_ZOOM}
+            className="w-10 h-10 bg-[var(--color-primary)] hover:bg-[var(--color-secondary)] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-pixel text-lg rounded pixel-border transition-colors flex items-center justify-center"
+            title="Zoom In"
+          >
+            +
+          </button>
+          <div className="text-center text-xs font-pixel text-[var(--color-accent)] py-1">
+            {zoom.toFixed(1)}x
+          </div>
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= MIN_ZOOM}
+            className="w-10 h-10 bg-[var(--color-primary)] hover:bg-[var(--color-secondary)] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-pixel text-lg rounded pixel-border transition-colors flex items-center justify-center"
+            title="Zoom Out"
+          >
+            −
+          </button>
+          <button
+            onClick={handleZoomReset}
+            className="w-10 h-10 bg-[var(--color-purple)] hover:bg-[var(--color-purple)]/80 text-white font-pixel text-xs rounded pixel-border transition-colors flex items-center justify-center"
+            title="Reset Zoom & Pan"
+          >
+            ↺
+          </button>
+        </div>
+
         {/* Horizontal Timeline Container */}
-        <div className="relative w-full overflow-x-auto overflow-y-visible pb-4" style={{ minHeight: '500px' }}>
-          <div className="relative" style={{ minWidth: 'max(200%, 1600px)', height: '500px' }}>
+        <div
+          ref={containerRef}
+          className="relative w-full overflow-x-auto overflow-y-visible pb-4 cursor-grab active:cursor-grabbing"
+          style={{ minHeight: '500px' }}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleContainerClick}
+        >
+          <div
+            className="relative"
+            style={{
+              minWidth: `max(${200 * zoom}%, ${1600 * zoom}px)`,
+              height: '500px'
+            }}
+          >
             
             {/* Horizontal timeline axis - centered exactly at 50% */}
             <div
@@ -430,28 +597,33 @@ export function SpaceTimeline({
                     ></div>
                   </div>
 
-                  {/* Event card with enhanced visual hierarchy */}
+                  {/* Event card with enhanced visual hierarchy and click interaction */}
                   <div
                     className="absolute group"
                     style={{
                       left: `${event.position}%`,
                       top: '50%',
-                      transform: `translate(-50%, ${verticalOffset}px)`,
-                      width: isHovered ? '220px' : '140px',
-                      zIndex: isHovered ? 50 : 15,
-                      transition: 'width 0.3s ease-in-out'
+                      transform: `translate(-50%, ${verticalOffset}px) ${!isAbove ? 'translateY(-100%)' : ''}`,
+                      width: expandedIndex === index ? '280px' : (isHovered ? '220px' : '140px'),
+                      zIndex: expandedIndex === index ? 100 : (isHovered ? 50 : 15),
+                      transition: 'width 0.3s ease-in-out, z-index 0s'
                     }}
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
+                    onClick={(e) => handleEventClick(index, e)}
                   >
                     <div
-                      className={`bg-[var(--color-bg-dark)] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 relative ${
-                        isHovered
+                      className={`bg-[var(--color-bg-dark)] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 relative cursor-pointer ${
+                        expandedIndex === index
+                          ? 'border-opacity-100 z-10 p-5 shadow-2xl'
+                          : isHovered
                           ? 'border-opacity-100 z-10 p-4'
                           : 'hover:border-opacity-100 group-hover:scale-102 p-3'
                       }`}
                       style={{
-                        boxShadow: isHovered
+                        boxShadow: expandedIndex === index
+                          ? `0 0 30px ${style.color.includes('00CED1') ? 'rgba(0, 206, 209, 0.5)' : style.color.includes('FFD700') ? 'rgba(255, 215, 0, 0.5)' : style.color.includes('9370DB') ? 'rgba(147, 112, 219, 0.5)' : 'rgba(65, 105, 225, 0.5)'}`
+                          : isHovered
                           ? `0 0 20px ${style.color.includes('00CED1') ? 'rgba(0, 206, 209, 0.3)' : style.color.includes('FFD700') ? 'rgba(255, 215, 0, 0.3)' : style.color.includes('9370DB') ? 'rgba(147, 112, 219, 0.3)' : 'rgba(65, 105, 225, 0.3)'}`
                           : 'none'
                       }}
@@ -468,8 +640,22 @@ export function SpaceTimeline({
                         [isAbove ? 'borderTop' : 'borderBottom']: `8px solid ${style.color.includes('00CED1') ? '#00CED1' : style.color.includes('FFD700') ? '#FFD700' : style.color.includes('9370DB') ? '#9370DB' : '#4169E1'}`
                       }}
                     />
+                    {/* Close button for expanded view */}
+                    {expandedIndex === index && (
+                      <button
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white font-pixel text-xs rounded pixel-border transition-colors flex items-center justify-center z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedIndex(null);
+                        }}
+                        title="Close"
+                      >
+                        ✕
+                      </button>
+                    )}
+
                     {/* Compact view (default) */}
-                    {!isHovered && (
+                    {!isHovered && expandedIndex !== index && (
                       <div className="flex flex-col items-center gap-2">
                         <h3 className="text-[11px] font-pixel text-white text-center leading-tight line-clamp-2">
                           {event.title}
@@ -477,8 +663,8 @@ export function SpaceTimeline({
                       </div>
                     )}
 
-                    {/* Expanded view (on hover) */}
-                    {isHovered && (
+                    {/* Hover view */}
+                    {isHovered && expandedIndex !== index && (
                       <>
                         {/* Icon and Date */}
                         <div className="flex items-center justify-between mb-2">
@@ -515,7 +701,101 @@ export function SpaceTimeline({
                           </div>
                         )}
                       </>
-                      )}
+                    )}
+
+                    {/* Expanded view (on click) */}
+                    {expandedIndex === index && (
+                      <>
+                        {/* Icon and Date */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-3xl">{style.icon}</span>
+                            <div className={`font-pixel text-xs ${style.textColor} uppercase tracking-wide`}>
+                              {event.date}
+                            </div>
+                          </div>
+                          {event.type && (
+                            <div className={`px-2 py-1 ${style.color} border rounded text-[10px] font-pixel ${style.textColor} uppercase`}>
+                              {event.type}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Event Title */}
+                        <h3 className="text-base font-pixel text-white mb-3 leading-tight">
+                          {event.title}
+                        </h3>
+
+                        {/* Event Description */}
+                        <p className="font-pixel text-[11px] text-gray-300 leading-relaxed mb-3">
+                          {event.description}
+                        </p>
+
+                        {/* Additional Details */}
+                        {event.details && (
+                          <div className="mb-3 p-2 bg-[var(--color-bg-card)]/50 border border-[var(--color-primary)]/20 rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs">📝</span>
+                              <span className="text-[10px] font-pixel text-[var(--color-accent)] uppercase">Details</span>
+                            </div>
+                            <p className="font-pixel text-[10px] text-gray-400 leading-relaxed">
+                              {event.details}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Related Events */}
+                        {event.relatedEvents && event.relatedEvents.length > 0 && (
+                          <div className="mb-3 p-2 bg-[var(--color-bg-card)]/50 border border-[var(--color-secondary)]/20 rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs">🔗</span>
+                              <span className="text-[10px] font-pixel text-[var(--color-secondary)] uppercase">Related</span>
+                            </div>
+                            <ul className="space-y-1">
+                              {event.relatedEvents.map((related, idx) => (
+                                <li key={idx} className="font-pixel text-[10px] text-gray-400 flex items-start gap-1">
+                                  <span className="text-[var(--color-secondary)]">•</span>
+                                  <span>{related}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Sources */}
+                        {event.sources && event.sources.length > 0 && (
+                          <div className="mb-2 p-2 bg-[var(--color-bg-card)]/50 border border-[var(--color-purple)]/20 rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs">📚</span>
+                              <span className="text-[10px] font-pixel text-[var(--color-purple)] uppercase">Sources</span>
+                            </div>
+                            <ul className="space-y-1">
+                              {event.sources.map((source, idx) => (
+                                <li key={idx} className="font-pixel text-[9px] text-gray-500 flex items-start gap-1">
+                                  <span className="text-[var(--color-purple)]">•</span>
+                                  <span className="break-all">{source}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Time gap indicator */}
+                        {showRelativeTime && event.timeGap && (
+                          <div className="pt-2 border-t border-[var(--color-primary)]/30">
+                            <div className="flex items-center gap-2 text-[10px] font-pixel text-[var(--color-primary)]">
+                              <span>⏱️</span>
+                              <span>+{event.timeGap} after previous</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Click hint */}
+                        <div className="mt-2 text-center">
+                          <span className="text-[9px] font-pixel text-gray-500 italic">Click again to close</span>
+                        </div>
+                      </>
+                    )}
                     </div>
                   </div>
                 </React.Fragment>
@@ -584,185 +864,6 @@ export function SpaceTimeline({
       </div>
     );
   }
-
-  // Render vertical layout (original)
-  return (
-    <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] to-[var(--color-bg-card)] border-4 border-[var(--color-primary)] rounded-lg pixel-border scanline-container">
-      {/* Timeline Title */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-pixel text-[var(--color-primary)] glow-text-subtle uppercase tracking-wider flex items-center gap-3">
-          <span className="text-[var(--color-secondary)]">⏱️</span>
-          {title}
-        </h2>
-        <div className="mt-2 h-1 w-24 bg-gradient-to-r from-[var(--color-primary)] to-transparent"></div>
-        
-        {/* Timeline info */}
-        <div className="mt-3 flex flex-wrap gap-3 text-xs font-pixel text-gray-400">
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--color-secondary)]">📅</span>
-            <span>{processedEvents.length} events</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--color-accent)]">⚡</span>
-            <span>Scale: {scaleType}</span>
-          </div>
-          {showTimeAxis && (
-            <div className="flex items-center gap-2">
-              <span className="text-[var(--color-purple)]">📊</span>
-              <span>Time axis enabled</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Timeline Container */}
-      <div className="relative" style={{ minHeight: `${minHeight}px` }}>
-        {/* Vertical timeline line with glow effect */}
-        <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--color-primary)] via-[var(--color-purple)] to-[var(--color-primary)] opacity-50 glow-line"></div>
-
-        {/* Time axis markers */}
-        {showTimeAxis && timeAxisMarkers.map((marker, index) => (
-          <div
-            key={index}
-            className="absolute left-0 flex items-center"
-            style={{ top: `${marker.position}px` }}
-          >
-            <div className="w-4 h-0.5 bg-[var(--color-primary)] opacity-50"></div>
-            <span className="ml-2 text-[10px] font-pixel text-[var(--color-primary)] opacity-70">
-              {marker.label}
-            </span>
-          </div>
-        ))}
-
-        {/* Events with temporal positioning */}
-        {processedEvents.map((event, index) => {
-          const style = getEventTypeStyle(event.type);
-          const isHovered = hoveredIndex === index;
-
-          return (
-            <div
-              key={index}
-              className="absolute left-0 right-0 pl-16 group"
-              style={{ top: `${event.position}px` }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              {/* Time gap indicator */}
-              {showRelativeTime && event.timeGap && (
-                <div className="absolute left-6 -top-6 transform -translate-x-1/2">
-                  <div className="px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-primary)]/30 rounded text-[10px] font-pixel text-[var(--color-primary)] whitespace-nowrap">
-                    +{event.timeGap}
-                  </div>
-                  <div className="absolute left-1/2 top-full w-0.5 h-6 bg-gradient-to-b from-[var(--color-primary)] to-transparent opacity-30 transform -translate-x-1/2"></div>
-                </div>
-              )}
-
-              {/* Timeline dot and icon */}
-              <div className="absolute left-0 flex items-center">
-                <div
-                  className={`w-12 h-12 rounded-full ${style.color} border-2 flex items-center justify-center z-10 transition-all duration-300 ${
-                    isHovered ? 'scale-125 shadow-lg shadow-current' : 'group-hover:scale-110'
-                  }`}
-                >
-                  <span className="text-2xl">{style.icon}</span>
-                </div>
-                {/* Connecting dot on timeline */}
-                <div
-                  className={`absolute left-[22px] w-2 h-2 rounded-full ${style.dotColor} ${
-                    isHovered ? 'animate-ping' : 'animate-pulse'
-                  }`}
-                ></div>
-              </div>
-
-              {/* Event content */}
-              <div
-                className={`p-4 bg-[var(--color-bg-dark)] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 ${
-                  isHovered
-                    ? 'border-opacity-100 translate-x-2 shadow-lg shadow-current/20'
-                    : 'hover:border-opacity-100 group-hover:translate-x-1'
-                }`}
-              >
-                {/* Date and Type */}
-                <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
-                  <div className={`font-pixel text-xs ${style.textColor} uppercase tracking-wide`}>
-                    {event.date}
-                  </div>
-                  {event.type && (
-                    <div className={`px-2 py-1 ${style.color} border rounded text-xs font-pixel ${style.textColor} uppercase`}>
-                      {event.type}
-                    </div>
-                  )}
-                </div>
-
-                {/* Event Title */}
-                <h3 className="text-lg font-pixel text-white mb-2">
-                  {event.title}
-                </h3>
-
-                {/* Event Description */}
-                <p className="font-pixel text-xs text-gray-300 leading-relaxed">
-                  {event.description}
-                </p>
-
-                {/* Expanded details on hover */}
-                {isHovered && event.timeGap && (
-                  <div className="mt-3 pt-3 border-t border-[var(--color-primary)]/30">
-                    <div className="flex items-center gap-2 text-[10px] font-pixel text-[var(--color-primary)]">
-                      <span>⏱️</span>
-                      <span>{event.timeGap} after previous event</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Timeline end marker */}
-        <div
-          className="absolute left-0 right-0 pl-16"
-          style={{ top: `${processedEvents[processedEvents.length - 1].position + 100}px` }}
-        >
-          <div className="absolute left-0 flex items-center">
-            <div className="w-12 h-12 rounded-full border-2 border-[var(--color-primary)] bg-[var(--color-bg-dark)] flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-[var(--color-primary)] animate-pulse"></div>
-            </div>
-          </div>
-          <div className="p-3 bg-[var(--color-bg-dark)]/50 border border-[var(--color-primary)]/30 rounded pixel-border">
-            <p className="font-pixel text-xs text-[var(--color-primary)] italic">
-              Timeline continues...
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 pt-4 border-t-2 border-[var(--color-primary)]/30">
-        <div className="flex flex-wrap gap-4 justify-center text-xs font-pixel">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🚀</span>
-            <span className="text-[var(--color-event-mission)]">Mission</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🔭</span>
-            <span className="text-[var(--color-event-discovery)]">Discovery</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">👁️</span>
-            <span className="text-[var(--color-event-observation)]">Observation</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Add custom styles for glow effects */}
-      <style jsx>{`
-        .glow-line {
-          box-shadow: 0 0 10px rgba(65, 105, 225, 0.5),
-                      0 0 20px rgba(65, 105, 225, 0.3);
-        }
-      `}</style>
-    </div>
-  );
 }
 
 // Made with Bob
