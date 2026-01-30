@@ -3,22 +3,20 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { scaleTime, scaleLog } from 'd3-scale';
 
+interface SpaceTimelineEvent {
+  date: string;
+  title: string;
+  description: string;
+  type?: 'mission' | 'discovery' | 'observation';
+}
+
 interface SpaceTimelineProps {
   title: string;
-  events: Array<{
-    date: string;
-    title: string;
-    description: string;
-    type?: 'mission' | 'discovery' | 'observation';
-    details?: string; // Additional details for expanded view
-    relatedEvents?: string[]; // Related event titles
-    sources?: string[]; // Source citations
-  }>;
-  layout?: 'horizontal'; // Only horizontal layout supported
+  events: Array<SpaceTimelineEvent>;
   scaleType?: 'linear' | 'logarithmic';
   showTimeAxis?: boolean;
   showRelativeTime?: boolean;
-  minHeight?: number; // Not used in horizontal layout, kept for backward compatibility
+  onEventClick?: (event: SpaceTimelineEvent) => void; // Callback when event is clicked
 }
 
 interface ProcessedEvent {
@@ -26,9 +24,6 @@ interface ProcessedEvent {
   title: string;
   description: string;
   type?: 'mission' | 'discovery' | 'observation';
-  details?: string;
-  relatedEvents?: string[];
-  sources?: string[];
   parsedDate: Date;
   originalIndex: number;
   position: number;
@@ -43,14 +38,12 @@ interface ProcessedEvent {
 export function SpaceTimeline({
   title,
   events,
-  layout = 'horizontal', // Only horizontal supported, kept for backward compatibility
   scaleType = 'linear',
   showTimeAxis = true,
   showRelativeTime = true,
-  minHeight = 600 // Not used, kept for backward compatibility
+  onEventClick
 }: SpaceTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
@@ -201,16 +194,14 @@ export function SpaceTimeline({
     setIsPanning(false);
   };
 
-  // Click handler for event expansion
+  // Click handler for event - just triggers callback
   const handleEventClick = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
-  // Click outside to close expanded event
-  const handleContainerClick = () => {
-    if (expandedIndex !== null) {
-      setExpandedIndex(null);
+    
+    // Trigger callback if provided
+    if (onEventClick) {
+      const clickedEvent = events[processedEvents[index].originalIndex];
+      onEventClick(clickedEvent);
     }
   };
 
@@ -235,9 +226,9 @@ export function SpaceTimeline({
     const paddedMinDate = new Date(minDate.getTime() - timeRange * 0.1);
     const paddedMaxDate = new Date(maxDate.getTime() + timeRange * 0.1);
 
-    // Create scale based on type and layout
+    // Create scale based on type (horizontal layout only)
     let timeScale;
-    const scaleRange = layout === 'horizontal' ? [0, 100] : [0, minHeight * zoom];
+    const scaleRange = [0, 100];
     
     if (scaleType === 'logarithmic' && timeRange > 0) {
       // For log scale, ensure we don't have zero or negative values
@@ -275,9 +266,8 @@ export function SpaceTimeline({
     });
   }, [events, scaleType, zoom]);
 
-  // Multi-lane collision detection system
+  // Multi-lane collision detection system for horizontal layout
   const eventsWithVerticalPositions = useMemo((): ProcessedEvent[] => {
-    if (layout !== 'horizontal') return processedEvents;
 
     // Define lanes: 3 above, 3 below the timeline (wider spacing)
     const lanes = {
@@ -327,7 +317,7 @@ export function SpaceTimeline({
     });
 
     return positionedEvents;
-  }, [processedEvents, layout]);
+  }, [processedEvents]);
 
   // Generate time axis markers
   const timeAxisMarkers = useMemo(() => {
@@ -422,9 +412,8 @@ export function SpaceTimeline({
     );
   }
 
-  // Render horizontal layout
-  if (layout === 'horizontal') {
-    return (
+  // Render horizontal timeline
+  return (
       <div className="w-full p-6 bg-gradient-to-br from-[var(--color-bg-dark)] to-[var(--color-bg-card)] border-4 border-[var(--color-primary)] rounded-lg pixel-border scanline-container">
         {/* Timeline Title */}
         <div className="mb-6">
@@ -450,7 +439,7 @@ export function SpaceTimeline({
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[var(--color-secondary)]">👆</span>
-              <span>Click events for details</span>
+              <span>Click events to ask questions</span>
             </div>
           </div>
         </div>
@@ -502,7 +491,6 @@ export function SpaceTimeline({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
-          onClick={handleContainerClick}
         >
           <div
             className="relative"
@@ -597,15 +585,15 @@ export function SpaceTimeline({
                     ></div>
                   </div>
 
-                  {/* Event card with enhanced visual hierarchy and click interaction */}
+                  {/* Event card with hover and click interaction */}
                   <div
                     className="absolute group"
                     style={{
                       left: `${event.position}%`,
                       top: '50%',
                       transform: `translate(-50%, ${verticalOffset}px) ${!isAbove ? 'translateY(-100%)' : ''}`,
-                      width: expandedIndex === index ? '280px' : (isHovered ? '220px' : '140px'),
-                      zIndex: expandedIndex === index ? 100 : (isHovered ? 50 : 15),
+                      width: isHovered ? '220px' : '140px',
+                      zIndex: isHovered ? 50 : 15,
                       transition: 'width 0.3s ease-in-out, z-index 0s'
                     }}
                     onMouseEnter={() => setHoveredIndex(index)}
@@ -614,16 +602,12 @@ export function SpaceTimeline({
                   >
                     <div
                       className={`bg-[var(--color-bg-dark)] border-2 ${style.color.split(' ')[0]} rounded-lg pixel-border transition-all duration-300 relative cursor-pointer ${
-                        expandedIndex === index
-                          ? 'border-opacity-100 z-10 p-5 shadow-2xl'
-                          : isHovered
+                        isHovered
                           ? 'border-opacity-100 z-10 p-4'
                           : 'hover:border-opacity-100 group-hover:scale-102 p-3'
                       }`}
                       style={{
-                        boxShadow: expandedIndex === index
-                          ? `0 0 30px ${style.color.includes('00CED1') ? 'rgba(0, 206, 209, 0.5)' : style.color.includes('FFD700') ? 'rgba(255, 215, 0, 0.5)' : style.color.includes('9370DB') ? 'rgba(147, 112, 219, 0.5)' : 'rgba(65, 105, 225, 0.5)'}`
-                          : isHovered
+                        boxShadow: isHovered
                           ? `0 0 20px ${style.color.includes('00CED1') ? 'rgba(0, 206, 209, 0.3)' : style.color.includes('FFD700') ? 'rgba(255, 215, 0, 0.3)' : style.color.includes('9370DB') ? 'rgba(147, 112, 219, 0.3)' : 'rgba(65, 105, 225, 0.3)'}`
                           : 'none'
                       }}
@@ -640,22 +624,9 @@ export function SpaceTimeline({
                         [isAbove ? 'borderTop' : 'borderBottom']: `8px solid ${style.color.includes('00CED1') ? '#00CED1' : style.color.includes('FFD700') ? '#FFD700' : style.color.includes('9370DB') ? '#9370DB' : '#4169E1'}`
                       }}
                     />
-                    {/* Close button for expanded view */}
-                    {expandedIndex === index && (
-                      <button
-                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white font-pixel text-xs rounded pixel-border transition-colors flex items-center justify-center z-10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedIndex(null);
-                        }}
-                        title="Close"
-                      >
-                        ✕
-                      </button>
-                    )}
 
                     {/* Compact view (default) */}
-                    {!isHovered && expandedIndex !== index && (
+                    {!isHovered && (
                       <div className="flex flex-col items-center gap-2">
                         <h3 className="text-[11px] font-pixel text-white text-center leading-tight line-clamp-2">
                           {event.title}
@@ -664,7 +635,7 @@ export function SpaceTimeline({
                     )}
 
                     {/* Hover view */}
-                    {isHovered && expandedIndex !== index && (
+                    {isHovered && (
                       <>
                         {/* Icon and Date */}
                         <div className="flex items-center justify-between mb-2">
@@ -703,99 +674,6 @@ export function SpaceTimeline({
                       </>
                     )}
 
-                    {/* Expanded view (on click) */}
-                    {expandedIndex === index && (
-                      <>
-                        {/* Icon and Date */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-3xl">{style.icon}</span>
-                            <div className={`font-pixel text-xs ${style.textColor} uppercase tracking-wide`}>
-                              {event.date}
-                            </div>
-                          </div>
-                          {event.type && (
-                            <div className={`px-2 py-1 ${style.color} border rounded text-[10px] font-pixel ${style.textColor} uppercase`}>
-                              {event.type}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Event Title */}
-                        <h3 className="text-base font-pixel text-white mb-3 leading-tight">
-                          {event.title}
-                        </h3>
-
-                        {/* Event Description */}
-                        <p className="font-pixel text-[11px] text-gray-300 leading-relaxed mb-3">
-                          {event.description}
-                        </p>
-
-                        {/* Additional Details */}
-                        {event.details && (
-                          <div className="mb-3 p-2 bg-[var(--color-bg-card)]/50 border border-[var(--color-primary)]/20 rounded">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs">📝</span>
-                              <span className="text-[10px] font-pixel text-[var(--color-accent)] uppercase">Details</span>
-                            </div>
-                            <p className="font-pixel text-[10px] text-gray-400 leading-relaxed">
-                              {event.details}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Related Events */}
-                        {event.relatedEvents && event.relatedEvents.length > 0 && (
-                          <div className="mb-3 p-2 bg-[var(--color-bg-card)]/50 border border-[var(--color-secondary)]/20 rounded">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs">🔗</span>
-                              <span className="text-[10px] font-pixel text-[var(--color-secondary)] uppercase">Related</span>
-                            </div>
-                            <ul className="space-y-1">
-                              {event.relatedEvents.map((related, idx) => (
-                                <li key={idx} className="font-pixel text-[10px] text-gray-400 flex items-start gap-1">
-                                  <span className="text-[var(--color-secondary)]">•</span>
-                                  <span>{related}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Sources */}
-                        {event.sources && event.sources.length > 0 && (
-                          <div className="mb-2 p-2 bg-[var(--color-bg-card)]/50 border border-[var(--color-purple)]/20 rounded">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs">📚</span>
-                              <span className="text-[10px] font-pixel text-[var(--color-purple)] uppercase">Sources</span>
-                            </div>
-                            <ul className="space-y-1">
-                              {event.sources.map((source, idx) => (
-                                <li key={idx} className="font-pixel text-[9px] text-gray-500 flex items-start gap-1">
-                                  <span className="text-[var(--color-purple)]">•</span>
-                                  <span className="break-all">{source}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Time gap indicator */}
-                        {showRelativeTime && event.timeGap && (
-                          <div className="pt-2 border-t border-[var(--color-primary)]/30">
-                            <div className="flex items-center gap-2 text-[10px] font-pixel text-[var(--color-primary)]">
-                              <span>⏱️</span>
-                              <span>+{event.timeGap} after previous</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Click hint */}
-                        <div className="mt-2 text-center">
-                          <span className="text-[9px] font-pixel text-gray-500 italic">Click again to close</span>
-                        </div>
-                      </>
-                    )}
                     </div>
                   </div>
                 </React.Fragment>
@@ -863,7 +741,6 @@ export function SpaceTimeline({
         `}</style>
       </div>
     );
-  }
 }
 
 // Made with Bob

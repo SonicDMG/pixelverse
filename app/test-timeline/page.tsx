@@ -230,7 +230,6 @@ export default function TestTimelinePage() {
           <SpaceTimeline
             title="Space Exploration Timeline"
             events={testEvents}
-            layout="horizontal"
             scaleType="linear"
             showTimeAxis={true}
             showRelativeTime={true}

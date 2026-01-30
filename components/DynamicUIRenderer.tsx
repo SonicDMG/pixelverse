@@ -192,6 +192,10 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
               key={key}
               title={normalizedSpec.props.title}
               events={normalizedSpec.props.events}
+              onEventClick={onSetQuestion ? (event) => {
+                // Generate a question about the clicked event
+                onSetQuestion(`Give me detail about ${event.title}`);
+              } : undefined}
             />
           );
 
