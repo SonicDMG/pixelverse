@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { compareProjections, type CelestialCoordinate } from '@/utils/celestial-coordinates';
+import { convertStarsToCanvasWithProjection, type CelestialCoordinate } from '@/utils/celestial-coordinates';
 
 interface Star {
   name: string;
@@ -44,23 +44,21 @@ export function ConstellationComparison({
     
     if (!customCtx || !d3Ctx) return;
 
-    // Get coordinates from both projection methods
+    // Get coordinates using d3-geo projection
     const celestialStars: CelestialCoordinate[] = stars.map(s => ({
       ra: s.ra,
       dec: s.dec
     }));
 
-    const { custom, d3Geo, bounds, projectionType } = compareProjections(
+    const { coordinates, projectionType, bounds } = convertStarsToCanvasWithProjection(
       celestialStars,
       canvasSize,
       50
     );
 
-    // Draw custom projection
-    drawConstellation(customCtx, custom, stars, lines, canvasSize, '#00ff00');
-    
-    // Draw d3-geo projection
-    drawConstellation(d3Ctx, d3Geo, stars, lines, canvasSize, '#00ffff');
+    // Draw on both canvases (they now show the same d3-geo projection)
+    drawConstellation(customCtx, coordinates, stars, lines, canvasSize, '#00ff00');
+    drawConstellation(d3Ctx, coordinates, stars, lines, canvasSize, '#00ffff');
 
   }, [stars, lines, canvasSize]);
 
@@ -129,7 +127,7 @@ export function ConstellationComparison({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <h3 className="font-pixel text-sm text-[var(--color-accent)] text-center">
-          Custom Equirectangular (with cos(dec) correction)
+          d3-geo Projection (Green)
         </h3>
         <canvas
           ref={customCanvasRef}
@@ -140,7 +138,7 @@ export function ConstellationComparison({
       </div>
       <div className="space-y-2">
         <h3 className="font-pixel text-sm text-[var(--color-secondary)] text-center">
-          d3.geoEquirectangular()
+          d3-geo Projection (Cyan)
         </h3>
         <canvas
           ref={d3CanvasRef}

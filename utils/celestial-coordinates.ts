@@ -1,11 +1,21 @@
 /**
  * Celestial Coordinate Conversion Utilities
- * Converts Right Ascension (RA) and Declination (Dec) to canvas coordinates
  *
- * Supports multiple projection types for accurate rendering across all declinations:
+ * Converts Right Ascension (RA) and Declination (Dec) to canvas coordinates using
+ * d3-geo map projections. Celestial coordinates are spherical and cannot be directly
+ * plotted on a 2D canvas without proper projection to account for spherical geometry.
+ *
+ * This implementation uses d3-geo's battle-tested projection library to ensure
+ * astronomically accurate rendering across all declination ranges, following IAU
+ * (International Astronomical Union) sky chart conventions.
+ *
+ * Supported projections (automatically selected based on declination):
  * - Equirectangular: For mid-latitude constellations (0-60° dec)
  * - Stereographic: For high-latitude constellations (60-70° dec)
  * - Azimuthal Equidistant: For polar constellations (>70° dec)
+ *
+ * @see {@link file://./docs/CONSTELLATION_RENDERING_GUIDE.md} for detailed technical explanation
+ * @module celestial-coordinates
  */
 
 import { geoAzimuthalEquidistant, geoStereographic, geoEquirectangular } from 'd3-geo';
@@ -65,8 +75,24 @@ export function decToDecimalDegrees(dec: string): number {
 
 /**
  * Determine which projection type to use based on constellation bounds
+ *
+ * The selection algorithm considers:
+ * 1. Mean declination (average latitude of constellation)
+ * 2. Maximum declination (highest point reached)
+ * 3. RA range (how wide the constellation spans)
+ *
+ * **Circumpolar Detection**: Constellations are considered circumpolar if they have
+ * high mean declination (>60°) AND either extend above 70° OR span >90° in RA
+ * (indicating they wrap around the celestial pole).
+ *
+ * **Projection Selection**:
+ * - Circumpolar → Azimuthal Equidistant (pole-centered view)
+ * - 60-70° dec → Stereographic (conformal, preserves shapes at high latitudes)
+ * - 0-60° dec → Equirectangular (standard cylindrical projection)
+ *
  * @param bounds The RA/Dec bounds of the constellation
  * @returns The optimal projection type for the constellation
+ * @see {@link file://./docs/CONSTELLATION_RENDERING_GUIDE.md#automatic-projection-selection}
  */
 export function selectProjectionType(bounds: ConstellationBounds): ProjectionType {
   const { raMin, raMax, decMin, decMax } = bounds;
@@ -106,13 +132,26 @@ export function selectProjectionType(bounds: ConstellationBounds): ProjectionTyp
 
 /**
  * Convert celestial coordinates using azimuthal equidistant projection
- * Optimal for polar constellations (>70° declination)
+ *
+ * Optimal for polar constellations (>70° declination) and circumpolar constellations.
+ * This projection centers on the celestial pole and preserves distances from the center,
+ * making it ideal for constellations that wrap around the pole.
+ *
+ * **d3-geo Configuration**:
+ * - `.rotate([0, -poleDec, 180])`: Centers on pole and applies 180° rotation for IAU convention
+ *   - λ (lambda): 0° - no rotation around vertical axis
+ *   - φ (phi): -poleDec - centers on the appropriate pole (+90° or -90°)
+ *   - γ (gamma): 180° - flips view to match IAU sky chart convention (RA increases right-to-left)
+ * - `.scale()`: Calculated to fit constellation within canvas bounds
+ * - `.translate()`: Centers the projection on the canvas
+ *
  * @param ra Right Ascension in decimal degrees
  * @param dec Declination in decimal degrees
  * @param bounds The RA/Dec bounds of the constellation
  * @param canvasSize Size of the canvas
  * @param padding Padding around the edges
  * @returns Canvas coordinates
+ * @see {@link https://d3js.org/d3-geo/azimuthal#geoAzimuthalEquidistant}
  */
 function azimuthalEquidistantToCanvas(
   ra: number,
@@ -147,8 +186,14 @@ function azimuthalEquidistantToCanvas(
     Math.abs(poleDec - decMax)
   );
   
-  // Scale to fit the canvas with padding
-  const drawableSize = canvasSize - 2 * padding;
+  // Adaptive padding for small constellations
+  const minPadding = padding * 0.3;
+  const adaptivePadding = maxPoleDistance < 20
+    ? Math.max(minPadding, padding * (maxPoleDistance / 20))
+    : padding;
+  
+  // Scale to fit the canvas with adaptive padding
+  const drawableSize = canvasSize - 2 * adaptivePadding;
   const scale = (drawableSize / 2) / (maxPoleDistance * Math.PI / 180);
   
   projection.scale(scale);
@@ -176,13 +221,27 @@ function azimuthalEquidistantToCanvas(
 
 /**
  * Convert celestial coordinates using stereographic projection
- * Optimal for high-latitude constellations (60-70° declination)
+ *
+ * Optimal for high-latitude constellations (60-70° declination). Stereographic
+ * projection is conformal (preserves angles and shapes locally), making it ideal
+ * for compact high-latitude constellations where shape preservation is important.
+ *
+ * **d3-geo Configuration**:
+ * - `.center([meanRa, meanDec])`: Centers projection on constellation's midpoint
+ * - `.rotate([0, 0, 0])`: No additional rotation (centering handles positioning)
+ * - `.scale()`: Calculated based on constellation's angular extent
+ * - `.translate()`: Centers the projection on the canvas
+ *
+ * Unlike equirectangular, stereographic handles spherical geometry internally,
+ * so no manual cos(declination) correction is needed.
+ *
  * @param ra Right Ascension in decimal degrees
  * @param dec Declination in decimal degrees
  * @param bounds The RA/Dec bounds of the constellation
  * @param canvasSize Size of the canvas
  * @param padding Padding around the edges
  * @returns Canvas coordinates
+ * @see {@link https://d3js.org/d3-geo/conic#geoStereographic}
  */
 function stereographicToCanvas(
   ra: number,
@@ -201,19 +260,21 @@ function stereographicToCanvas(
     .rotate([0, 0, 0]);
   
   // Calculate the angular extent
-  // Note: Unlike equirectangular, stereographic projection handles spherical
-  // geometry internally, so we use the raw RA range without cos(dec) correction
   const raAngularRange = raMax - raMin;
   const decRange = decMax - decMin;
   const maxRange = Math.max(raAngularRange, decRange);
   
-  // Scale to fit the canvas with padding
-  const drawableSize = canvasSize - 2 * padding;
+  // Adaptive padding for small constellations
+  const minPadding = padding * 0.3;
+  const adaptivePadding = maxRange < 20
+    ? Math.max(minPadding, padding * (maxRange / 20))
+    : padding;
+  
+  // Scale to fit the canvas with adaptive padding
+  const drawableSize = canvasSize - 2 * adaptivePadding;
   const scale = (drawableSize / 2) / (maxRange * Math.PI / 180);
   
   projection.scale(scale);
-  
-  // Translate to center of canvas
   projection.translate([canvasSize / 2, canvasSize / 2]);
   
   // Project the coordinates
@@ -231,82 +292,44 @@ function stereographicToCanvas(
 }
 
 /**
- * Convert celestial coordinates using equirectangular projection
- * Optimal for mid-latitude constellations (0-60° declination)
- * This is the original implementation with spherical correction
+ * Convert celestial coordinates using equirectangular projection (d3-geo implementation)
+ *
+ * Optimal for mid-latitude constellations (0-60° declination). Equirectangular
+ * (also called "plate carrée") is a simple cylindrical projection that maps
+ * longitude/latitude (RA/Dec) directly to X/Y coordinates.
+ *
+ * **Key Implementation Details**:
+ *
+ * 1. **Spherical Correction**: RA circles shrink at higher declinations due to
+ *    spherical geometry. We apply `cos(meanDec)` correction to the RA range to
+ *    account for this, ensuring accurate angular measurements.
+ *
+ *    Example: At 60° declination, RA circles are only 50% as wide as at the equator.
+ *    Without correction, constellations would appear horizontally stretched.
+ *
+ * 2. **IAU Sky Chart Convention**: Astronomical charts show the sky as viewed from
+ *    Earth looking up, where RA increases from right to left (east to west).
+ *    We implement this using `.reflectX(true)` to flip the X-axis.
+ *
+ * 3. **d3-geo Configuration**:
+ *    - `.rotate([-meanRa, -meanDec, 0])`: Centers view on constellation
+ *      - λ (lambda): -meanRa rotates to center RA
+ *      - φ (phi): -meanDec rotates to center Dec
+ *      - γ (gamma): 0° (no roll rotation)
+ *    - `.reflectX(true)`: Implements IAU convention (RA increases right-to-left)
+ *    - `.scale()`: Calculated using spherical-corrected angular extent
+ *    - `.translate()`: Centers projection on canvas
+ *
  * @param ra Right Ascension in decimal degrees
  * @param dec Declination in decimal degrees
  * @param bounds The RA/Dec bounds of the constellation
  * @param canvasSize Size of the canvas
  * @param padding Padding around the edges
  * @returns Canvas coordinates
+ * @see {@link https://d3js.org/d3-geo/cylindrical#geoEquirectangular}
+ * @see {@link file://./docs/CONSTELLATION_RENDERING_GUIDE.md#equirectangular-projection}
  */
 function equirectangularToCanvas(
-  ra: number,
-  dec: number,
-  bounds: ConstellationBounds,
-  canvasSize: number,
-  padding: number
-): CanvasCoordinate {
-  const { raMin, raMax, decMin, decMax } = bounds;
-  
-  // Calculate the mean declination for the constellation
-  // This is used to apply the spherical correction factor
-  const meanDec = (decMin + decMax) / 2;
-  const meanDecRadians = (meanDec * Math.PI) / 180;
-  
-  // Apply spherical correction to RA range
-  // At higher declinations, RA circles are smaller, so we need to scale by cos(dec)
-  // This gives us the true angular separation on the celestial sphere
-  const raAngularRange = (raMax - raMin) * Math.cos(meanDecRadians);
-  const decRange = decMax - decMin;
-  
-  // Determine the maximum range to maintain aspect ratio
-  // This ensures we use the full drawable area while preserving celestial proportions
-  const maxRange = Math.max(raAngularRange, decRange);
-  
-  // Calculate the drawable area (square canvas minus padding)
-  const drawableSize = canvasSize - 2 * padding;
-  
-  // Calculate scale factors to maintain proper aspect ratio
-  // Both dimensions use the same scale based on the maximum range
-  const scale = drawableSize / maxRange;
-  
-  // Calculate the actual drawable dimensions for each axis
-  const drawableWidth = raAngularRange * scale;
-  const drawableHeight = decRange * scale;
-  
-  // Center the constellation in the available space
-  const xOffset = padding + (drawableSize - drawableWidth) / 2;
-  const yOffset = padding + (drawableSize - drawableHeight) / 2;
-  
-  // Normalize to 0-1 range within the actual data bounds
-  // Invert xNorm so higher RA values appear on the left (IAU sky chart convention)
-  const xNorm = 1 - (ra - raMin) / (raMax - raMin);
-  const yNorm = (dec - decMin) / decRange;
-  
-  // Convert to canvas coordinates with proper spherical projection
-  // Note: Y axis is inverted for sky view
-  // - X follows IAU convention: RA increases from right to left (as viewed from Earth)
-  //   This is achieved by inverting xNorm above
-  // - Y is inverted: higher Dec (north) appears at the top (lower Y coordinate)
-  const x = Math.round(xOffset + xNorm * drawableWidth);
-  const y = Math.round(yOffset + (1 - yNorm) * drawableHeight);
-  
-  return { x, y };
-}
-
-/**
- * Convert celestial coordinates using d3.geoEquirectangular() projection
- * This is for comparison with the custom implementation
- * @param ra Right Ascension in decimal degrees
- * @param dec Declination in decimal degrees
- * @param bounds The RA/Dec bounds of the constellation
- * @param canvasSize Size of the canvas
- * @param padding Padding around the edges
- * @returns Canvas coordinates
- */
-function d3EquirectangularToCanvas(
   ra: number,
   dec: number,
   bounds: ConstellationBounds,
@@ -333,16 +356,21 @@ function d3EquirectangularToCanvas(
     .reflectX(true);
   
   // Calculate angular extents
-  // Apply spherical correction to RA range to match custom implementation
+  // Apply spherical correction to RA range
   const meanDecRadians = (meanDec * Math.PI) / 180;
   const raAngularRange = (raMax - raMin) * Math.cos(meanDecRadians);
   const decRange = decMax - decMin;
   const maxRange = Math.max(raAngularRange, decRange);
   
-  // Scale to fit canvas with padding
-  const drawableSize = canvasSize - 2 * padding;
-  // Adjust scale calculation to better fill the canvas
-  // Use the same approach as custom implementation for consistency
+  // Adaptive padding: reduce padding for small constellations
+  // Constellations smaller than 20° get proportionally less padding
+  const minPadding = padding * 0.3; // Minimum 30% of original padding
+  const adaptivePadding = maxRange < 20
+    ? Math.max(minPadding, padding * (maxRange / 20))
+    : padding;
+  
+  // Scale to fit canvas with adaptive padding
+  const drawableSize = canvasSize - 2 * adaptivePadding;
   const scale = drawableSize / (maxRange * Math.PI / 180);
   
   projection.scale(scale);
@@ -364,13 +392,24 @@ function d3EquirectangularToCanvas(
 
 /**
  * Convert celestial coordinates (RA/Dec) to canvas coordinates
- * Automatically selects the optimal projection based on declination
+ *
+ * This is the main entry point for coordinate conversion. It automatically:
+ * 1. Selects the optimal projection based on constellation declination
+ * 2. Routes to the appropriate d3-geo projection function
+ * 3. Returns canvas coordinates ready for rendering
+ *
+ * **Automatic Projection Selection**:
+ * - Analyzes constellation bounds (RA/Dec range)
+ * - Chooses projection optimized for the declination range
+ * - Handles special cases (circumpolar constellations)
+ *
  * @param ra Right Ascension in decimal degrees
  * @param dec Declination in decimal degrees
  * @param bounds The RA/Dec bounds of the constellation
  * @param canvasSize Size of the canvas (default 400)
  * @param padding Padding around the edges (default 50)
- * @returns Canvas coordinates and the projection type used
+ * @returns Canvas coordinates
+ * @see {@link selectProjectionType} for projection selection logic
  */
 export function celestialToCanvas(
   ra: number,
@@ -483,46 +522,3 @@ export function convertStarsToCanvasWithProjection(
   };
 }
 
-// Made with Bob
-/**
- * Compare custom equirectangular vs d3.geoEquirectangular() projections
- * Returns coordinates from both methods for visual comparison
- * @param stars Array of stars with RA/Dec coordinates
- * @param canvasSize Size of the canvas (default 400)
- * @param padding Padding around the edges (default 50)
- * @returns Object with coordinates from both projection methods
- */
-export function compareProjections(
-  stars: Array<CelestialCoordinate>,
-  canvasSize: number = 400,
-  padding: number = 50
-): {
-  custom: Array<CanvasCoordinate>;
-  d3Geo: Array<CanvasCoordinate>;
-  bounds: ConstellationBounds;
-  projectionType: ProjectionType;
-} {
-  const bounds = calculateConstellationBounds(stars);
-  const projectionType = selectProjectionType(bounds);
-  
-  // Get coordinates using custom implementation
-  const custom = stars.map(star => {
-    const ra = raToDecimalDegrees(star.ra);
-    const dec = decToDecimalDegrees(star.dec);
-    return equirectangularToCanvas(ra, dec, bounds, canvasSize, padding);
-  });
-  
-  // Get coordinates using d3.geoEquirectangular()
-  const d3Geo = stars.map(star => {
-    const ra = raToDecimalDegrees(star.ra);
-    const dec = decToDecimalDegrees(star.dec);
-    return d3EquirectangularToCanvas(ra, dec, bounds, canvasSize, padding);
-  });
-  
-  return {
-    custom,
-    d3Geo,
-    bounds,
-    projectionType
-  };
-}

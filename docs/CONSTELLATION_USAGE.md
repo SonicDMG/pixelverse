@@ -3,6 +3,14 @@
 ## Overview
 The Constellation component displays information about star constellations with a hybrid visualization: a list of notable stars on the left and an SVG sky view on the right showing the accurate star positions calculated from astronomical coordinates.
 
+## Technical Background
+
+For developers interested in how constellation rendering works under the hood, see the [Constellation Rendering Guide](CONSTELLATION_RENDERING_GUIDE.md). This technical guide explains:
+- Why celestial coordinates require proper map projections
+- How d3-geo projections are used for accurate rendering
+- The automatic projection selection system
+- Common pitfalls and best practices
+
 ## Component Type
 `constellation`
 
@@ -111,11 +119,14 @@ Use this component when:
 
 ## Automatic Coordinate Conversion
 
-The component automatically converts RA/Dec to canvas coordinates:
+The component automatically converts RA/Dec to canvas coordinates using d3-geo map projections:
 - **No manual coordinate calculation needed**
+- **Automatic projection selection** based on declination (equirectangular, stereographic, or azimuthal equidistant)
 - Correct orientation (matches sky view from Earth)
-- X-axis: Higher RA (east) → left side of canvas
+- X-axis: Higher RA (east) → left side of canvas (IAU convention)
 - Y-axis: Higher Dec (north) → top of canvas
+
+> **Technical Details**: See [Constellation Rendering Guide](CONSTELLATION_RENDERING_GUIDE.md) for in-depth explanation of the projection system and spherical coordinate mathematics.
 
 ## Complete Example: Orion
 
@@ -215,6 +226,18 @@ The component automatically converts RA/Dec to canvas coordinates:
 }
 ```
 
+## Projection Selection Guidelines
+
+The system automatically selects the optimal projection based on constellation declination:
+
+| Declination Range | Projection Type | Best For |
+|-------------------|-----------------|----------|
+| 0° to 60° | Equirectangular | Most constellations (Orion, Leo, Scorpius) |
+| 60° to 70° | Stereographic | High-latitude constellations (Cassiopeia, Cepheus) |
+| >70° or circumpolar | Azimuthal Equidistant | Polar constellations (Ursa Minor, Draco) |
+
+**For AI Agents**: You don't need to worry about projection selection. Simply provide accurate RA/Dec coordinates in the correct format, and the system handles the rest. See the [Constellation Rendering Guide](CONSTELLATION_RENDERING_GUIDE.md) for technical details.
+
 ## Best Practices for AI Agents
 
 ### 1. Query Astronomical Data
@@ -227,6 +250,7 @@ The component automatically converts RA/Dec to canvas coordinates:
 - Format RA as "HHh MMm" (e.g., "5h 55m")
 - Format Dec as "±DD° MM'" (e.g., "+7° 24'")
 - Provide spectral class for accurate star colors
+- **Coordinate validation**: The system validates format and will throw errors for invalid coordinates
 
 ### 3. Size Field
 - Size represents visual appearance, not just magnitude

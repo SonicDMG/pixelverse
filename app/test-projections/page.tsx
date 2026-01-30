@@ -335,13 +335,13 @@ export default function TestProjectionsPage() {
           </div>
         </div>
 
-        {/* Projection Comparison Section */}
+        {/* Projection Visualization Section */}
         <div className="border-4 border-[var(--color-accent)] rounded-lg p-6 bg-[var(--color-bg-card)]">
           <h2 className="text-2xl font-pixel text-[var(--color-accent)] mb-4 text-center">
-            🔬 Projection Method Comparison
+            🔬 d3-geo Projection Visualization
           </h2>
           <p className="text-sm font-pixel text-gray-300 mb-6 text-center">
-            Side-by-side comparison: Custom Equirectangular (with spherical correction) vs d3.geoEquirectangular()
+            Dual view of d3-geo projections (same projection shown in different colors for visual reference)
           </p>
           
           {/* Cygnus Comparison */}
@@ -357,9 +357,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Why this matters:</strong> Cygnus spans ~40° declination with significant RA range.
-                The custom implementation applies cos(dec) correction to account for RA circles getting smaller at higher latitudes,
-                which should produce more accurate star positions matching IAU charts.
+                <strong className="text-[var(--color-accent)]">Mid-latitude constellation:</strong> Cygnus spans ~40° declination with significant RA range.
+                The d3-geo equirectangular projection handles the spherical geometry correctly, producing accurate star positions.
               </p>
             </div>
           </div>
@@ -377,8 +376,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Equatorial test:</strong> Orion is near the celestial equator (~0° dec).
-                At this latitude, both methods should produce similar results since cos(0°) ≈ 1.
+                <strong className="text-[var(--color-accent)]">Equatorial constellation:</strong> Orion is near the celestial equator (~0° dec).
+                The equirectangular projection works well for equatorial regions.
               </p>
             </div>
           </div>
@@ -396,8 +395,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">High-latitude test:</strong> Ursa Major at ~56° dec shows where spherical correction matters most.
-                The custom method's cos(56°) ≈ 0.56 factor significantly compresses the RA axis to match the actual sky geometry.
+                <strong className="text-[var(--color-accent)]">High-latitude constellation:</strong> Ursa Major at ~56° dec demonstrates how d3-geo
+                handles spherical geometry at higher latitudes, properly accounting for RA compression.
               </p>
             </div>
           </div>
@@ -415,8 +414,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Southern hemisphere test:</strong> Scorpius at ~-30° dec tests the projection in the southern sky.
-                Both methods should handle negative declinations correctly.
+                <strong className="text-[var(--color-accent)]">Southern hemisphere constellation:</strong> Scorpius at ~-30° dec demonstrates
+                d3-geo projection handling of southern sky coordinates.
               </p>
             </div>
           </div>
@@ -434,8 +433,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Compact high-latitude test:</strong> Cassiopeia at ~60° dec with narrow RA range.
-                The custom projection uses stereographic for this case, while d3-geo uses equirectangular.
+                <strong className="text-[var(--color-accent)]">Compact high-latitude constellation:</strong> Cassiopeia at ~60° dec with narrow RA range
+                uses d3-geo stereographic projection for optimal rendering.
               </p>
             </div>
           </div>
@@ -453,8 +452,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Very high-latitude test:</strong> Cepheus at ~65° dec with one star at +77°.
-                The custom projection may use azimuthal equidistant due to the extreme declination, while d3-geo uses equirectangular.
+                <strong className="text-[var(--color-accent)]">Very high-latitude constellation:</strong> Cepheus at ~65° dec with one star at +77°
+                uses d3-geo azimuthal equidistant projection due to the extreme declination.
               </p>
             </div>
           </div>
@@ -472,8 +471,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Circumpolar test:</strong> Draco at ~61° dec with 96° RA span wraps around the pole.
-                The custom projection uses azimuthal equidistant for this circumpolar constellation, while d3-geo uses equirectangular.
+                <strong className="text-[var(--color-accent)]">Circumpolar constellation:</strong> Draco at ~61° dec with 96° RA span wraps around the pole.
+                Uses d3-geo azimuthal equidistant projection for accurate circumpolar rendering.
               </p>
             </div>
           </div>
@@ -491,8 +490,8 @@ export default function TestProjectionsPage() {
             />
             <div className="mt-4 p-4 bg-[var(--color-bg-darker)] rounded">
               <p className="font-pixel text-xs text-gray-400">
-                <strong className="text-[var(--color-accent)]">Polar test:</strong> Ursa Minor at ~81° dec includes Polaris at +89°.
-                The custom projection uses azimuthal equidistant centered on the pole, while d3-geo uses equirectangular.
+                <strong className="text-[var(--color-accent)]">Polar constellation:</strong> Ursa Minor at ~81° dec includes Polaris at +89°.
+                Uses d3-geo azimuthal equidistant projection centered on the pole for accurate polar rendering.
               </p>
             </div>
           </div>
