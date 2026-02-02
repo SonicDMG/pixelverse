@@ -1,0 +1,11 @@
+# Next.js build output
+.next/
+
+# Next.js production build
+out/
+
+# General build directories
+build/
+
+# Dependencies
+node_modules/
