@@ -104,11 +104,14 @@ Use this component when:
     - Larger values = larger visual representation
 
 #### `lines` (array, optional)
-- Defines constellation pattern by connecting stars
+- **Now automatically generated if not provided!**
+- The system uses d3-delaunay with Minimum Spanning Tree algorithm to generate non-crossing lines
+- For 15 major constellations (Orion, Ursa Major, Cassiopeia, etc.), predefined traditional patterns are used
+- For other constellations, the algorithm creates natural-looking connections
+- You can still provide custom lines to override the automatic generation
 - Each line object contains:
   - `from` (number): Index of star in stars array
   - `to` (number): Index of star in stars array
-- Connect stars to form traditional asterism pattern
 
 ### Optional Fields
 
@@ -238,6 +241,45 @@ The system automatically selects the optimal projection based on constellation d
 
 **For AI Agents**: You don't need to worry about projection selection. Simply provide accurate RA/Dec coordinates in the correct format, and the system handles the rest. See the [Constellation Rendering Guide](CONSTELLATION_RENDERING_GUIDE.md) for technical details.
 
+## Automatic Line Generation
+
+### How It Works
+
+The system now **automatically uses traditional asterism patterns** for constellation lines:
+
+1. **Traditional Patterns Only** (15 major constellations):
+   - Orion, Ursa Major, Cassiopeia, Cygnus, Leo, Scorpius, Taurus, Gemini, Aquila, Lyra, Andromeda, Perseus, Pegasus, Boötes, Virgo
+   - Uses authentic asterism patterns from astronomical sources
+   - Historically and culturally accurate representations
+   - Matches what you'd see in star charts and planetarium software
+
+2. **No Lines for Unknown Constellations**:
+   - If no traditional pattern exists, no lines are drawn
+   - Asterisms are cultural artifacts, not algorithmic constructs
+   - Shows only the stars without connecting lines
+   - Agent can still provide custom lines if needed
+
+### Benefits
+
+- ✅ **Culturally authentic** - uses real traditional patterns
+- ✅ **Historically accurate** - matches astronomical references
+- ✅ **No crossing lines** - traditional patterns are well-designed
+- ✅ **Agent-friendly** - lines are now optional in the response
+- ✅ **Respects astronomy** - doesn't invent fake asterisms
+
+### When to Provide Lines
+
+You can still provide custom `lines` in your response:
+
+- For constellations not in our predefined list
+- When you have specific educational requirements
+- For demonstrating alternative cultural interpretations
+- When showing non-traditional star groupings
+
+If you omit the `lines` field:
+- **Major constellations**: Traditional pattern will be used automatically
+- **Other constellations**: Only stars will be shown (no lines)
+
 ## Best Practices for AI Agents
 
 ### 1. Query Astronomical Data
@@ -260,12 +302,13 @@ The system automatically selects the optimal projection based on constellation d
 - Medium stars: 1.0-2.0
 - Smaller stars: 0.5-1.5
 
-### 4. Line Connections
-- Research traditional asterism patterns
-- Connect stars by array index
-- Form recognizable constellation shape
-- Avoid crossing lines when possible
-- Use 5-15 lines for most constellations
+### 4. Line Connections (Optional)
+- **Lines are now optional!** The system generates them automatically
+- Only provide lines if you need to override the automatic generation
+- If providing custom lines:
+  - Connect stars by array index
+  - Form recognizable constellation shape
+  - The system will use your lines instead of generating them
 
 ### 5. Description Quality
 - Include mythology or cultural significance

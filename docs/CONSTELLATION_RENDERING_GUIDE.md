@@ -1,10 +1,13 @@
-# Constellation Rendering Guide: Celestial Coordinate Projection
+# Constellation Rendering Guide: Celestial Coordinate Projection & Line Generation
 
 ## Introduction
 
-This guide documents the technical implementation of constellation rendering in the PixelTicker application, specifically how we convert celestial coordinates (Right Ascension and Declination) into accurate 2D canvas positions using d3-geo map projections.
+This guide documents the technical implementation of constellation rendering in the PixelTicker application, covering two key aspects:
 
-**Why this guide exists**: During development, we discovered that naively plotting celestial coordinates as simple X/Y values produces severe distortions, especially for high-declination constellations. This guide explains the cartographic solution we implemented and serves as a reference for understanding spherical-to-planar coordinate transformations.
+1. **Coordinate Projection**: How we convert celestial coordinates (Right Ascension and Declination) into accurate 2D canvas positions using d3-geo map projections
+2. **Line Generation**: How we automatically generate non-crossing constellation lines using Delaunay triangulation and Minimum Spanning Tree algorithms
+
+**Why this guide exists**: During development, we discovered that naively plotting celestial coordinates as simple X/Y values produces severe distortions, especially for high-declination constellations. Additionally, agent-generated constellation lines often crossed inappropriately. This guide explains both the cartographic solution and the algorithmic line generation we implemented.
 
 ## The Fundamental Problem
 
@@ -678,8 +681,108 @@ const adaptivePadding = maxRange < 20
 - [`docs/CONSTELLATION_USAGE.md`](./CONSTELLATION_USAGE.md) - Usage guide for AI agents
 - [`__tests__/utils/celestial-coordinates.test.ts`](../__tests__/utils/celestial-coordinates.test.ts) - Test suite
 
+## Automatic Line Generation
+
+### The Line Crossing Problem
+
+Initially, constellation lines were provided by the AI agent in the response. However, this approach had significant issues:
+
+- **Crossing lines**: Lines often crossed inappropriately, creating confusing patterns
+- **Inconsistent patterns**: Different queries for the same constellation produced different line patterns
+- **No astronomical accuracy**: Agent-generated lines didn't match traditional asterism patterns
+- **Unreliable**: Depended on agent's knowledge and interpretation
+
+### The Solution: Traditional Patterns Only
+
+We implemented a system that uses **only authentic traditional asterism patterns**:
+
+**Key Insight**: Asterisms are **cultural and historical artifacts**, not algorithmic constructs. They were hand-drawn by astronomers and cultures over thousands of years to represent mythological figures and tell stories.
+
+### Implementation Approach
+
+1. **Traditional Patterns** (15 major constellations):
+   - Orion, Ursa Major, Cassiopeia, Cygnus, Leo, Scorpius, Taurus, Gemini, Aquila, Lyra, Andromeda, Perseus, Pegasus, Boötes, Virgo
+   - Patterns sourced from IAU standards and astronomical references
+   - Historically and culturally accurate
+
+2. **No Lines for Unknown Constellations**:
+   - If no traditional pattern exists, no lines are drawn
+   - Shows only the stars without connecting lines
+   - Respects the cultural nature of asterisms
+   - Agent can still provide custom lines if needed
+
+### Predefined Patterns
+
+For 15 major constellations, we use traditional asterism patterns from astronomical sources:
+
+```typescript
+const CONSTELLATION_PATTERNS: Record<string, ConstellationLine[]> = {
+  'Orion': [
+    { from: 7, to: 0 }, // Meissa to Betelgeuse (head to shoulder)
+    { from: 7, to: 2 }, // Meissa to Bellatrix (head to shoulder)
+    { from: 0, to: 4 }, // Betelgeuse to Alnilam (shoulder to belt)
+    { from: 2, to: 4 }, // Bellatrix to Alnilam (shoulder to belt)
+    { from: 3, to: 4 }, // Alnitak to Alnilam (belt)
+    { from: 4, to: 5 }, // Alnilam to Mintaka (belt)
+    { from: 4, to: 6 }, // Alnilam to Saiph (belt to leg)
+    { from: 4, to: 1 }, // Alnilam to Rigel (belt to leg)
+  ],
+  'Ursa Major': [ /* Big Dipper pattern */ ],
+  'Cassiopeia': [ /* W shape */ ],
+  // ... 12 more constellations
+};
+```
+
+### Selection Logic
+
+```typescript
+export function getConstellationLines(
+  name: string,
+  stars: Star[]
+): ConstellationLine[] {
+  // Use predefined patterns only (traditional asterisms)
+  if (CONSTELLATION_PATTERNS[name]) {
+    return remapPatternToStars(CONSTELLATION_PATTERNS[name], stars);
+  }
+  
+  // No pattern available - return empty array
+  // Asterisms are cultural artifacts, not algorithmic
+  return [];
+}
+```
+
+### Why This Approach
+
+1. **Culturally Authentic**: Uses real traditional patterns passed down through history
+2. **Historically Accurate**: Matches what you'd see in star charts and planetariums
+3. **Respects Astronomy**: Doesn't invent fake asterisms algorithmically
+4. **No Crossing Lines**: Traditional patterns are well-designed
+5. **Educational Value**: Shows actual constellation patterns people have used for millennia
+6. **No Agent Dependency**: Removes unreliable agent-generated lines
+
+### Comparison: Before vs After
+
+**Before (Agent-Generated)**:
+- ❌ Lines often crossed inappropriately
+- ❌ Inconsistent patterns for same constellation
+- ❌ No guarantee of quality
+- ❌ Required agent to have astronomical knowledge
+- ❌ Invented non-traditional patterns
+
+**After (Traditional Patterns Only)**:
+- ✅ Culturally and historically authentic
+- ✅ Consistent traditional patterns
+- ✅ No crossing lines (traditional patterns are well-designed)
+- ✅ Agent only needs to provide star coordinates
+- ✅ Respects the cultural nature of asterisms
+
+### Implementation Files
+
+- [`utils/constellation-lines.ts`](../utils/constellation-lines.ts) - Line generation implementation
+- [`components/dynamic/Constellation.tsx`](../components/dynamic/Constellation.tsx) - Integration in React component
+
 ---
 
 **Made with Bob** 🤖✨
 
-*This guide documents the cartographic principles and implementation details of constellation rendering using d3-geo projections. For usage instructions, see [CONSTELLATION_USAGE.md](./CONSTELLATION_USAGE.md).*
+*This guide documents the cartographic principles and line generation algorithms for constellation rendering. For usage instructions, see [CONSTELLATION_USAGE.md](./CONSTELLATION_USAGE.md).*

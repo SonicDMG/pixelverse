@@ -337,68 +337,54 @@ function equirectangularToCanvas(
   padding: number
 ): CanvasCoordinate {
   const { raMin, raMax, decMin, decMax } = bounds;
+  const meanDec = (decMin + decMax) / 2;
+  const meanRa = (raMin + raMax) / 2;
   
-  console.log('🔧 NEW LINEAR MAPPING CODE ACTIVE - equirectangularToCanvas called');
-  console.log('Input:', { ra, dec, bounds });
+  // Create equirectangular projection with proper d3-geo configuration
+  // Following IAU sky chart convention where RA increases right-to-left
+  const projection: GeoProjection = geoEquirectangular()
+    .rotate([-meanRa, -meanDec, 0])  // Center on constellation
+    .reflectX(true);  // IAU convention: RA increases right-to-left
   
-  // Use simple linear mapping instead of complex projection
-  // This approach directly maps celestial coordinates to canvas coordinates
-  // without the distortion caused by d3-geo's rotate() method
-  
-  // Calculate the range of coordinates
+  // Calculate spherical-corrected angular extent
+  // RA circles shrink at higher declinations: apply cos(dec) correction
+  const meanDecRadians = (meanDec * Math.PI) / 180;
   let raRange = raMax - raMin;
-  let decRange = decMax - decMin;
   
   // Handle RA wrapping at 0°/360° boundary
   if (raRange < 0) {
     raRange += 360;
   }
   
-  // Apply spherical correction to RA range based on declination
-  // At higher declinations, RA lines converge, so we need to account for this
-  const meanDec = (decMin + decMax) / 2;
-  const meanDecRadians = (meanDec * Math.PI) / 180;
   const raAngularRange = raRange * Math.cos(meanDecRadians);
-  
-  // Use the larger of the two ranges to determine scale
+  const decRange = decMax - decMin;
   const maxRange = Math.max(raAngularRange, decRange);
   
-  // Adaptive padding: reduce padding for small constellations
+  // Adaptive padding for small constellations
   const minPadding = padding * 0.3;
   const adaptivePadding = maxRange < 20
     ? Math.max(minPadding, padding * (maxRange / 20))
     : padding;
   
-  // Calculate drawable area
+  // Calculate scale to fit constellation within canvas bounds
   const drawableSize = canvasSize - 2 * adaptivePadding;
+  // Use the full drawable size (not half) for better space utilization
+  const scale = drawableSize / (maxRange * Math.PI / 180);
   
-  // Calculate scale to fit the constellation in the drawable area
-  const scale = drawableSize / maxRange;
+  projection.scale(scale);
+  projection.translate([canvasSize / 2, canvasSize / 2]);
   
-  // Normalize coordinates relative to bounds center
-  const meanRa = (raMin + raMax) / 2;
-  let normalizedRa = ra - meanRa;
+  // Project the coordinates using d3-geo
+  const projected = projection([ra, dec]);
   
-  // Handle RA wrapping
-  if (normalizedRa > 180) normalizedRa -= 360;
-  if (normalizedRa < -180) normalizedRa += 360;
-  
-  const normalizedDec = dec - meanDec;
-  
-  // Apply spherical correction to RA coordinate
-  const correctedRa = normalizedRa * Math.cos(meanDecRadians);
-  
-  // Map to canvas coordinates
-  // X: RA increases LEFT-TO-RIGHT (standard map convention)
-  // Y: Dec increases bottom-to-top, so we negate it (canvas Y increases downward)
-  const x = canvasSize / 2 + (correctedRa * scale);  // Changed from minus to plus
-  const y = canvasSize / 2 - (normalizedDec * scale);
-  
-  console.log('Converted:', { ra, dec, normalizedRa, correctedRa, x, y });
+  if (!projected) {
+    // Fallback if projection fails
+    return { x: canvasSize / 2, y: canvasSize / 2 };
+  }
   
   return {
-    x: Math.round(x),
-    y: Math.round(y)
+    x: Math.round(projected[0]),
+    y: Math.round(projected[1])
   };
 }
 

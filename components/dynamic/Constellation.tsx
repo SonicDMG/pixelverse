@@ -37,7 +37,7 @@ export function Constellation({
   brightestStar,
   visibility,
   stars,
-  lines = [],
+  lines,
   onStarClick,
 }: ConstellationProps) {
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
@@ -127,20 +127,28 @@ export function Constellation({
     return 'var(--color-purple)';
   };
 
-  // Helper to get star size based on magnitude and optional size multiplier
+  // Helper to get star size based on magnitude
   const getStarRadius = (star: Star): number => {
-    const brightness = Math.max(0, Math.min(5, 6 - star.magnitude));
-    let baseRadius: number;
-    if (brightness > 3) baseRadius = 8;
-    else if (brightness > 1) baseRadius = 6;
-    else baseRadius = 4;
+    // Calculate radius from magnitude (lower magnitude = brighter = larger)
+    // Magnitude scale: -1 (very bright) to 6 (very dim)
+    const magnitude = star.magnitude ?? 3;
     
-    // Apply size multiplier if provided
-    if (star.size !== undefined) {
-      return baseRadius * Math.max(0.5, Math.min(3.0, star.size));
-    }
+    // Map magnitude to radius with continuous scale
+    // 0 mag (Rigel) → 10px, 2 mag → 6px, 4 mag → 3px
+    const minRadius = 3;
+    const maxRadius = 10;
+    const minMag = -1;
+    const maxMag = 6;
     
-    return baseRadius;
+    // Clamp magnitude to reasonable range
+    const clampedMag = Math.max(minMag, Math.min(maxMag, magnitude));
+    
+    // Linear interpolation (inverted because lower magnitude = brighter)
+    const normalized = (maxMag - clampedMag) / (maxMag - minMag);
+    const radius = minRadius + (maxRadius - minRadius) * normalized;
+    
+    console.log(`[Constellation] Star ${star.name}: mag=${magnitude}, radius=${radius.toFixed(1)}`);
+    return radius;
   };
 
   // Helper to render star magnitude with visual representation
@@ -241,7 +249,7 @@ export function Constellation({
                     </span>
                   </div>
                   <span className="font-pixel text-xs text-[var(--color-purple)]">
-                    mag {star.magnitude.toFixed(1)}
+                    mag {star.magnitude?.toFixed(1) ?? 'N/A'}
                   </span>
                 </div>
               ))}
@@ -289,30 +297,6 @@ export function Constellation({
                   className="w-full h-auto max-h-[500px] relative z-10"
                   style={{ aspectRatio: '1/1' }}
                 >
-                  {/* Draw constellation lines */}
-                  {lines.map((line, index) => {
-                    const fromStar = starsWithCoords[line.from];
-                    const toStar = starsWithCoords[line.to];
-                    if (!fromStar?.x || !fromStar?.y || !toStar?.x || !toStar?.y) return null;
-                    
-                    return (
-                      <line
-                        key={index}
-                        x1={fromStar.x}
-                        y1={fromStar.y}
-                        x2={toStar.x}
-                        y2={toStar.y}
-                        stroke="var(--color-primary)"
-                        strokeWidth="1.5"
-                        opacity="0.6"
-                        className="transition-opacity duration-300"
-                        style={{
-                          opacity: hoveredStar === line.from || hoveredStar === line.to ? 1 : 0.6,
-                        }}
-                      />
-                    );
-                  })}
-
                   {/* Draw stars */}
                   {starsWithCoords.map((star, index) => {
                     if (!star.x || !star.y) return null;

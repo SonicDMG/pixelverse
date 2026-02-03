@@ -18,6 +18,7 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
     '^msw/node$': '<rootDir>/node_modules/msw/lib/node/index.js',
     '^msw$': '<rootDir>/node_modules/msw/lib/core/index.js',
+    '^d3-delaunay$': '<rootDir>/__tests__/__mocks__/d3-delaunay.ts',
   },
   
   // Test match patterns
@@ -74,9 +75,9 @@ const customJestConfig = {
     '<rootDir>/.next/',
   ],
   
-  // Transform ignore patterns - allow MSW, d3-geo and its dependencies to be transformed
+  // Transform ignore patterns - allow MSW, d3-geo, d3-delaunay and their dependencies to be transformed
   transformIgnorePatterns: [
-    'node_modules/(?!(msw|@mswjs|d3-geo|d3-geo-projection|d3-array|d3-path|internmap|delaunator|robust-predicates))',
+    'node_modules/(?!(msw|@mswjs|d3-geo|d3-geo-projection|d3-delaunay|d3-array|d3-path|internmap|delaunator|robust-predicates))',
     '^.+\\.module\\.(css|sass|scss)$',
   ],
 }
