@@ -639,29 +639,10 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
   }
   
   if (lowerQuestion.includes('orion') || lowerQuestion.includes('constellation')) {
-    console.log('[Space API] Mock response - Matched: Orion/Constellation');
+    console.log('[Space API] Mock response - Matched: Orion/Constellation - Returning error (requires Langflow)');
     return {
-      answer: 'Orion is one of the most recognizable constellations in the night sky. Named after a hunter in Greek mythology, it contains some of the brightest stars visible from Earth.',
-      components: [
-        {
-          type: 'constellation',
-          props: {
-            name: 'Orion',
-            abbreviation: 'Ori',
-            description: 'The Hunter constellation, one of the most prominent and recognizable patterns in the night sky. Features the famous Orion\'s Belt asterism and the Orion Nebula.',
-            brightestStar: 'Rigel (β Orionis)',
-            visibility: 'Visible worldwide, best seen December-March',
-            stars: [
-              { name: 'Rigel', magnitude: 0.13 },
-              { name: 'Betelgeuse', magnitude: 0.50 },
-              { name: 'Bellatrix', magnitude: 1.64 },
-              { name: 'Alnilam', magnitude: 1.69 },
-              { name: 'Alnitak', magnitude: 1.77 },
-              { name: 'Saiph', magnitude: 2.09 }
-            ]
-          }
-        }
-      ]
+      answer: 'I apologize, but constellation visualizations require connection to our astronomical data service, which is currently unavailable.',
+      error: 'Constellation data requires Langflow integration. Please ensure Langflow is properly configured with astronomical data sources.'
     };
   }
   
@@ -679,6 +660,53 @@ function getMockSpaceResponse(question: string): SpaceQueryResult {
         }
       }
     ]
+  };
+}
+
+/**
+ * Sanitize constellation component data by removing pre-calculated x/y coordinates
+ * This forces the Constellation component to always convert from RA/Dec using
+ * our corrected celestial coordinate conversion logic.
+ *
+ * Background: Langflow may return pre-calculated x/y coordinates that were
+ * generated using incorrect conversion logic. By stripping these out, we ensure
+ * the frontend always uses the correct d3-geo projection-based conversion.
+ */
+function sanitizeConstellationData(result: SpaceQueryResult): SpaceQueryResult {
+  if (!result.components || result.components.length === 0) {
+    return result;
+  }
+
+  const sanitizedComponents = result.components.map(component => {
+    if (component.type === 'constellation' && component.props.stars) {
+      console.log('[Space API] Sanitizing constellation data - removing pre-calculated x/y coordinates');
+      
+      // Remove x and y coordinates from stars, keeping only RA/Dec
+      const sanitizedStars = component.props.stars.map((star: any) => {
+        const { x, y, ...starWithoutCoords } = star;
+        
+        if (x !== undefined || y !== undefined) {
+          console.log(`[Space API] Removed pre-calculated coordinates for star: ${star.name}`);
+        }
+        
+        return starWithoutCoords;
+      });
+
+      return {
+        ...component,
+        props: {
+          ...component.props,
+          stars: sanitizedStars
+        }
+      };
+    }
+    
+    return component;
+  });
+
+  return {
+    ...result,
+    components: sanitizedComponents
   };
 }
 
@@ -739,6 +767,9 @@ export async function POST(request: NextRequest) {
         hasError: !!result.error
       });
     }
+    
+    // Sanitize constellation data to remove pre-calculated coordinates
+    result = sanitizeConstellationData(result);
     
     console.log('[Space API] Final result prepared:', {
       hasAnswer: !!result.answer,

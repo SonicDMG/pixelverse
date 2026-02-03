@@ -161,6 +161,15 @@ export async function queryLangflow(
     const messageText = outputs?.message?.text || 'No response received';
     const messageData = outputs?.message?.data;
 
+    // Helper function to strip JavaScript-style comments from JSON
+    const stripJsonComments = (jsonString: string): string => {
+      // Remove single-line comments (// ...)
+      let cleaned = jsonString.replace(/\/\/.*$/gm, '');
+      // Remove multi-line comments (/* ... */)
+      cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
+      return cleaned;
+    };
+
     // Try to parse as UI specification response
     let uiResponse: any = null;
     console.log('[Langflow] Raw messageText:', messageText.substring(0, 500)); // Log first 500 chars
@@ -170,7 +179,8 @@ export async function queryLangflow(
     try {
       // Check if messageText is JSON with components
       if (messageText.trim().startsWith('{')) {
-        uiResponse = JSON.parse(messageText);
+        const cleanedMessageText = stripJsonComments(messageText);
+        uiResponse = JSON.parse(cleanedMessageText);
         console.log('[Langflow] Successfully parsed JSON response:', {
           hasComponents: !!uiResponse.components,
           componentCount: uiResponse.components?.length,

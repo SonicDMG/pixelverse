@@ -53,14 +53,19 @@ export function Constellation({
 
   // Auto-calculate coordinates from RA/Dec if not provided
   const starsWithCoords = useMemo(() => {
-    // Check if any stars have RA/Dec but not x/y
-    const needsConversion = stars.some(star =>
-      star.ra && star.dec && (star.x === undefined || star.y === undefined)
-    );
+    // ALWAYS convert if RA/Dec is available, regardless of x/y presence
+    // This ensures we use the correct projection-based coordinates
+    const hasRaDec = stars.some(star => star.ra && star.dec);
 
-    if (!needsConversion) {
+    console.log('[Constellation] hasRaDec:', hasRaDec);
+    console.log('[Constellation] stars:', stars);
+
+    if (!hasRaDec) {
+      console.log('[Constellation] No RA/Dec data, using provided coordinates');
       return stars;
     }
+
+    console.log('[Constellation] Converting RA/Dec to canvas coordinates (ignoring any pre-calculated x/y)');
 
     // Extract stars with RA/Dec for conversion
     const starsForConversion = stars.map(star => ({
@@ -71,11 +76,13 @@ export function Constellation({
     try {
       const canvasCoords = convertStarsToCanvas(starsForConversion);
       
-      // Merge calculated coordinates with original star data
+      console.log('[Constellation] Converted coordinates:', canvasCoords);
+      
+      // ALWAYS use the converted coordinates when RA/Dec is available
       return stars.map((star, i) => ({
         ...star,
-        x: star.x ?? canvasCoords[i].x,
-        y: star.y ?? canvasCoords[i].y
+        x: canvasCoords[i].x,
+        y: canvasCoords[i].y
       }));
     } catch (error) {
       console.error('Error converting RA/Dec to canvas coordinates:', error);

@@ -7,6 +7,7 @@ import { getProjectionType } from '@/utils/celestial-coordinates';
 export default function TestProjectionsPage() {
   // Test constellation 1: Orion (Equatorial, ~0-10° dec) - Should use equirectangular
   // Complete 8-star pattern showing the iconic hourglass shape with head
+  // UPDATED: Using authoritative coordinates from constellations.csv
   const orion = {
     name: "Orion",
     abbreviation: "Ori",
@@ -17,10 +18,10 @@ export default function TestProjectionsPage() {
       { name: "Betelgeuse (α Ori)", magnitude: 0.45, ra: "5h 55m", dec: "+7° 24'", color: "M", size: 2.5 },
       { name: "Rigel (β Ori)", magnitude: 0.18, ra: "5h 14m", dec: "-8° 12'", color: "B", size: 2.8 },
       { name: "Bellatrix (γ Ori)", magnitude: 1.64, ra: "5h 25m", dec: "+6° 21'", color: "B" },
-      { name: "Alnitak (ζ Ori)", magnitude: 1.74, ra: "5h 40m", dec: "-1° 56'", color: "O" },
+      { name: "Alnitak (ζ Ori)", magnitude: 1.74, ra: "5h 41m", dec: "-1° 57'", color: "O" },
       { name: "Alnilam (ε Ori)", magnitude: 1.69, ra: "5h 36m", dec: "-1° 12'", color: "B" },
       { name: "Mintaka (δ Ori)", magnitude: 2.23, ra: "5h 32m", dec: "-0° 18'", color: "B" },
-      { name: "Saiph (κ Ori)", magnitude: 2.07, ra: "5h 47m", dec: "-9° 40'", color: "B" },
+      { name: "Saiph (κ Ori)", magnitude: 2.07, ra: "5h 48m", dec: "-9° 40'", color: "B" },
       { name: "Meissa (λ Ori)", magnitude: 3.54, ra: "5h 35m", dec: "+9° 56'", color: "O" },
     ],
     lines: [
@@ -80,6 +81,7 @@ export default function TestProjectionsPage() {
 
   // Test constellation 3: Ursa Major (Mid-high latitude, ~56° dec) - Should use equirectangular
   // Complete Big Dipper pattern with all 7 stars
+  // UPDATED: Using authoritative coordinates from constellations.csv
   const ursaMajor = {
     name: "Ursa Major",
     abbreviation: "UMa",
@@ -88,12 +90,12 @@ export default function TestProjectionsPage() {
     visibility: "Northern Hemisphere, visible year-round",
     stars: [
       { name: "Dubhe (α UMa)", magnitude: 1.79, ra: "11h 04m", dec: "+61° 45'", color: "K", size: 2.1 },
-      { name: "Merak (β UMa)", magnitude: 2.37, ra: "11h 01m", dec: "+56° 23'", color: "A" },
-      { name: "Phecda (γ UMa)", magnitude: 2.44, ra: "11h 53m", dec: "+53° 42'", color: "A" },
+      { name: "Merak (β UMa)", magnitude: 2.37, ra: "11h 02m", dec: "+56° 23'", color: "A" },
+      { name: "Phecda (γ UMa)", magnitude: 2.44, ra: "11h 54m", dec: "+53° 42'", color: "A" },
       { name: "Megrez (δ UMa)", magnitude: 3.31, ra: "12h 15m", dec: "+57° 02'", color: "A" },
-      { name: "Alioth (ε UMa)", magnitude: 1.76, ra: "12h 54m", dec: "+55° 57'", color: "A", size: 2.2 },
-      { name: "Mizar (ζ UMa)", magnitude: 2.23, ra: "13h 23m", dec: "+54° 55'", color: "A" },
-      { name: "Alkaid (η UMa)", magnitude: 1.86, ra: "13h 47m", dec: "+49° 19'", color: "B", size: 2.0 },
+      { name: "Alioth (ε UMa)", magnitude: 1.76, ra: "12h 54m", dec: "+55° 58'", color: "A", size: 2.2 },
+      { name: "Mizar (ζ UMa)", magnitude: 2.23, ra: "13h 24m", dec: "+54° 56'", color: "A" },
+      { name: "Alkaid (η UMa)", magnitude: 1.86, ra: "13h 48m", dec: "+49° 19'", color: "B", size: 2.0 },
     ],
     lines: [
       // Bowl of the dipper (Dubhe -> Merak -> Phecda -> Megrez -> back to Dubhe)
@@ -165,6 +167,7 @@ export default function TestProjectionsPage() {
 
   // Test constellation 6: Cygnus (Mid-latitude ~40° dec) - Should use equirectangular
   // Northern Cross pattern showing the swan flying along the Milky Way
+  // UPDATED: Using authoritative coordinates from constellations.csv
   const cygnus = {
     name: "Cygnus",
     abbreviation: "Cyg",
@@ -172,7 +175,7 @@ export default function TestProjectionsPage() {
     brightestStar: "Deneb (α Cyg)",
     visibility: "Northern Hemisphere summer",
     stars: [
-      { name: "Deneb (α Cyg)", magnitude: 1.25, ra: "20h 41m", dec: "+45° 16'", color: "A", size: 2.5 },
+      { name: "Deneb (α Cyg)", magnitude: 1.25, ra: "20h 41m", dec: "+45° 17'", color: "A", size: 2.5 },
       { name: "Sadr (γ Cyg)", magnitude: 2.23, ra: "20h 22m", dec: "+40° 15'", color: "B", size: 2.0 },
       { name: "Albireo (β Cyg)", magnitude: 3.08, ra: "19h 31m", dec: "+27° 58'", color: "A" },
       { name: "Gienah (ε Cyg)", magnitude: 2.48, ra: "20h 46m", dec: "+33° 58'", color: "K" },
@@ -190,6 +193,7 @@ export default function TestProjectionsPage() {
 
   // Test constellation 7: Scorpius (Southern mid-latitude ~-30° dec) - Should use equirectangular
   // Complete scorpion pattern showing head, body, claws, and curved tail that hooks upward
+  // UPDATED: Using authoritative coordinates from constellations.csv
   const scorpius = {
     name: "Scorpius",
     abbreviation: "Sco",
@@ -198,16 +202,16 @@ export default function TestProjectionsPage() {
     visibility: "Southern Hemisphere, northern summer",
     stars: [
       { name: "Antares (α Sco)", magnitude: 0.96, ra: "16h 29m", dec: "-26° 26'", color: "M", size: 2.5 },
-      { name: "Shaula (λ Sco)", magnitude: 1.62, ra: "17h 33m", dec: "-37° 06'", color: "B", size: 2.1 },
+      { name: "Shaula (λ Sco)", magnitude: 1.62, ra: "17h 34m", dec: "-37° 06'", color: "B", size: 2.1 },
       { name: "Sargas (θ Sco)", magnitude: 1.86, ra: "17h 37m", dec: "-43° 00'", color: "F", size: 2.0 },
       { name: "Dschubba (δ Sco)", magnitude: 2.32, ra: "16h 00m", dec: "-22° 37'", color: "B" },
       { name: "Graffias (β Sco)", magnitude: 2.62, ra: "16h 05m", dec: "-19° 48'", color: "B" },
-      { name: "Pi Scorpii (π Sco)", magnitude: 2.89, ra: "15h 58m", dec: "-26° 06'", color: "B" },
+      { name: "Pi Scorpii (π Sco)", magnitude: 2.89, ra: "15h 59m", dec: "-26° 07'", color: "B" },
       { name: "Tau Scorpii (τ Sco)", magnitude: 2.82, ra: "16h 36m", dec: "-28° 13'", color: "B" },
-      { name: "Epsilon Scorpii (ε Sco)", magnitude: 2.29, ra: "16h 50m", dec: "-34° 17'", color: "K" },
+      { name: "Epsilon Scorpii (ε Sco)", magnitude: 2.29, ra: "16h 50m", dec: "-34° 18'", color: "K" },
       { name: "Kappa Scorpii (κ Sco)", magnitude: 2.41, ra: "17h 42m", dec: "-39° 02'", color: "B" },
-      { name: "Iota Scorpii (ι Sco)", magnitude: 3.03, ra: "17h 47m", dec: "-40° 08'", color: "F" },
-      { name: "Lesath (υ Sco)", magnitude: 2.70, ra: "17h 30m", dec: "-37° 18'", color: "B" },
+      { name: "Iota Scorpii (ι Sco)", magnitude: 3.03, ra: "17h 48m", dec: "-40° 08'", color: "F" },
+      { name: "Lesath (υ Sco)", magnitude: 2.70, ra: "17h 31m", dec: "-37° 18'", color: "B" },
       { name: "Sigma Scorpii (σ Sco)", magnitude: 2.90, ra: "16h 21m", dec: "-25° 36'", color: "B" },
       { name: "Mu-1 Scorpii (μ¹ Sco)", magnitude: 3.04, ra: "16h 52m", dec: "-38° 03'", color: "B" },
       { name: "Zeta-1 Scorpii (ζ¹ Sco)", magnitude: 4.73, ra: "16h 54m", dec: "-42° 22'", color: "B" },
