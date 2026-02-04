@@ -39,6 +39,8 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
   const [streamingState, setStreamingState] = useState<StreamingState>({ chunksReceived: 0, isStreaming: false });
   const [error, setError] = useState<string | null>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingStreamingStateRef = useRef<StreamingState | null>(null);
 
   /**
    * Submit a question with OpenAI-compatible streaming support
@@ -65,7 +67,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
     const timeout1 = setTimeout(() => {
       setLoadingStatus('getting_data');
       setStreamingState({ chunksReceived: 0, isStreaming: true });
-    }, 1000); // 1s for choosing_agent
+    }, 1000); // 1s for choosing_agent - intentional for loading spinner UX
     timeoutsRef.current.push(timeout1);
 
     try {
@@ -120,11 +122,23 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
             if (parsed.event === 'token') {
               // Token streaming event
               chunkIndex++;
-              setStreamingState(prev => ({
-                ...prev,
+              
+              // Debounce state updates: batch updates every 100ms instead of per-token
+              pendingStreamingStateRef.current = {
                 chunksReceived: chunkIndex,
                 isStreaming: true
-              }));
+              };
+              
+              if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+              }
+              
+              debounceTimerRef.current = setTimeout(() => {
+                if (pendingStreamingStateRef.current) {
+                  setStreamingState(pendingStreamingStateRef.current);
+                  pendingStreamingStateRef.current = null;
+                }
+              }, 100);
               
               const chunkText = parsed.data?.chunk || '';
               if (chunkText) {
@@ -145,9 +159,19 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
         }
       }
 
+      // Clear any pending debounced updates
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      
       // Process final result
       setLoadingStatus('processing');
       setStreamingState({ chunksReceived: chunkIndex, isStreaming: false });
+      
+      // Defer heavy JSON parsing to next tick to allow UI to update
+      // This prevents blocking the main thread and improves perceived performance
+      await new Promise(resolve => setTimeout(resolve, 0));
       
       // Parse the final result from the stream
       let result: StockQueryResult;
@@ -167,6 +191,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
         let uiResponse: any = null;
         try {
           if (messageText.trim().startsWith('{')) {
+            // Defer JSON parsing to prevent blocking
             uiResponse = JSON.parse(messageText);
           }
         } catch (e) {
@@ -242,9 +267,13 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
       setConversationGroups(prev => [...prev, errorGroup]);
       createdGroup = errorGroup;
     } finally {
-      // Clear all timeouts
+      // Clear all timeouts and debounce timers
       timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
       timeoutsRef.current = [];
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
       setLoadingStatus(null);
     }
 
