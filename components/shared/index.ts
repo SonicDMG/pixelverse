@@ -6,6 +6,7 @@
 export { ChangeIndicator, ChangeIndicatorWithSign } from './ChangeIndicator';
 export { PixelCard, PixelCardHeader, PixelCardContent } from './PixelCard';
 export { BaseChart } from './BaseChart';
-export { PixelTable, PixelTableSimple } from './PixelTable';
+export { PixelTable } from './PixelTable';
+export { StreamingLoader } from './StreamingLoader';
 
 // Made with Bob

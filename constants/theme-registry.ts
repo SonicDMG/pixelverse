@@ -153,7 +153,7 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       'Tell me about Jupiter',
       'Show me the Orion constellation',
       'What is the history of Mars exploration?',
-      'How far is the Moon from Earth?',
+      'Explain the pillars of creation',
     ],
   },
 };
@@ -195,82 +195,6 @@ export function getThemeIds(): string[] {
  */
 export function isValidThemeId(id: string): boolean {
   return id in THEME_REGISTRY;
-}
-
-/**
- * Type guard to validate a theme configuration object
- * @param config - Partial theme configuration to validate
- * @returns True if the config is a complete valid ThemeConfig
- */
-export function validateThemeConfig(config: Partial<ThemeConfig>): config is ThemeConfig {
-  if (!config) return false;
-  
-  // Check required string fields
-  const requiredStrings: (keyof ThemeConfig)[] = [
-    'id',
-    'name',
-    'tagline',
-    'apiEndpoint',
-    'musicDirectory',
-    'loadingDataText',
-  ];
-  
-  for (const field of requiredStrings) {
-    if (typeof config[field] !== 'string' || !config[field]) {
-      return false;
-    }
-  }
-  
-  // Check colors object
-  if (!config.colors || typeof config.colors !== 'object') return false;
-  const requiredColors = [
-    'primary',
-    'secondary',
-    'accent',
-    'neonCyan',
-    'neonMagenta',
-    'neonBlue',
-    'neonYellow',
-    'darkBg',
-    'darkerBg',
-    'cardBg',
-    'error',
-  ];
-  for (const color of requiredColors) {
-    if (typeof config.colors[color as keyof typeof config.colors] !== 'string') {
-      return false;
-    }
-  }
-  
-  // Check fonts object
-  if (!config.fonts || typeof config.fonts !== 'object') return false;
-  if (typeof config.fonts.pixel !== 'string') return false;
-  
-  // Check animations object
-  if (!config.animations || typeof config.animations !== 'object') return false;
-  if (!config.animations.duration || typeof config.animations.duration !== 'object') return false;
-  if (
-    typeof config.animations.duration.fast !== 'number' ||
-    typeof config.animations.duration.normal !== 'number' ||
-    typeof config.animations.duration.slow !== 'number'
-  ) {
-    return false;
-  }
-  
-  // Check audio object
-  if (!config.audio || typeof config.audio !== 'object') return false;
-  if (typeof config.audio.soundEffectsVolume !== 'number') return false;
-  
-  // Check exampleQuestions array
-  if (!Array.isArray(config.exampleQuestions)) return false;
-  if (!config.exampleQuestions.every((q) => typeof q === 'string')) return false;
-  
-  // Icon is optional, but if present must be a string
-  if (config.icon !== undefined && typeof config.icon !== 'string') {
-    return false;
-  }
-  
-  return true;
 }
 
 // Made with Bob

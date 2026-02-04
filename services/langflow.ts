@@ -234,4 +234,160 @@ export async function queryLangflow(
   }
 }
 
+/**
+ * Query Langflow with streaming support
+ * Uses Server-Sent Events (SSE) to receive incremental responses
+ *
+ * @param question - The question to ask
+ * @param theme - The theme to use for selecting the appropriate flow ID
+ * @param sessionId - Session ID for conversation tracking
+ * @param onChunk - Callback fired for each chunk received
+ * @param onComplete - Callback fired when streaming completes
+ * @param onError - Callback fired on error
+ */
+export async function queryLangflowStreaming(
+  question: string,
+  theme: LangflowTheme = 'ticker',
+  sessionId: string,
+  onChunk: (chunk: { text?: string; data?: any; chunkIndex: number }) => void,
+  onComplete: (result: StockQueryResult) => void,
+  onError: (error: string) => void
+): Promise<void> {
+  try {
+    console.log(`[${new Date().toISOString()}] [Langflow Streaming] Starting request for: "${question}"`);
+    
+    const flowId = getFlowIdForTheme(theme);
+    const url = `${LANGFLOW_URL}/api/v1/run/${flowId}?stream=true`;
+    
+    const payload = {
+      input_value: question,
+      output_type: 'chat',
+      input_type: 'chat',
+      session_id: sessionId,
+    };
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+    };
+
+    if (LANGFLOW_API_KEY) {
+      headers['x-api-key'] = LANGFLOW_API_KEY;
+    }
+
+    console.log(`[${new Date().toISOString()}] [Langflow Streaming] Initiating SSE connection`);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let chunkIndex = 0;
+    let accumulatedText = '';
+    let finalData: any = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        console.log(`[${new Date().toISOString()}] [Langflow Streaming] Stream complete`);
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          
+          if (data === '[DONE]') {
+            console.log(`[${new Date().toISOString()}] [Langflow Streaming] Received [DONE] signal`);
+            continue;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            console.log(`[${new Date().toISOString()}] [Langflow Streaming] Chunk ${chunkIndex}:`, parsed);
+            
+            // Extract text from chunk
+            const chunkText = parsed.chunk || parsed.text || parsed.message?.text || '';
+            if (chunkText) {
+              accumulatedText += chunkText;
+            }
+            
+            // Store final data if present
+            if (parsed.outputs || parsed.data) {
+              finalData = parsed;
+            }
+
+            // Notify chunk received
+            onChunk({
+              text: chunkText,
+              data: parsed,
+              chunkIndex: chunkIndex++,
+            });
+          } catch (e) {
+            console.error('[Langflow Streaming] Failed to parse chunk:', e);
+          }
+        }
+      }
+    }
+
+    // Process final result
+    console.log(`[${new Date().toISOString()}] [Langflow Streaming] Processing final result`);
+    
+    let uiResponse: any = null;
+    const messageText = accumulatedText || 'No response received';
+    
+    // Try to parse as UI specification
+    try {
+      if (finalData?.outputs?.[0]?.outputs?.[0]?.results?.message?.text) {
+        const fullText = finalData.outputs[0].outputs[0].results.message.text;
+        if (fullText.trim().startsWith('{')) {
+          const repairedJson = jsonrepair(fullText);
+          uiResponse = JSON.parse(repairedJson);
+        }
+      }
+    } catch (e) {
+      console.error('[Langflow Streaming] Failed to parse final UI response:', e);
+    }
+
+    // Build result
+    if (uiResponse && uiResponse.components && Array.isArray(uiResponse.components)) {
+      const answerText = uiResponse.answer || uiResponse.text || messageText;
+      onComplete({
+        answer: answerText,
+        components: uiResponse.components,
+        symbol: extractSymbol(question),
+      });
+    } else {
+      // Fallback to stock data parsing
+      const stockData = parseStockData(messageText, finalData);
+      onComplete({
+        answer: messageText,
+        stockData,
+        symbol: extractSymbol(question),
+      });
+    }
+  } catch (error) {
+    console.error('[Langflow Streaming] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    onError(errorMessage);
+  }
+}
+
 // Made with Bob

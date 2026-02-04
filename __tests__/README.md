@@ -22,7 +22,6 @@ __tests__/
 ├── utils/             # Tests for utility functions
 ├── components/        # Tests for React components
 │   └── dynamic/       # Tests for dynamic UI components
-├── integration/       # Integration tests
 └── mocks/             # Mock handlers and server setup
     ├── handlers.ts    # MSW request handlers
     └── server.ts      # MSW server configuration

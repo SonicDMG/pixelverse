@@ -331,6 +331,16 @@ export interface ExplainOMaticSpec extends UIComponentSpec {
   };
 }
 
+export interface StreamingDataLoaderSpec extends UIComponentSpec {
+  type: 'streaming-data-loader';
+  props: {
+    message?: string;
+    chunksReceived?: number;
+    totalChunks?: number;
+    status?: 'connecting' | 'streaming' | 'processing' | 'complete';
+  };
+}
+
 // Union type of all possible component specs
 export type ComponentSpec =
   | LineChartSpec
@@ -346,7 +356,8 @@ export type ComponentSpec =
   | ConstellationSpec
   | SpaceTimelineSpec
   | SolarSystemSpec
-  | ExplainOMaticSpec;
+  | ExplainOMaticSpec
+  | StreamingDataLoaderSpec;
 
 // Response from Langflow with UI specifications
 export interface UIResponse {

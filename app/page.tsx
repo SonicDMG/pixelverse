@@ -168,6 +168,8 @@ export default function Home() {
           <ConversationContainer
             groups={conversation.conversationGroups}
             isLoading={conversation.loadingStatus !== null}
+            loadingStatus={conversation.loadingStatus}
+            streamingChunks={conversation.streamingState.chunksReceived}
             error={conversation.error}
             onSetQuestion={setQuestion}
           />

@@ -14,11 +14,6 @@ interface ExplainOMaticProps {
     title: string;
     description: string;
   }>;
-  citations?: Array<{
-    source: string;
-    url?: string;
-    excerpt?: string;
-  }>;
   followUpQuestions?: string[];
   // Multi-level mode (for testing)
   levels?: Partial<Record<KnowledgeLevel, ExplainOMaticLevelData>>;
@@ -33,7 +28,6 @@ export function ExplainOMatic({
   knowledgeLevel,
   explanation,
   relatedTopics,
-  citations,
   followUpQuestions,
   levels,
   onRelatedTopicClick,
@@ -45,7 +39,6 @@ export function ExplainOMatic({
     knowledgeLevel,
     explanation,
     relatedTopics,
-    citations,
     followUpQuestions,
     levels
   });
@@ -93,7 +86,6 @@ export function ExplainOMatic({
   const currentLevelData = levels?.[selectedLevel] || {
     explanation: explanation || '',
     relatedTopics: relatedTopics || [],
-    citations: citations || [],
     followUpQuestions: followUpQuestions || []
   };
   
@@ -200,50 +192,6 @@ export function ExplainOMatic({
         </PixelCard>
       )}
 
-      {/* Citations Section */}
-      {currentLevelData.citations && currentLevelData.citations.length > 0 && (
-        <PixelCard variant="base" className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">📚</span>
-            <h3 className="text-lg font-pixel text-[var(--color-secondary)] uppercase tracking-wide">
-              Sources & Citations
-            </h3>
-          </div>
-          
-          <div className="space-y-3">
-            {currentLevelData.citations!.map((citation, index) => (
-              <div
-                key={index}
-                className="p-4 bg-[var(--color-bg-dark)] border-2 border-[var(--color-secondary)]/30 rounded-lg pixel-border"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <h4 className="font-pixel text-sm text-[var(--color-secondary)] mb-2">
-                      {citation.source}
-                    </h4>
-                    {citation.excerpt && (
-                      <p className="font-pixel text-xs text-gray-400 italic leading-relaxed">
-                        "{citation.excerpt}"
-                      </p>
-                    )}
-                  </div>
-                  {citation.url && (
-                    <a
-                      href={citation.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-shrink-0 px-3 py-2 bg-[var(--color-secondary)] text-white font-pixel text-xs rounded pixel-border hover:bg-[var(--color-secondary)]/80 transition-colors"
-                      aria-label={`View source: ${citation.source}`}
-                    >
-                      View
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </PixelCard>
-      )}
     </div>
   );
 }

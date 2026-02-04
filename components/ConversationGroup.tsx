@@ -2,6 +2,7 @@ import { Message } from '@/types';
 import { ComponentSpec } from '@/types/ui-spec';
 import { DynamicUIRenderer } from './DynamicUIRenderer';
 import { StockChart } from './StockChart';
+import { StreamingDataLoader } from './dynamic/StreamingDataLoader';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ConversationGroupProps {
@@ -11,6 +12,7 @@ interface ConversationGroupProps {
   stockData?: any[];
   symbol?: string;
   durationSeconds?: number;
+  streamingChunks?: number;
   onSetQuestion?: (question: string) => void;
 }
 
@@ -25,6 +27,7 @@ export function ConversationGroup({
   stockData,
   symbol,
   durationSeconds,
+  streamingChunks,
   onSetQuestion,
 }: ConversationGroupProps) {
   const { theme } = useTheme();
@@ -40,6 +43,18 @@ export function ConversationGroup({
   
   return (
     <div className="conversation-group">
+      {/* Streaming Stats - Show completed streaming info at the top */}
+      {streamingChunks !== undefined && streamingChunks > 0 && (
+        <div className="animate-fade-in mb-4">
+          <StreamingDataLoader
+            message="DATA STREAM COMPLETE"
+            status="complete"
+            chunksReceived={streamingChunks}
+            totalChunks={streamingChunks}
+          />
+        </div>
+      )}
+
       {/* User Question */}
       <div className="p-4 border-4 pixel-border bg-[var(--color-bg-card)] border-[var(--color-primary)] ml-8 mb-4 animate-fade-in">
         <div className="flex items-center justify-between mb-2">

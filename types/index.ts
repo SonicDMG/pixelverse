@@ -34,6 +34,7 @@ export interface ConversationGroup {
   symbol?: string;
   timestamp: Date;
   durationSeconds?: number;
+  streamingChunks?: number; // Number of chunks received during streaming
 }
 
 // Langflow API request

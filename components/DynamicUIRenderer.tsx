@@ -13,6 +13,7 @@ import { SpaceTimeline } from './dynamic/SpaceTimeline';
 import { SolarSystem } from './dynamic/SolarSystem';
 import { TextBlock } from './dynamic/TextBlock';
 import { ExplainOMatic } from './dynamic/ExplainOMatic';
+import { StreamingDataLoader } from './dynamic/StreamingDataLoader';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
@@ -219,7 +220,6 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
             knowledgeLevel: normalizedSpec.props.knowledgeLevel,
             explanation: normalizedSpec.props.explanation,
             relatedTopics: normalizedSpec.props.relatedTopics,
-            citations: normalizedSpec.props.citations,
             followUpQuestions: normalizedSpec.props.followUpQuestions,
             levels: normalizedSpec.props.levels
           });
@@ -230,7 +230,6 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
               knowledgeLevel={normalizedSpec.props.knowledgeLevel}
               explanation={normalizedSpec.props.explanation}
               relatedTopics={normalizedSpec.props.relatedTopics}
-              citations={normalizedSpec.props.citations}
               followUpQuestions={normalizedSpec.props.followUpQuestions}
               levels={normalizedSpec.props.levels}
               onRelatedTopicClick={onSetQuestion ? (topic) => {
@@ -239,6 +238,17 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
               onFollowUpClick={onSetQuestion ? (question) => {
                 onSetQuestion(question);
               } : undefined}
+            />
+          );
+
+        case 'streaming-data-loader':
+          return (
+            <StreamingDataLoader
+              key={key}
+              message={normalizedSpec.props.message}
+              chunksReceived={normalizedSpec.props.chunksReceived}
+              totalChunks={normalizedSpec.props.totalChunks}
+              status={normalizedSpec.props.status}
             />
           );
 
