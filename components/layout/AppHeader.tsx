@@ -2,6 +2,7 @@
 
 import { ThemeConfig } from '@/constants/theme';
 import { AppSwitcher } from '@/components/AppSwitcher';
+import { UserStatus } from '@/components/UserStatus';
 import { LoadingStatus } from '@/types';
 
 /**
@@ -49,6 +50,11 @@ export function AppHeader({
           </p>
         </div>
 
+        {/* User Status (mobile) */}
+        <div className="flex justify-center">
+          <UserStatus theme={theme} />
+        </div>
+
         {/* Clear Button */}
         {hasConversation && (
           <div className="flex justify-center mb-8">
@@ -80,8 +86,13 @@ export function AppHeader({
           </p>
         </div>
 
-        {/* Right Column: App Switcher + Clear Button - matches audio panel width */}
+        {/* Right Column: User Status + App Switcher + Clear Button - matches audio panel width */}
         <div className="hidden lg:flex lg:flex-col lg:gap-4 lg:w-[240px] lg:justify-self-end">
+          {/* User Status */}
+          <div className="w-full flex justify-end">
+            <UserStatus theme={theme} />
+          </div>
+
           <div className="w-full flex justify-end">
             <AppSwitcher />
           </div>

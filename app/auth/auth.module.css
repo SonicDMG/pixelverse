@@ -1,0 +1,349 @@
+/**
+ * Cyberpunk Authentication Page Styles
+ * Retro CRT monitor aesthetic with neon colors and pixel art elements
+ */
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #050814 0%, #0a0e27 50%, #050814 100%);
+  position: relative;
+  overflow: hidden;
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Animated background grid */
+.backgroundGrid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 159, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 159, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridScroll 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes gridScroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(50px);
+  }
+}
+
+/* Scanlines effect */
+.scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.3) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  animation: scanlineMove 8s linear infinite;
+  opacity: 0.1;
+}
+
+@keyframes scanlineMove {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+/* Main auth card */
+.authCard {
+  position: relative;
+  z-index: 10;
+  background: rgba(26, 31, 58, 0.95);
+  border: 3px solid #00ff9f;
+  border-radius: 0;
+  padding: 3rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 159, 0.3),
+    0 0 40px rgba(0, 255, 159, 0.2),
+    inset 0 0 60px rgba(0, 255, 159, 0.05);
+  animation: cardGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes cardGlow {
+  0% {
+    box-shadow: 
+      0 0 20px rgba(0, 255, 159, 0.3),
+      0 0 40px rgba(0, 255, 159, 0.2),
+      inset 0 0 60px rgba(0, 255, 159, 0.05);
+  }
+  100% {
+    box-shadow: 
+      0 0 30px rgba(0, 255, 159, 0.4),
+      0 0 60px rgba(0, 255, 159, 0.3),
+      inset 0 0 80px rgba(0, 255, 159, 0.08);
+  }
+}
+
+/* Header section */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  color: #00ff9f;
+  text-shadow: 
+    0 0 10px rgba(0, 255, 159, 0.8),
+    0 0 20px rgba(0, 255, 159, 0.5);
+  margin-bottom: 0.5rem;
+  animation: titleGlitch 3s ease-in-out infinite;
+  letter-spacing: 2px;
+}
+
+@keyframes titleGlitch {
+  0%, 90%, 100% {
+    transform: translateX(0);
+  }
+  92% {
+    transform: translateX(-2px);
+  }
+  94% {
+    transform: translateX(2px);
+  }
+  96% {
+    transform: translateX(-2px);
+  }
+  98% {
+    transform: translateX(2px);
+  }
+}
+
+.subtitle {
+  font-size: 0.7rem;
+  color: #00d4ff;
+  text-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+.accessDenied {
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+  margin: 1.5rem 0;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
+}
+
+/* Form section */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.7rem;
+  color: #00ff9f;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.input {
+  background: rgba(5, 8, 20, 0.8);
+  border: 2px solid #00d4ff;
+  color: #00ff9f;
+  padding: 1rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.input:focus {
+  border-color: #00ff9f;
+  box-shadow: 
+    inset 0 0 10px rgba(0, 255, 159, 0.3),
+    0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.input::placeholder {
+  color: rgba(0, 212, 255, 0.5);
+}
+
+.button {
+  background: linear-gradient(135deg, #00ff9f 0%, #00d4ff 100%);
+  border: none;
+  color: #050814;
+  padding: 1rem 2rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.8);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+/* Error message */
+.error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 2px solid #ff0000;
+  color: #ff0000;
+  padding: 1rem;
+  font-size: 0.7rem;
+  text-align: center;
+  animation: errorShake 0.5s ease-in-out;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  color: #00d4ff;
+  font-size: 0.7rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Decorative elements */
+.corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ff00ff;
+}
+
+.cornerTopLeft {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.cornerTopRight {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.cornerBottomLeft {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+}
+
+.cornerBottomRight {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .authCard {
+    padding: 2rem;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .subtitle {
+    font-size: 0.6rem;
+  }
+
+  .accessDenied {
+    font-size: 0.8rem;
+  }
+
+  .input,
+  .button {
+    font-size: 0.7rem;
+  }
+}
+
+/* Made with Bob */

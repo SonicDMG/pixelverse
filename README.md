@@ -1,6 +1,6 @@
-# 🎮 PixelTicker
+# 🎮 PixelVerse
 
-A cyberpunk pixel art stock analysis app powered by Langflow and MCP (Model Context Protocol).
+A cyberpunk pixel art application suite (PixelTicker & PixelSpace) powered by Langflow, MCP, and OpenRAG.
 
 ![PixelTicker](https://img.shields.io/badge/Next.js-16.1.4-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
@@ -8,11 +8,13 @@ A cyberpunk pixel art stock analysis app powered by Langflow and MCP (Model Cont
 
 ## 🌟 Features
 
+- **🔐 Secure Authentication**: HTTP Basic Auth with cyberpunk-styled landing page
 - **Retro Cyberpunk UI**: Pixel art design with neon cyan and magenta colors
-- **Stock Analysis**: Ask natural language questions about stock performance
-- **Interactive Charts**: Visualize stock data with pixel art styled charts
-- **Langflow Integration**: Powered by Langflow agents with MCP stock tools
-- **Real-time Updates**: Get instant responses to your stock queries
+- **Stock Analysis**: Ask natural language questions about stock performance (PixelTicker)
+- **Space Exploration**: Explore the cosmos with AI-powered space data (PixelSpace)
+- **Interactive Charts**: Visualize data with pixel art styled charts
+- **Langflow Integration**: Powered by Langflow agents with MCP and OpenRAG
+- **Real-time Updates**: Get instant responses to your queries
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 
 ## 🏗️ Architecture
@@ -60,13 +62,22 @@ PixelTicker/
 
 3. **Configure environment variables:**
    
-   The `.env.local` file is already created with:
+   Copy the example environment file and configure it:
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Edit `.env.local` and set your values:
    ```env
+   # Authentication (REQUIRED)
+   AUTH_PASSWORD=your_secure_password_here
+   
+   # Langflow Configuration
    NEXT_PUBLIC_LANGFLOW_URL=http://localhost:7861
    LANGFLOW_API_KEY=
    ```
    
-   Update these values if your Langflow instance is on a different port or requires an API key.
+   **Important**: Set a strong password for `AUTH_PASSWORD`. This protects access to your application.
 
 4. **Update Langflow Flow ID:**
    
@@ -89,6 +100,43 @@ npm start
 ```
 
 The app will be available at `http://localhost:3000`
+
+### 🔐 Authentication
+
+On first visit, you'll see a cyberpunk-styled authentication page with two access options:
+
+#### Full Authentication
+Enter the password you set in `AUTH_PASSWORD` to get full access to all features including test pages.
+
+#### Guest Access
+Click "GUEST ACCESS" for limited access to main application features. Guest users can:
+- ✅ Use PixelTicker (stock analysis)
+- ✅ Use PixelSpace (space exploration)
+- ✅ Access all main features
+- ❌ Cannot access test pages (`/test-*` routes)
+
+**Security Features:**
+- Rate limiting (5 attempts per minute per IP)
+- Secure httpOnly cookies
+- Session management
+- Two-tier access control (authenticated vs guest)
+- Test pages require full authentication
+- User status indicator in header (AUTH/GUEST badge)
+- Logout functionality
+
+**Access Control:**
+- **Public**: `/auth`, public assets, API auth endpoints
+- **Guest or Authenticated**: Main app pages (`/`, PixelTicker, PixelSpace)
+- **Authenticated Only**: Test pages (`/test-*`)
+
+**To change the password:**
+1. Update `AUTH_PASSWORD` in `.env.local`
+2. Restart the development server
+3. Clear your browser cookies or use incognito mode
+
+**To logout:**
+- Click the "LOGOUT" button in the header (visible on all pages)
+- You'll be redirected to the authentication page
 
 ## 🎯 Usage
 
