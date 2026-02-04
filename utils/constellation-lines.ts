@@ -1,5 +1,3 @@
-import { Delaunay } from 'd3-delaunay';
-
 /**
  * Constellation line definition
  */
@@ -16,15 +14,6 @@ export interface Star {
   x?: number;
   y?: number;
   [key: string]: any;
-}
-
-/**
- * Edge with distance for MST algorithm
- */
-interface Edge {
-  from: number;
-  to: number;
-  distance: number;
 }
 
 /**
@@ -208,127 +197,6 @@ const CONSTELLATION_PATTERNS: Record<string, ConstellationLine[]> = {
 };
 
 /**
- * Calculate Euclidean distance between two points
- */
-function distance(p1: number[], p2: number[]): number {
-  const dx = p1[0] - p2[0];
-  const dy = p1[1] - p2[1];
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-/**
- * Union-Find data structure for Kruskal's MST algorithm
- */
-class UnionFind {
-  private parent: number[];
-  private rank: number[];
-
-  constructor(size: number) {
-    this.parent = Array.from({ length: size }, (_, i) => i);
-    this.rank = Array(size).fill(0);
-  }
-
-  find(x: number): number {
-    if (this.parent[x] !== x) {
-      this.parent[x] = this.find(this.parent[x]); // Path compression
-    }
-    return this.parent[x];
-  }
-
-  union(x: number, y: number): boolean {
-    const rootX = this.find(x);
-    const rootY = this.find(y);
-
-    if (rootX === rootY) return false;
-
-    // Union by rank
-    if (this.rank[rootX] < this.rank[rootY]) {
-      this.parent[rootX] = rootY;
-    } else if (this.rank[rootX] > this.rank[rootY]) {
-      this.parent[rootY] = rootX;
-    } else {
-      this.parent[rootY] = rootX;
-      this.rank[rootX]++;
-    }
-
-    return true;
-  }
-}
-
-/**
- * Apply Minimum Spanning Tree algorithm to reduce edges
- * Uses Kruskal's algorithm with Union-Find
- */
-function minimumSpanningTree(edges: Edge[], nodeCount: number): ConstellationLine[] {
-  // Sort edges by distance
-  const sortedEdges = [...edges].sort((a, b) => a.distance - b.distance);
-  
-  const uf = new UnionFind(nodeCount);
-  const mstLines: ConstellationLine[] = [];
-
-  for (const edge of sortedEdges) {
-    if (uf.union(edge.from, edge.to)) {
-      mstLines.push({ from: edge.from, to: edge.to });
-      
-      // MST has exactly n-1 edges for n nodes
-      if (mstLines.length === nodeCount - 1) {
-        break;
-      }
-    }
-  }
-
-  return mstLines;
-}
-
-/**
- * Generate constellation lines using Delaunay triangulation + MST
- * This guarantees non-crossing lines with natural-looking connections
- */
-function generateDelaunayMSTLines(stars: Star[]): ConstellationLine[] {
-  if (stars.length < 2) return [];
-
-  // Extract coordinates as tuples for d3-delaunay
-  const points: [number, number][] = stars.map(s => [s.x || 0, s.y || 0] as [number, number]);
-
-  // Create Delaunay triangulation (guarantees non-crossing)
-  const delaunay = Delaunay.from(points);
-
-  // Extract all edges from triangulation with distances
-  const edges: Edge[] = [];
-  const edgeSet = new Set<string>(); // Prevent duplicate edges
-
-  for (let i = 0; i < delaunay.triangles.length; i += 3) {
-    const a = delaunay.triangles[i];
-    const b = delaunay.triangles[i + 1];
-    const c = delaunay.triangles[i + 2];
-
-    // Add three edges of the triangle
-    const triangleEdges = [
-      [a, b],
-      [b, c],
-      [c, a],
-    ];
-
-    for (const [from, to] of triangleEdges) {
-      // Create unique edge key (smaller index first)
-      const edgeKey = from < to ? `${from}-${to}` : `${to}-${from}`;
-      
-      if (!edgeSet.has(edgeKey)) {
-        edgeSet.add(edgeKey);
-        edges.push({
-          from: Math.min(from, to),
-          to: Math.max(from, to),
-          distance: distance(points[from], points[to]),
-        });
-      }
-    }
-  }
-
-  // Apply MST to get minimal, non-crossing connections
-  return minimumSpanningTree(edges, stars.length);
-}
-
-/**
  * Remap predefined pattern indices to match actual star positions
  * This handles cases where the agent returns stars in a different order
  */
@@ -336,14 +204,14 @@ function remapPatternToStars(
   pattern: ConstellationLine[],
   stars: Star[]
 ): ConstellationLine[] {
-  // If we have fewer stars than the pattern expects, use what we have
+  // If we have fewer stars than the pattern expects, return empty array
   const maxIndex = Math.max(...pattern.flatMap(line => [line.from, line.to]));
   
   if (maxIndex >= stars.length) {
     console.warn(
-      `[constellation-lines] Pattern expects ${maxIndex + 1} stars but only ${stars.length} provided. Using algorithmic fallback.`
+      `[constellation-lines] Pattern expects ${maxIndex + 1} stars but only ${stars.length} provided. Cannot draw constellation.`
     );
-    return generateDelaunayMSTLines(stars);
+    return [];
   }
 
   return pattern;

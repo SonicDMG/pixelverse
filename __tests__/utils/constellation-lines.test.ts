@@ -61,6 +61,7 @@ describe('constellation-lines', () => {
         { name: 'Alnilam', x: 189, y: 220 },
         { name: 'Mintaka', x: 218, y: 207 },
         { name: 'Saiph', x: 101, y: 350 },
+        { name: 'Meissa', x: 160, y: 50 },
       ];
 
       const lines = getConstellationLines('Orion', orionStars);
