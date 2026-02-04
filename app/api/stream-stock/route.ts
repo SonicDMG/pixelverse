@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 
 // Server-side only - no NEXT_PUBLIC_ prefix for security
 const LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
@@ -18,7 +19,33 @@ export async function POST(request: NextRequest) {
     const { question, session_id } = body;
 
     console.log('[Stream Stock API] 🚀 Starting streaming request');
-    console.log('[Stream Stock API] Question:', question);
+
+    // Validate and sanitize question input
+    const questionValidation = validateAndSanitizeQuestion(question);
+    if (!questionValidation.valid) {
+      console.warn('[Stream Stock API] Question validation failed:', {
+        error: questionValidation.error,
+        timestamp: new Date().toISOString(),
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+      });
+      return new Response(
+        JSON.stringify({ error: 'Invalid input. Please check your question and try again.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate session_id if provided
+    const sessionValidation = validateSessionId(session_id);
+    if (!sessionValidation.valid) {
+      console.warn('[Stream Stock API] Session ID validation failed:', sessionValidation.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid session ID format' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[Stream Stock API] Validation passed');
+    console.log('[Stream Stock API] Sanitized question:', questionValidation.sanitized);
     console.log('[Stream Stock API] Session ID:', session_id);
     console.log('[Stream Stock API] Flow ID:', FLOW_ID_TICKER);
 
@@ -34,12 +61,12 @@ export async function POST(request: NextRequest) {
       headers['x-api-key'] = LANGFLOW_API_KEY;
     }
 
-    // Make request to Langflow with streaming enabled
+    // Make request to Langflow with streaming enabled using sanitized input
     const response = await fetch(langflowUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        input_value: question,
+        input_value: questionValidation.sanitized,
         output_type: 'chat',
         input_type: 'chat',
         session_id: session_id,

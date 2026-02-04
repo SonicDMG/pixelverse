@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryLangflow } from '@/services/langflow';
+import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 
 /**
  * API Error response interface
@@ -9,55 +10,43 @@ interface ApiErrorResponse {
   details?: string;
 }
 
-/**
- * Validate and sanitize question input
- */
-function validateQuestion(question: unknown): { valid: boolean; error?: string; sanitized?: string } {
-  if (!question || typeof question !== 'string') {
-    return { valid: false, error: 'Question is required and must be a string' };
-  }
-
-  const trimmed = question.trim();
-
-  if (trimmed.length === 0) {
-    return { valid: false, error: 'Question cannot be empty' };
-  }
-
-  if (trimmed.length > 500) {
-    return { valid: false, error: 'Question too long (max 500 characters)' };
-  }
-
-  // Basic sanitization - remove control characters
-  const sanitized = trimmed.replace(/[\x00-\x1F\x7F]/g, '');
-
-  return { valid: true, sanitized };
-}
-
 export async function POST(request: NextRequest) {
   try {
+    console.log('[Stock API] Received POST request');
     const body = await request.json();
     const { question, session_id } = body;
+    console.log('[Stock API] Raw question from body:', question);
 
-    // Validate and sanitize input
-    const validation = validateQuestion(question);
-    if (!validation.valid) {
+    // Validate and sanitize question input using comprehensive validation
+    const questionValidation = validateAndSanitizeQuestion(question);
+    if (!questionValidation.valid) {
+      console.warn('[Stock API] Question validation failed:', {
+        error: questionValidation.error,
+        timestamp: new Date().toISOString(),
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+      });
       return NextResponse.json<ApiErrorResponse>(
-        { error: validation.error! },
+        { error: 'Invalid input. Please check your question and try again.' },
         { status: 400 }
       );
     }
 
-    // Validate session_id if provided (OWASP security: input validation)
-    if (session_id !== undefined && typeof session_id !== 'string') {
+    // Validate session_id if provided
+    const sessionValidation = validateSessionId(session_id);
+    if (!sessionValidation.valid) {
+      console.warn('[Stock API] Session ID validation failed:', sessionValidation.error);
       return NextResponse.json<ApiErrorResponse>(
-        { error: 'session_id must be a string' },
+        { error: 'Invalid session ID format' },
         { status: 400 }
       );
     }
+
+    console.log('[Stock API] Validation passed. Sanitized question:', questionValidation.sanitized);
+    console.log('[Stock API] Session ID provided:', !!session_id);
 
     // Query Langflow with sanitized input using the 'ticker' theme
     // Pass session_id for conversation tracking (backward compatible - optional parameter)
-    const result = await queryLangflow(validation.sanitized!, 'ticker', session_id);
+    const result = await queryLangflow(questionValidation.sanitized!, 'ticker', session_id);
 
     if (result.error) {
       return NextResponse.json<ApiErrorResponse>(

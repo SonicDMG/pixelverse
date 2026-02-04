@@ -87,7 +87,17 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
       });
 
       if (!streamResponse.ok) {
-        throw new Error(`HTTP error! status: ${streamResponse.status}`);
+        // Try to parse error response for better error messages
+        let errorMessage = `HTTP error! status: ${streamResponse.status}`;
+        try {
+          const errorData = await streamResponse.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If parsing fails, use the status code error
+        }
+        throw new Error(errorMessage);
       }
 
       if (!streamResponse.body) {

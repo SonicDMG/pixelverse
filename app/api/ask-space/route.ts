@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryLangflow } from '@/services/langflow';
+import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 
 /**
  * ============================================================================
@@ -374,30 +375,6 @@ interface SpaceQueryResult {
   error?: string;
 }
 
-/**
- * Validate and sanitize question input
- * Following OWASP security standards for input validation
- */
-function validateQuestion(question: unknown): { valid: boolean; error?: string; sanitized?: string } {
-  if (!question || typeof question !== 'string') {
-    return { valid: false, error: 'Question is required and must be a string' };
-  }
-
-  const trimmed = question.trim();
-
-  if (trimmed.length === 0) {
-    return { valid: false, error: 'Question cannot be empty' };
-  }
-
-  if (trimmed.length > 500) {
-    return { valid: false, error: 'Question too long (max 500 characters)' };
-  }
-
-  // Basic sanitization - remove control characters to prevent injection attacks
-  const sanitized = trimmed.replace(/[\x00-\x1F\x7F]/g, '');
-
-  return { valid: true, sanitized };
-}
 
 /**
  * Mock space query responses for development
@@ -721,25 +698,31 @@ export async function POST(request: NextRequest) {
     const { question, session_id } = body;
     console.log('[Space API] Raw question from body:', question);
 
-    // Validate and sanitize input
-    const validation = validateQuestion(question);
-    if (!validation.valid) {
-      console.log('[Space API] Validation failed:', validation.error);
+    // Validate and sanitize question input using comprehensive validation
+    const questionValidation = validateAndSanitizeQuestion(question);
+    if (!questionValidation.valid) {
+      console.warn('[Space API] Question validation failed:', {
+        error: questionValidation.error,
+        timestamp: new Date().toISOString(),
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+      });
       return NextResponse.json<ApiErrorResponse>(
-        { error: validation.error! },
+        { error: 'Invalid input. Please check your question and try again.' },
         { status: 400 }
       );
     }
 
-    // Validate session_id if provided (OWASP security: input validation)
-    if (session_id !== undefined && typeof session_id !== 'string') {
+    // Validate session_id if provided
+    const sessionValidation = validateSessionId(session_id);
+    if (!sessionValidation.valid) {
+      console.warn('[Space API] Session ID validation failed:', sessionValidation.error);
       return NextResponse.json<ApiErrorResponse>(
-        { error: 'session_id must be a string' },
+        { error: 'Invalid session ID format' },
         { status: 400 }
       );
     }
 
-    console.log('[Space API] Validation passed. Sanitized question:', validation.sanitized);
+    console.log('[Space API] Validation passed. Sanitized question:', questionValidation.sanitized);
     console.log('[Space API] Session ID provided:', !!session_id);
 
     // Query Langflow with sanitized input using the 'space' theme
@@ -748,7 +731,7 @@ export async function POST(request: NextRequest) {
     
     try {
       console.log('[Space API] Attempting Langflow query with space theme');
-      result = await queryLangflow(validation.sanitized!, 'space', session_id);
+      result = await queryLangflow(questionValidation.sanitized!, 'space', session_id);
       console.log('[Space API] Langflow response received:', {
         hasAnswer: !!result.answer,
         answerLength: result.answer?.length,
@@ -758,7 +741,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       console.warn('[Space API] Langflow query failed, falling back to mock responses:', error);
-      result = getMockSpaceResponse(validation.sanitized!);
+      result = getMockSpaceResponse(questionValidation.sanitized!);
       console.log('[Space API] Mock response generated:', {
         hasAnswer: !!result.answer,
         answerLength: result.answer?.length,

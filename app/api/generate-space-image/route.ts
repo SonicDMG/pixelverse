@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EverArtService } from '@/services/image/everart-service';
 import { SpacePromptBuilder } from '@/services/space/prompt-builder';
+import { validateImageGenerationInput } from '@/lib/input-validation';
 
 /**
  * ============================================================================
@@ -64,22 +65,16 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
     return { valid: false, error: `objectType must be one of: ${validObjectTypes.join(', ')}` };
   }
 
-  // Validate description
-  if (!req.description || typeof req.description !== 'string') {
-    return { valid: false, error: 'description is required and must be a string' };
+  // Use comprehensive validation for name and description
+  const inputValidation = validateImageGenerationInput(req.name, req.description);
+  if (!inputValidation.valid) {
+    const errors = inputValidation.errors!;
+    const errorMessage = errors.description || errors.name || 'Invalid input';
+    console.warn('[Generate Space Image API] Input validation failed:', errors);
+    return { valid: false, error: errorMessage };
   }
 
-  const trimmedDescription = req.description.trim();
-  if (trimmedDescription.length === 0) {
-    return { valid: false, error: 'description cannot be empty' };
-  }
-
-  if (trimmedDescription.length > 200) {
-    return { valid: false, error: 'description too long (max 200 characters)' };
-  }
-
-  // Sanitize description - remove control characters
-  const sanitizedDescription = trimmedDescription.replace(/[\x00-\x1F\x7F]/g, '');
+  const { name: sanitizedName, description: sanitizedDescription } = inputValidation.sanitized!;
 
   // Validate planetType if provided
   if (req.planetType) {
@@ -112,20 +107,12 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
     }
   }
 
-  // Validate name if provided
-  let sanitizedName: string | undefined;
-  if (req.name && typeof req.name === 'string') {
-    const trimmedName = req.name.trim();
-    if (trimmedName.length > 0 && trimmedName.length <= 100) {
-      sanitizedName = trimmedName.replace(/[\x00-\x1F\x7F]/g, '');
-    }
-  }
-
   // Validate displayType if provided
   let sanitizedDisplayType: string | undefined;
   if (req.displayType && typeof req.displayType === 'string') {
     const trimmedDisplayType = req.displayType.trim();
     if (trimmedDisplayType.length > 0 && trimmedDisplayType.length <= 50) {
+      // Basic sanitization for displayType
       sanitizedDisplayType = trimmedDisplayType.replace(/[\x00-\x1F\x7F]/g, '');
     }
   }
@@ -134,7 +121,7 @@ function validateRequest(body: unknown): { valid: boolean; error?: string; data?
     valid: true,
     data: {
       objectType: req.objectType,
-      name: sanitizedName,
+      name: sanitizedName || undefined,
       description: sanitizedDescription,
       planetType: req.planetType,
       celestialType: req.celestialType,

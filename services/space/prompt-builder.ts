@@ -1,3 +1,5 @@
+import { sanitizeForDisplay } from '@/lib/input-validation';
+
 export interface CelestialObjectOptions {
   type: 'planet' | 'moon' | 'star' | 'nebula' | 'galaxy' | 'black-hole';
   name: string;
@@ -85,6 +87,7 @@ const MOON_CHARACTERISTICS: Record<string, { colors: string[], features: string[
 export class SpacePromptBuilder {
   /**
    * Build a prompt for generating a celestial object image.
+   * Includes secondary validation layer to sanitize any user input.
    *
    * @param options - Object configuration including type, name, characteristics, and colors
    * @returns Formatted prompt string optimized for pixel-art generation
@@ -92,19 +95,24 @@ export class SpacePromptBuilder {
   static buildCelestialPrompt(options: CelestialObjectOptions): string {
     const { type, name, characteristics = [], colors = [] } = options;
 
-    const colorDesc = colors.length > 0
-      ? `with ${colors.join(', ')} colors`
+    // Secondary validation: sanitize all user-provided strings
+    const sanitizedName = sanitizeForDisplay(name);
+    const sanitizedCharacteristics = characteristics.map(c => sanitizeForDisplay(c));
+    const sanitizedColors = colors.map(c => sanitizeForDisplay(c));
+
+    const colorDesc = sanitizedColors.length > 0
+      ? `with ${sanitizedColors.join(', ')} colors`
       : 'with accurate astronomical colors';
 
-    const charDesc = characteristics.length > 0
-      ? characteristics.join(', ')
+    const charDesc = sanitizedCharacteristics.length > 0
+      ? sanitizedCharacteristics.join(', ')
       : '';
 
     return [
       '32-bit pixel art',
       'retro space game aesthetic',
       'SNES/Genesis style',
-      `${type} named ${name}`,
+      `${type} named ${sanitizedName}`,
       charDesc,
       colorDesc,
       'centered composition',
@@ -228,6 +236,7 @@ export class SpacePromptBuilder {
   /**
    * Build a generic prompt for any celestial object.
    * Useful for moons, stars, nebulae, and galaxies.
+   * Includes secondary validation layer.
    *
    * @param type - Type of celestial object (for validation/API)
    * @param name - Object name
@@ -241,12 +250,17 @@ export class SpacePromptBuilder {
     description?: string,
     displayType?: string
   ): string {
-    const characteristics = description ? [description] : [];
+    // Secondary validation: sanitize all inputs
+    const sanitizedName = sanitizeForDisplay(name);
+    const sanitizedDescription = description ? sanitizeForDisplay(description) : undefined;
+    const sanitizedDisplayType = displayType ? sanitizeForDisplay(displayType) : undefined;
+    
+    const characteristics = sanitizedDescription ? [sanitizedDescription] : [];
     // Use displayType if provided, otherwise use the mapped type
-    const promptType = displayType || type;
+    const promptType = sanitizedDisplayType || type;
     return this.buildCelestialPrompt({
       type: promptType as any, // Allow any string for displayType
-      name,
+      name: sanitizedName,
       characteristics,
     });
   }
