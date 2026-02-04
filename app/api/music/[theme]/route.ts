@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { isValidThemeId } from '@/constants/theme';
+import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
 
 /**
  * GET /api/music/[theme]
@@ -25,6 +26,30 @@ export async function GET(
   { params }: { params: Promise<{ theme: string }> }
 ) {
   try {
+    // Apply rate limiting (20 requests per minute for media endpoints)
+    const clientIp = getClientIp(request.headers);
+    const rateLimitResult = rateLimit(clientIp, RateLimitPresets.MEDIA);
+    
+    if (!rateLimitResult.success) {
+      console.warn('[Music API] Rate limit exceeded:', {
+        ip: clientIp,
+        limit: rateLimitResult.limit,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          message: 'Rate limit exceeded. Please try again later.',
+          files: []
+        },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+    
     // Await the params object (Next.js 15+ requirement)
     const { theme } = await params;
 
@@ -55,9 +80,14 @@ export async function GET(
       // Sort alphabetically for consistent ordering
       mp3Files.sort();
 
-      return NextResponse.json({
-        files: mp3Files
-      });
+      return NextResponse.json(
+        {
+          files: mp3Files
+        },
+        {
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
 
     } catch (fsError) {
       // Handle case where directory doesn't exist or can't be read

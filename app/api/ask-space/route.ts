@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryLangflow } from '@/services/langflow';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
+import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
 
 /**
  * ============================================================================
@@ -694,6 +695,27 @@ function sanitizeConstellationData(result: SpaceQueryResult): SpaceQueryResult {
 export async function POST(request: NextRequest) {
   try {
     console.log('[Space API] Received POST request');
+    
+    // Apply rate limiting (10 requests per minute for AI queries)
+    const clientIp = getClientIp(request.headers);
+    const rateLimitResult = rateLimit(clientIp, RateLimitPresets.AI_QUERY);
+    
+    if (!rateLimitResult.success) {
+      console.warn('[Space API] Rate limit exceeded:', {
+        ip: clientIp,
+        limit: rateLimitResult.limit,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+    
     const body = await request.json();
     const { question, session_id } = body;
     console.log('[Space API] Raw question from body:', question);
@@ -771,7 +793,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Space API] Returning successful response');
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: createRateLimitHeaders(rateLimitResult),
+    });
   } catch (error) {
     console.error('[Space API] Route error:', error);
     

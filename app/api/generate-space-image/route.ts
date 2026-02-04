@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EverArtService } from '@/services/image/everart-service';
 import { SpacePromptBuilder } from '@/services/space/prompt-builder';
 import { validateImageGenerationInput } from '@/lib/input-validation';
+import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
 
 /**
  * ============================================================================
@@ -299,6 +300,26 @@ function buildPrompt(request: GenerateImageRequest): string {
 export async function POST(request: NextRequest) {
   try {
     console.log('[Generate Space Image API] Received POST request');
+    
+    // Apply rate limiting (3 requests per minute for image generation)
+    const clientIp = getClientIp(request.headers);
+    const rateLimitResult = rateLimit(clientIp, RateLimitPresets.IMAGE_GEN);
+    
+    if (!rateLimitResult.success) {
+      console.warn('[Generate Space Image API] Rate limit exceeded:', {
+        ip: clientIp,
+        limit: rateLimitResult.limit,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      return NextResponse.json<GenerateImageResponse>(
+        { success: false, error: 'Too many image generation requests. Please try again later.' },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
 
     // Parse request body
     const body = await request.json();
@@ -361,11 +382,16 @@ export async function POST(request: NextRequest) {
       });
 
       console.log('[Generate Space Image API] Image generated successfully');
-      return NextResponse.json<GenerateImageResponse>({
-        success: true,
-        imageUrl: result.url,
-        seed: validatedRequest.seed,
-      });
+      return NextResponse.json<GenerateImageResponse>(
+        {
+          success: true,
+          imageUrl: result.url,
+          seed: validatedRequest.seed,
+        },
+        {
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
     } catch (error) {
       console.error('[Generate Space Image API] Image generation failed:', error);
       

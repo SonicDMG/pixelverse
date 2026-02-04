@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryLangflow } from '@/services/langflow';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
+import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
 
 /**
  * API Error response interface
@@ -13,6 +14,27 @@ interface ApiErrorResponse {
 export async function POST(request: NextRequest) {
   try {
     console.log('[Stock API] Received POST request');
+    
+    // Apply rate limiting (10 requests per minute for AI queries)
+    const clientIp = getClientIp(request.headers);
+    const rateLimitResult = rateLimit(clientIp, RateLimitPresets.AI_QUERY);
+    
+    if (!rateLimitResult.success) {
+      console.warn('[Stock API] Rate limit exceeded:', {
+        ip: clientIp,
+        limit: rateLimitResult.limit,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+    
     const body = await request.json();
     const { question, session_id } = body;
     console.log('[Stock API] Raw question from body:', question);
@@ -55,7 +77,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: createRateLimitHeaders(rateLimitResult),
+    });
   } catch (error) {
     console.error('API route error:', error);
     

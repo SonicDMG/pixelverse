@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
+import { trackConnection, releaseConnection, getClientIp, createRateLimitHeaders } from '@/lib/rate-limit';
 
 // Server-side only - no NEXT_PUBLIC_ prefix for security
 const LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
@@ -14,11 +15,36 @@ const FLOW_ID_TICKER = process.env.LANGFLOW_FLOW_ID_TICKER || process.env.LANGFL
  * Returns Server-Sent Events (SSE) in OpenAI format
  */
 export async function POST(request: NextRequest) {
+  const clientIp = getClientIp(request.headers);
+  const connectionId = `stream-stock-${Date.now()}-${Math.random()}`;
+  
   try {
+    console.log('[Stream Stock API] 🚀 Starting streaming request');
+    
+    // Apply concurrent connection limiting (5 concurrent connections)
+    const rateLimitResult = trackConnection(clientIp, connectionId, 5);
+    
+    if (!rateLimitResult.success) {
+      console.warn('[Stream Stock API] Connection limit exceeded:', {
+        ip: clientIp,
+        limit: rateLimitResult.limit,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      return new Response(
+        JSON.stringify({ error: 'Too many concurrent connections. Please try again later.' }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            ...createRateLimitHeaders(rateLimitResult),
+          },
+        }
+      );
+    }
+    
     const body = await request.json();
     const { question, session_id } = body;
-
-    console.log('[Stream Stock API] 🚀 Starting streaming request');
 
     // Validate and sanitize question input
     const questionValidation = validateAndSanitizeQuestion(question);
@@ -85,20 +111,52 @@ export async function POST(request: NextRequest) {
 
     console.log('[Stream Stock API] ✅ Langflow connection established, streaming...');
 
+    // Create a TransformStream to intercept the stream and release connection on close
+    const { readable, writable } = new TransformStream();
+    
+    // Pipe the response through and handle cleanup
+    if (response.body) {
+      const reader = response.body.getReader();
+      const writer = writable.getWriter();
+      
+      const pump = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              console.log('[Stream Stock API] Stream completed, releasing connection');
+              releaseConnection(clientIp, connectionId);
+              await writer.close();
+              break;
+            }
+            await writer.write(value);
+          }
+        } catch (error) {
+          console.error('[Stream Stock API] Stream error, releasing connection:', error);
+          releaseConnection(clientIp, connectionId);
+          await writer.abort(error);
+        }
+      };
+      
+      pump();
+    }
+
     // Pass through the streaming response from Langflow
-    // Langflow already sends SSE format, so we just need to set the right headers
-    return new Response(response.body, {
+    return new Response(readable, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        ...createRateLimitHeaders(rateLimitResult),
       },
     });
   } catch (error) {
     console.error('[Stream Stock API] ❌ Error:', error);
+    // Release connection on error
+    releaseConnection(clientIp, connectionId);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500 }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
