@@ -213,6 +213,16 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           );
 
         case 'explain-o-matic':
+          console.log('[DynamicUIRenderer] explain-o-matic case hit');
+          console.log('[DynamicUIRenderer] Props being passed:', {
+            topic: normalizedSpec.props.topic,
+            knowledgeLevel: normalizedSpec.props.knowledgeLevel,
+            explanation: normalizedSpec.props.explanation,
+            relatedTopics: normalizedSpec.props.relatedTopics,
+            citations: normalizedSpec.props.citations,
+            followUpQuestions: normalizedSpec.props.followUpQuestions,
+            levels: normalizedSpec.props.levels
+          });
           return (
             <ExplainOMatic
               key={key}

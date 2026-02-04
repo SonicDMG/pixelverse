@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { LangflowRequest, LangflowResponse, StockQueryResult, StockDataPoint } from '@/types';
 import { randomUUID } from 'crypto';
+import { jsonrepair } from 'jsonrepair';
 
 /**
  * Extract stock symbol from question
@@ -161,15 +162,6 @@ export async function queryLangflow(
     const messageText = outputs?.message?.text || 'No response received';
     const messageData = outputs?.message?.data;
 
-    // Helper function to strip JavaScript-style comments from JSON
-    const stripJsonComments = (jsonString: string): string => {
-      // Remove single-line comments (// ...)
-      let cleaned = jsonString.replace(/\/\/.*$/gm, '');
-      // Remove multi-line comments (/* ... */)
-      cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
-      return cleaned;
-    };
-
     // Try to parse as UI specification response
     let uiResponse: any = null;
     console.log('[Langflow] Raw messageText:', messageText.substring(0, 500)); // Log first 500 chars
@@ -179,8 +171,11 @@ export async function queryLangflow(
     try {
       // Check if messageText is JSON with components
       if (messageText.trim().startsWith('{')) {
-        const cleanedMessageText = stripJsonComments(messageText);
-        uiResponse = JSON.parse(cleanedMessageText);
+        // Use jsonrepair library to fix malformed JSON (handles control characters, broken strings, etc.)
+        const repairedJson = jsonrepair(messageText);
+        console.log('[Langflow] Repaired JSON (first 1500 chars):', repairedJson.substring(0, 1500));
+        
+        uiResponse = JSON.parse(repairedJson);
         console.log('[Langflow] Successfully parsed JSON response:', {
           hasComponents: !!uiResponse.components,
           componentCount: uiResponse.components?.length,
@@ -191,7 +186,8 @@ export async function queryLangflow(
       }
     } catch (e) {
       console.error('[Langflow] Failed to parse messageText as JSON:', e);
-      console.log('[Langflow] Failed messageText:', messageText);
+      console.log('[Langflow] Failed messageText (first 1500 chars):', messageText.substring(0, 1500));
+      console.log('[Langflow] Failed messageText around error position:', messageText.substring(1350, 1450));
     }
 
     // If we have a UI response with components, use it

@@ -19,6 +19,7 @@
     "d3-scale": "^4.0.2",
     "d3-time": "^3.1.0",
     "everart": "^1.2.2",
+    "jsonrepair": "^3.13.2",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",
