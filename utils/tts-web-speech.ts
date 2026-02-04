@@ -32,6 +32,11 @@ export class WebSpeechTTS {
       // Load voices (may be async in some browsers)
       this.loadVoices();
       
+      // Trigger voice loading with a dummy utterance (helps in some browsers)
+      const dummyUtterance = new SpeechSynthesisUtterance('');
+      this.synth.speak(dummyUtterance);
+      this.synth.cancel();
+      
       // Some browsers fire voiceschanged event when voices are loaded
       if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = () => {
@@ -48,7 +53,46 @@ export class WebSpeechTTS {
    */
   private loadVoices(): void {
     this.voices = this.synth.getVoices();
-    console.log(`Loaded ${this.voices.length} voices`);
+  }
+
+  /**
+   * Ensure voices are loaded before attempting to use them
+   * Returns a promise that resolves when voices are available
+   */
+  private ensureVoicesLoaded(): Promise<void> {
+    return new Promise((resolve) => {
+      // If voices are already loaded, resolve immediately
+      if (this.voices.length > 0) {
+        resolve();
+        return;
+      }
+
+      // Try loading voices
+      this.loadVoices();
+      
+      // If voices loaded after manual call, resolve
+      if (this.voices.length > 0) {
+        resolve();
+        return;
+      }
+
+      // Wait for voiceschanged event
+      const handleVoicesChanged = () => {
+        this.loadVoices();
+        if (this.voices.length > 0) {
+          speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+          resolve();
+        }
+      };
+
+      speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+
+      // Fallback timeout - resolve after 1 second even if no voices loaded
+      setTimeout(() => {
+        speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+        resolve();
+      }, 1000);
+    });
   }
 
   /**
@@ -217,6 +261,9 @@ export class WebSpeechTTS {
     // Cancel any ongoing speech
     this.synth.cancel();
 
+    // Ensure voices are loaded before attempting to find and use a voice
+    await this.ensureVoicesLoaded();
+
     return new Promise((resolve, reject) => {
       try {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -230,19 +277,16 @@ export class WebSpeechTTS {
         const voice = this.findCyberpunkVoice();
         if (voice) {
           utterance.voice = voice;
-          console.log(`Using voice: ${voice.name}`);
         }
 
         // Event handlers
         utterance.onend = () => {
-          console.log('Speech finished');
           resolve();
         };
 
         utterance.onerror = (event) => {
           // "interrupted" is not really an error - it's normal when speech is cancelled
           if (event.error === 'interrupted') {
-            console.log('[TTS] Speech interrupted (normal behavior)');
             resolve(); // Resolve instead of reject
             return;
           }

@@ -32,15 +32,6 @@ export function ConversationGroup({
 }: ConversationGroupProps) {
   const { theme } = useTheme();
   
-  console.log('[ConversationGroup] Rendering with:', {
-    hasComponents: !!components,
-    componentCount: components?.length,
-    componentTypes: components?.map(c => c.type),
-    hasStockData: !!stockData,
-    stockDataLength: stockData?.length,
-    symbol,
-  });
-  
   return (
     <div className="conversation-group">
       {/* Streaming Stats - Show completed streaming info at the top */}

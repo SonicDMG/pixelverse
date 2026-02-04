@@ -33,16 +33,6 @@ export function ExplainOMatic({
   onRelatedTopicClick,
   onFollowUpClick
 }: ExplainOMaticProps) {
-  console.log('[ExplainOMatic] Component called');
-  console.log('[ExplainOMatic] Props received:', {
-    topic,
-    knowledgeLevel,
-    explanation,
-    relatedTopics,
-    followUpQuestions,
-    levels
-  });
-  
   // Determine initial level
   const defaultLevel: KnowledgeLevel = knowledgeLevel || 'layperson';
   
@@ -88,13 +78,6 @@ export function ExplainOMatic({
     relatedTopics: relatedTopics || [],
     followUpQuestions: followUpQuestions || []
   };
-  
-  console.log('[ExplainOMatic] currentLevelData computed:', {
-    selectedLevel,
-    currentLevelData,
-    hasLevels: !!levels,
-    levelKeys: levels ? Object.keys(levels) : []
-  });
 
   return (
     <div className="w-full space-y-6">
