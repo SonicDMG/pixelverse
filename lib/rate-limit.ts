@@ -283,8 +283,8 @@ export const RateLimitPresets = {
   // AI query endpoints: 10 requests per minute
   AI_QUERY: { limit: 10, windowMs: 60 * 1000 },
   
-  // Image generation: 3 requests per minute
-  IMAGE_GEN: { limit: 3, windowMs: 60 * 1000 },
+  // Image generation: 10 requests per minute
+  IMAGE_GEN: { limit: 10, windowMs: 60 * 1000 },
   
   // Streaming: 5 concurrent connections
   STREAMING: { limit: 5, windowMs: 60 * 1000 },

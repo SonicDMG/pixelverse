@@ -97,7 +97,6 @@ export function useBackgroundMusic(
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     
-    console.log('Shuffled playlist:', indices);
     return indices;
   }, []);
 
@@ -106,7 +105,6 @@ export function useBackgroundMusic(
    */
   const fetchMusicFileList = useCallback(async (): Promise<string[]> => {
     try {
-      console.log(`Fetching music files for theme: ${themeId}`);
       const apiResponse = await fetch(`/api/music/${themeId}`);
       
       if (!apiResponse.ok) {
@@ -122,7 +120,6 @@ export function useBackgroundMusic(
         return [];
       }
 
-      console.log(`Found ${musicFiles.length} music files for theme ${themeId}`);
       return musicFiles;
     } catch (error) {
       console.error(`Failed to fetch music file list for theme ${themeId}:`, error);
@@ -139,7 +136,6 @@ export function useBackgroundMusic(
   ): Promise<AudioBuffer | null> => {
     try {
       const filePath = `/audio/music/${themeId}/${encodeURIComponent(filename)}`;
-      console.log(`Lazy loading: ${filePath}`);
       
       const response = await fetch(filePath);
       if (!response.ok) {
@@ -150,7 +146,6 @@ export function useBackgroundMusic(
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       
-      console.log(`✓ Loaded track: ${filename} (${audioBuffer.duration.toFixed(1)}s)`);
       return audioBuffer;
     } catch (error) {
       console.error(`Error loading ${filename}:`, error);
@@ -194,7 +189,6 @@ export function useBackgroundMusic(
         }
       }
 
-      console.log(`Initialized ${tracks.length} tracks (1 loaded, ${tracks.length - 1} lazy)`);
       return tracks;
     } catch (error) {
       console.error(`Failed to initialize music tracks for theme ${themeId}:`, error);
@@ -248,7 +242,6 @@ export function useBackgroundMusic(
         gainBRef.current = gainB;
         
         // Initialize music tracks (lazy load)
-        console.log('Initializing music tracks...');
         const tracks = await initializeMusicTracks(audioContext);
         
         if (!mounted) return;
@@ -277,8 +270,6 @@ export function useBackgroundMusic(
           setCurrentSong(songs[playlistRef.current[0]]);
         }
         
-        console.log(`Loaded ${tracks.length} tracks`);
-        
         // Set ready state first
         setIsReady(true);
 
@@ -286,7 +277,6 @@ export function useBackgroundMusic(
         if (autoPlay && mounted) {
           setTimeout(() => {
             if (mounted) {
-              console.log('Auto-starting music...');
               start();
             }
           }, 200);
@@ -385,7 +375,6 @@ export function useBackgroundMusic(
     
     // Lazy load track if not loaded yet
     if (!track.buffer && !track.isLoading) {
-      console.log(`Lazy loading track: ${track.filename}`);
       track.isLoading = true;
       const buffer = await loadSingleTrack(track.filename, audioContext);
       track.buffer = buffer;
@@ -399,7 +388,6 @@ export function useBackgroundMusic(
     
     // Wait if track is currently loading
     if (track.isLoading) {
-      console.log(`Waiting for track to load: ${track.filename}`);
       // Try again in a moment
       setTimeout(() => playTrackOnSource(playlistPosition, source, fadeIn), 100);
       return;
@@ -466,7 +454,6 @@ export function useBackgroundMusic(
         actualNextPosition = nextPlaylistPosition;
         if (nextPlaylistPosition >= playlist.length) {
           // Reshuffle for next round
-          console.log('End of playlist reached, reshuffling...');
           playlistRef.current = shufflePlaylist(tracks.length);
           actualNextPosition = 0;
         }
@@ -486,13 +473,11 @@ export function useBackgroundMusic(
         // Check if we should continue playing by checking the source refs
         // If both sources are null, playback was stopped
         if (!sourceARef.current && !sourceBRef.current) {
-          console.log('Playback stopped, not scheduling next track');
           return;
         }
         
         // If in manual mode, just loop the same track
         if (manualSongIndexRef.current !== null) {
-          console.log(`Manual mode: looping track ${manualSongIndexRef.current}`);
           actualNextPosition = playlistPosition; // Stay on same track
         }
         
@@ -518,9 +503,7 @@ export function useBackgroundMusic(
           : playlistRef.current[actualNextPosition];
         
         // Defensive check: ensure track exists before accessing properties
-        if (nextTrackIndex !== undefined && tracks[nextTrackIndex]) {
-          console.log(`Crossfading to: ${tracks[nextTrackIndex].filename}`);
-        } else {
+        if (nextTrackIndex === undefined || !tracks[nextTrackIndex]) {
           console.error('[Background Music] Invalid track index during crossfade:', nextTrackIndex);
         }
       }, crossfadeStartTime * 1000);
@@ -528,8 +511,6 @@ export function useBackgroundMusic(
       // Start playback
       bufferSource.start(0);
       sourceRef.current = bufferSource;
-      
-      console.log(`Playing on source ${source}: ${track.filename}`);
     } catch (error) {
       console.error(`Failed to play track on source ${source}:`, error);
     }
@@ -556,16 +537,13 @@ export function useBackgroundMusic(
 
     // Don't start if already playing
     if (isPlaying) {
-      console.log('Music already playing');
       return;
     }
 
     try {
       // Resume audio context if suspended
       if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-          console.log('Audio context resumed');
-        }).catch(err => {
+        audioContext.resume().catch(err => {
           console.error('Failed to resume audio context:', err);
         });
       }
@@ -576,7 +554,6 @@ export function useBackgroundMusic(
       playTrackOnSource(0, 'A', false);
       
       setIsPlaying(true);
-      console.log('Background music started');
     } catch (error) {
       console.error('Failed to start background music:', error);
       setIsPlaying(false);
@@ -614,7 +591,6 @@ export function useBackgroundMusic(
       }
       
       setIsPlaying(false);
-      console.log('Background music stopped');
     } catch (error) {
       console.error('Failed to stop background music:', error);
     }
@@ -685,7 +661,6 @@ export function useBackgroundMusic(
 
     if (songId === null) {
       // Switch to auto-cycle mode
-      console.log('[MP3 Music] Switching to AUTO-CYCLE mode');
       manualSongIndexRef.current = null;
       setIsAutoCycling(true);
       
@@ -718,7 +693,6 @@ export function useBackgroundMusic(
       }
       
       const song = availableSongs[songId];
-      console.log(`[MP3 Music] Switching to MANUAL mode, song: "${song.name}"`);
       manualSongIndexRef.current = songId;
       setIsAutoCycling(false);
       setCurrentSong(song);

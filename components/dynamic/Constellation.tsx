@@ -57,15 +57,9 @@ export function Constellation({
     // This ensures we use the correct projection-based coordinates
     const hasRaDec = stars.some(star => star.ra && star.dec);
 
-    console.log('[Constellation] hasRaDec:', hasRaDec);
-    console.log('[Constellation] stars:', stars);
-
     if (!hasRaDec) {
-      console.log('[Constellation] No RA/Dec data, using provided coordinates');
       return stars;
     }
-
-    console.log('[Constellation] Converting RA/Dec to canvas coordinates (ignoring any pre-calculated x/y)');
 
     // Extract stars with RA/Dec for conversion
     const starsForConversion = stars.map(star => ({
@@ -75,8 +69,6 @@ export function Constellation({
 
     try {
       const canvasCoords = convertStarsToCanvas(starsForConversion);
-      
-      console.log('[Constellation] Converted coordinates:', canvasCoords);
       
       // ALWAYS use the converted coordinates when RA/Dec is available
       return stars.map((star, i) => ({
@@ -147,7 +139,6 @@ export function Constellation({
     const normalized = (maxMag - clampedMag) / (maxMag - minMag);
     const radius = minRadius + (maxRadius - minRadius) * normalized;
     
-    console.log(`[Constellation] Star ${star.name}: mag=${magnitude}, radius=${radius.toFixed(1)}`);
     return radius;
   };
 

@@ -48,7 +48,6 @@ export class WebSpeechTTS {
    */
   private loadVoices(): void {
     this.voices = this.synth.getVoices();
-    console.log(`Loaded ${this.voices.length} voices`);
   }
 
   /**
@@ -230,19 +229,16 @@ export class WebSpeechTTS {
         const voice = this.findCyberpunkVoice();
         if (voice) {
           utterance.voice = voice;
-          console.log(`Using voice: ${voice.name}`);
         }
 
         // Event handlers
         utterance.onend = () => {
-          console.log('Speech finished');
           resolve();
         };
 
         utterance.onerror = (event) => {
           // "interrupted" is not really an error - it's normal when speech is cancelled
           if (event.error === 'interrupted') {
-            console.log('[TTS] Speech interrupted (normal behavior)');
             resolve(); // Resolve instead of reject
             return;
           }

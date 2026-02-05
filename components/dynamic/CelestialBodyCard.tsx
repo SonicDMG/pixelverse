@@ -167,16 +167,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
   // Get theme for current body type, with fallback to planet theme
   const theme = BODY_THEMES[bodyType] || BODY_THEMES.planet;
 
-  // Debug logging
-  console.log('[CelestialBodyCard] Component mounted/updated:', {
-    name,
-    bodyType,
-    enableImageGeneration,
-    hasGeneratedImageUrl: !!generatedImageUrl,
-    hasLocalGeneratedUrl: !!localGeneratedUrl,
-    generationInitiated: generationInitiatedRef.current,
-  });
-
   /**
    * Automatically generate image on component mount if enabled
    * Uses a ref to ensure generation only happens once per component instance
@@ -189,7 +179,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
       !generationInitiatedRef.current;
     
     if (shouldGenerate) {
-      console.log('[CelestialBodyCard] Triggering image generation for:', name);
       generationInitiatedRef.current = true;
       generateImage();
     }
@@ -199,9 +188,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
    * Generate a space image using the API endpoint
    */
   const generateImage = async () => {
-    console.log('[CelestialBodyCard] === Starting Image Generation ===');
-    console.log('[CelestialBodyCard] Body name:', name);
-    console.log('[CelestialBodyCard] Body type:', bodyType);
     
     setIsGenerating(true);
     setGenerationError(null);
@@ -269,8 +255,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
         style: 'pixel-art',
       };
       
-      console.log('[CelestialBodyCard] API Request Body:', JSON.stringify(requestBody, null, 2));
-      
       const response = await fetch('/api/generate-space-image', {
         method: 'POST',
         headers: {
@@ -280,7 +264,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
       });
 
       const data: GenerateImageResponse = await response.json();
-      console.log('[CelestialBodyCard] API Response Data:', JSON.stringify(data, null, 2));
 
       if (!response.ok || !data.success) {
         const errorMsg = data.error || 'Failed to generate image';
@@ -288,7 +271,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
       }
 
       if (data.imageUrl) {
-        console.log('[CelestialBodyCard] ✅ Image generated successfully!');
         setLocalGeneratedUrl(data.imageUrl);
       } else {
         throw new Error('No image URL returned from API');
@@ -299,7 +281,6 @@ export function CelestialBodyCard(props: CelestialBodyCardProps) {
       setGenerationError(errorMessage);
     } finally {
       setIsGenerating(false);
-      console.log('[CelestialBodyCard] === Image Generation Complete ===');
     }
   };
 

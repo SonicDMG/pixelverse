@@ -28,11 +28,6 @@ interface DynamicUIRendererProps {
  * Langflow agent to dynamically compose UIs from safe building blocks.
  */
 export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRendererProps) {
-  console.log('[DynamicUIRenderer] Rendering components:', {
-    count: components.length,
-    types: components.map(c => c.type),
-  });
-
   const renderComponent = (spec: ComponentSpec, index: number) => {
     // DEFENSIVE FIX: Handle malformed agent responses where bodyType exists but type is missing
     // Agent should return: { type: "celestial-body-card", props: { bodyType: "star", ... } }
@@ -40,7 +35,9 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
     let normalizedSpec = spec;
     const specAny = spec as any;
     if (!spec.type && specAny.bodyType) {
-      console.warn('[DynamicUIRenderer] Detected malformed component with bodyType but no type field. Auto-normalizing to celestial-body-card.');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[DynamicUIRenderer] Detected malformed component with bodyType but no type field. Auto-normalizing to celestial-body-card.');
+      }
       normalizedSpec = {
         type: 'celestial-body-card',
         props: specAny,
@@ -49,12 +46,6 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
     }
     
     const key = normalizedSpec.id || `${normalizedSpec.type}-${index}`;
-    console.log('[DynamicUIRenderer] Rendering component:', {
-      type: normalizedSpec.type,
-      index,
-      hasProps: !!normalizedSpec.props,
-      propsKeys: normalizedSpec.props ? Object.keys(normalizedSpec.props) : [],
-    });
 
     try {
       // Normalize component type aliases before type checking
@@ -64,7 +55,6 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
       // Map "key-metrics" to "metric-grid" for backward compatibility
       // The agent may interpret "key financial metrics" as a component type
       if (rawType === 'key-metrics') {
-        console.log('[DynamicUIRenderer] Normalizing "key-metrics" to "metric-grid"');
         (normalizedSpec as any).type = 'metric-grid';
       }
       
@@ -214,15 +204,6 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
           );
 
         case 'explain-o-matic':
-          console.log('[DynamicUIRenderer] explain-o-matic case hit');
-          console.log('[DynamicUIRenderer] Props being passed:', {
-            topic: normalizedSpec.props.topic,
-            knowledgeLevel: normalizedSpec.props.knowledgeLevel,
-            explanation: normalizedSpec.props.explanation,
-            relatedTopics: normalizedSpec.props.relatedTopics,
-            followUpQuestions: normalizedSpec.props.followUpQuestions,
-            levels: normalizedSpec.props.levels
-          });
           return (
             <ExplainOMatic
               key={key}

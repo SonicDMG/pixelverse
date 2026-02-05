@@ -37,7 +37,6 @@ export function useCyberpunkVoice(
     if (audioContext && !ttsRef.current) {
       try {
         ttsRef.current = new WebSpeechTTS(audioContext);
-        console.log('Cyberpunk voice initialized');
       } catch (error) {
         console.error('Failed to initialize cyberpunk voice:', error);
       }
@@ -213,8 +212,6 @@ export function useCyberpunkVoice(
       const voiceSettings = getVoiceSettings(type);
       const audioEffects = getAudioEffects(type);
 
-      console.log(`Announcing (${type}): ${processedText}`);
-
       // Speak with effects
       await ttsRef.current.speak(processedText, voiceSettings, audioEffects);
 
@@ -224,7 +221,6 @@ export function useCyberpunkVoice(
       
       // Check if it's an interruption error (normal behavior)
       if (error instanceof Error && error.message.includes('interrupted')) {
-        console.log('[Voice] Speech interrupted (normal behavior)');
         return; // Don't throw for interruptions
       }
       

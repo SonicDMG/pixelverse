@@ -29,23 +29,17 @@ export function SongSelector({
 
   const handlePrevious = () => {
     if (!currentSong) {
-      console.warn('[SongSelector] Previous button clicked but no current song');
       return;
     }
     const prevId = (currentSong.id - 1 + availableSongs.length) % availableSongs.length;
-    const prevSong = availableSongs[prevId];
-    console.log(`[SongSelector] Previous button clicked: ${currentSong.name} (${currentSong.id}) → ${prevSong.name} (${prevId})`);
     onSongChange(prevId);
   };
 
   const handleNext = () => {
     if (!currentSong) {
-      console.warn('[SongSelector] Next button clicked but no current song');
       return;
     }
     const nextId = (currentSong.id + 1) % availableSongs.length;
-    const nextSong = availableSongs[nextId];
-    console.log(`[SongSelector] Next button clicked: ${currentSong.name} (${currentSong.id}) → ${nextSong.name} (${nextId})`);
     onSongChange(nextId);
   };
 
@@ -53,11 +47,9 @@ export function SongSelector({
     if (isAutoCycling) {
       // Switch to manual mode with current song
       const songId = currentSong?.id ?? 0;
-      console.log(`[SongSelector] Switching to MANUAL mode, locking to song: ${currentSong?.name || 'Unknown'} (${songId})`);
       onSongChange(songId);
     } else {
       // Switch to auto mode
-      console.log(`[SongSelector] Switching to AUTO mode, enabling auto-cycling from current song: ${currentSong?.name || 'Unknown'}`);
       onSongChange(null);
     }
   };
