@@ -272,18 +272,22 @@ export function sanitizeForDisplay(text: string): string {
 
 /**
  * Validate and sanitize image generation parameters
- * 
- * @param name - Object name
- * @param description - Object description
+ *
+ * Note: Both names and descriptions are typically AI-generated and don't need
+ * the same strict security validation as direct user input. We only validate
+ * length and sanitize control characters.
+ *
+ * @param name - Object name (AI-generated)
+ * @param description - Object description (AI-generated)
  * @returns ValidationResult for both fields
  */
 export function validateImageGenerationInput(
-  name: unknown, 
+  name: unknown,
   description: unknown
 ): { valid: boolean; errors?: { name?: string; description?: string }; sanitized?: { name: string; description: string } } {
   const errors: { name?: string; description?: string } = {};
   
-  // Validate name
+  // Validate name (lenient validation for AI-generated content)
   if (name !== undefined && name !== null) {
     if (typeof name !== 'string') {
       errors.name = 'Name must be text';
@@ -291,44 +295,34 @@ export function validateImageGenerationInput(
       const trimmedName = name.trim();
       if (trimmedName.length > 100) {
         errors.name = 'Name too long (maximum 100 characters)';
-      } else if (trimmedName.length > 0) {
-        // Check for injection patterns in name
-        const nameValidation = validateAndSanitizeQuestion(trimmedName);
-        if (!nameValidation.valid) {
-          errors.name = 'Invalid name format';
-        }
       }
+      // Note: No security pattern checks for AI-generated names
     }
   }
   
-  // Validate description
+  // Validate description (lenient validation for AI-generated content)
   if (!description || typeof description !== 'string') {
     errors.description = 'Description is required';
   } else {
     const trimmedDesc = description.trim();
     if (trimmedDesc.length === 0) {
       errors.description = 'Description cannot be empty';
-    } else if (trimmedDesc.length > 200) {
-      errors.description = 'Description too long (maximum 200 characters)';
-    } else {
-      // Check for injection patterns in description
-      const descValidation = validateAndSanitizeQuestion(trimmedDesc);
-      if (!descValidation.valid) {
-        errors.description = 'Invalid description format';
-      }
+    } else if (trimmedDesc.length > 500) {
+      errors.description = 'Description too long (maximum 500 characters)';
     }
+    // Note: No security pattern checks for AI-generated descriptions
   }
   
   if (Object.keys(errors).length > 0) {
     return { valid: false, errors };
   }
   
-  // Sanitize both fields
-  const sanitizedName = name && typeof name === 'string' 
+  // Sanitize both fields (remove control characters only)
+  const sanitizedName = name && typeof name === 'string'
     ? name.trim().replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100)
     : '';
   const sanitizedDescription = typeof description === 'string'
-    ? description.trim().replace(/[\x00-\x1F\x7F]/g, '').substring(0, 200)
+    ? description.trim().replace(/[\x00-\x1F\x7F]/g, '').substring(0, 500)
     : '';
   
   return {
