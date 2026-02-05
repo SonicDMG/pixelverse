@@ -1,4 +1,5 @@
 import EverArt from 'everart';
+import { getValidatedEnvVar } from '@/lib/env-validation';
 
 export interface GenerateImageOptions {
   prompt: string;
@@ -19,9 +20,18 @@ export class EverArtService {
   private client: EverArt;
 
   constructor() {
-    const apiKey = process.env.EVERART_API_KEY;
-    if (!apiKey) {
-      throw new Error('EVERART_API_KEY not configured');
+    // Validate API key at runtime as a fallback
+    let apiKey: string;
+    try {
+      apiKey = getValidatedEnvVar('EVERART_API_KEY');
+    } catch (error) {
+      console.error('Failed to validate EVERART_API_KEY:', error);
+      // Fallback to process.env for backward compatibility
+      apiKey = process.env.EVERART_API_KEY || '';
+      if (!apiKey) {
+        throw new Error('EVERART_API_KEY not configured');
+      }
+      console.warn('Using unvalidated EVERART_API_KEY - this is a security risk');
     }
     this.client = new EverArt(apiKey);
   }

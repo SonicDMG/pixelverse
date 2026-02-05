@@ -2,6 +2,7 @@ import axios from 'axios';
 import { LangflowRequest, LangflowResponse, StockQueryResult, StockDataPoint } from '@/types';
 import { randomUUID } from 'crypto';
 import { jsonrepair } from 'jsonrepair';
+import { getValidatedEnvVar } from '@/lib/env-validation';
 
 /**
  * Extract stock symbol from question
@@ -12,8 +13,20 @@ function extractSymbol(question: string): string | undefined {
 }
 
 // Server-side only - no NEXT_PUBLIC_ prefix for security
-const LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
-const LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || '';
+// Validate environment variables at runtime as a fallback
+let LANGFLOW_URL: string;
+let LANGFLOW_API_KEY: string;
+
+try {
+  LANGFLOW_URL = getValidatedEnvVar('LANGFLOW_URL');
+  LANGFLOW_API_KEY = getValidatedEnvVar('LANGFLOW_API_KEY');
+} catch (error) {
+  console.error('Failed to validate Langflow environment variables:', error);
+  // Fallback to process.env for backward compatibility, but log warning
+  LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
+  LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || '';
+  console.warn('Using unvalidated environment variables - this is a security risk');
+}
 
 // Theme-specific flow IDs
 const FLOW_IDS = {

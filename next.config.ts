@@ -1,4 +1,29 @@
 import type { NextConfig } from "next";
+import { validateEnvironment } from './lib/env-validation';
+
+// Skip validation during test runs and builds
+// Validation will occur at runtime when the application starts
+const shouldValidate = process.env.NODE_ENV !== 'test' && process.env.SKIP_ENV_VALIDATION !== 'true';
+
+if (shouldValidate) {
+  // Validate environment variables at config load time
+  const envValidation = validateEnvironment();
+  if (!envValidation.valid) {
+    console.error('❌ Environment validation failed:');
+    envValidation.errors.forEach(err => console.error(`  - ${err}`));
+    console.error('\nPlease check your .env.local file and ensure all required environment variables are set.');
+    console.error('See .env.example for reference.\n');
+    console.error('To skip validation during build, set SKIP_ENV_VALIDATION=true\n');
+    process.exit(1);
+  }
+
+  if (envValidation.warnings.length > 0) {
+    console.warn('⚠️  Environment warnings:');
+    envValidation.warnings.forEach(warn => console.warn(`  - ${warn}`));
+  }
+
+  console.log('✅ Environment validation passed');
+}
 
 const nextConfig: NextConfig = {
   images: {

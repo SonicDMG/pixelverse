@@ -69,15 +69,28 @@ PixelTicker/
    
    Edit `.env.local` and set your values:
    ```env
-   # Authentication (REQUIRED)
+   # Authentication (REQUIRED - minimum 8 characters)
    AUTH_PASSWORD=your_secure_password_here
    
-   # Langflow Configuration
-   NEXT_PUBLIC_LANGFLOW_URL=http://localhost:7861
-   LANGFLOW_API_KEY=
+   # Langflow Configuration (REQUIRED)
+   LANGFLOW_URL=http://localhost:7861
+   LANGFLOW_API_KEY=your_langflow_api_key
+   
+   # EverArt Configuration (REQUIRED)
+   EVERART_API_KEY=your_everart_api_key
+   
+   # Optional: Flow IDs for different themes
+   # LANGFLOW_FLOW_ID_TICKER=your_ticker_flow_id
+   # LANGFLOW_FLOW_ID_SPACE=your_space_flow_id
    ```
    
-   **Important**: Set a strong password for `AUTH_PASSWORD`. This protects access to your application.
+   **Important Security Notes:**
+   - Set a strong password for `AUTH_PASSWORD` (minimum 8 characters, 12+ recommended for production)
+   - All required environment variables are validated at startup
+   - In development mode, localhost and private IPs are allowed for `LANGFLOW_URL`
+   - In production mode, `LANGFLOW_URL` must be a public URL (SSRF protection)
+   - Never commit `.env.local` to version control
+   - See `.env.example` for detailed documentation
 
 4. **Update Langflow Flow ID:**
    
@@ -148,6 +161,48 @@ Click "GUEST ACCESS" for limited access to main application features. Guest user
    - "Compare AAPL vs GOOGL performance"
    - "Show me Tesla stock trends"
 4. **View results** in the pixel art chart and conversation history
+
+## 🔒 Security
+
+### Environment Variable Validation
+
+All environment variables are validated at application startup to prevent security vulnerabilities:
+
+**VULN-002 (Critical) - SSRF Protection:**
+- `LANGFLOW_URL` is validated to prevent Server-Side Request Forgery (SSRF) attacks
+- In **production mode**: Private IP addresses and localhost are blocked
+- In **development mode**: Localhost and private IPs are allowed for local testing
+- Only `http://` and `https://` protocols are permitted
+- Blocked ranges in production: `127.x.x.x`, `10.x.x.x`, `192.168.x.x`, `172.16-31.x.x`, `169.254.x.x`, IPv6 private ranges
+
+**VULN-003 (Critical) - API Key Validation:**
+- `LANGFLOW_API_KEY` and `EVERART_API_KEY` must be non-empty
+- Keys are validated at both startup and runtime
+- Recommendation: Rotate API keys every 90 days
+
+**Authentication:**
+- `AUTH_PASSWORD` must be at least 8 characters (12+ recommended for production)
+- Passwords are validated at startup
+- Use strong, unique passwords
+
+**Validation Behavior:**
+- Application fails fast if required variables are missing or invalid
+- Clear error messages guide configuration
+- Warnings are shown for optional variables or weak configurations
+
+**Development vs Production:**
+```bash
+# Development (.env.local)
+NODE_ENV=development
+LANGFLOW_URL=http://localhost:7861  # ✅ Allowed in development
+
+# Production (.env.local)
+NODE_ENV=production
+LANGFLOW_URL=https://api.langflow.io  # ✅ Must be public URL
+# LANGFLOW_URL=http://localhost:7861  # ❌ Blocked in production (SSRF protection)
+```
+
+For detailed security documentation, see `.env.example`.
 
 ## 🎨 Design Theme
 
