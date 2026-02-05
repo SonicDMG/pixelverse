@@ -85,22 +85,22 @@ export function Constellation({
   // Check if we have coordinate data for visualization
   const hasCoordinates = starsWithCoords.some(star => star.x !== undefined && star.y !== undefined);
 
-  // Helper to convert spectral class to color
+  // Helper to convert spectral class to color (intense, saturated colors)
   const spectralClassToColor = (spectralClass: string): string => {
     const upperClass = spectralClass.toUpperCase().charAt(0);
     const spectralColors: Record<string, string> = {
-      'O': 'var(--color-spectral-o)', // Blue - hottest stars
-      'B': 'var(--color-spectral-b)', // Blue-white
-      'A': 'var(--color-spectral-a)', // White
-      'F': 'var(--color-spectral-f)', // Yellow-white
-      'G': 'var(--color-spectral-g)', // Yellow (like our Sun)
-      'K': 'var(--color-spectral-k)', // Orange
-      'M': 'var(--color-spectral-m)', // Red-orange - coolest stars (Betelgeuse)
+      'O': '#2E7DFF', // Intense deep blue - hottest stars (>30,000K)
+      'B': '#5599FF', // Vivid blue - very hot (10,000-30,000K) - Rigel, Spica
+      'A': '#DDEEFF', // Brilliant white - hot (7,500-10,000K) - Sirius, Vega
+      'F': '#FFFFCC', // Pale yellow-white - warm (6,000-7,500K) - Procyon
+      'G': '#FFCC00', // Intense gold - moderate (5,200-6,000K) - Sun, Capella
+      'K': '#FF9933', // Deep orange - cool (3,700-5,200K) - Arcturus, Aldebaran
+      'M': '#FF3300', // Intense red - coolest (<3,700K) - Betelgeuse, Antares
     };
     return spectralColors[upperClass] || '#FFFFFF';
   };
 
-  // Helper to get star color
+  // Helper to get star color based on spectral class or hex color
   const getStarColor = (star: Star): string => {
     // If color is provided, use it
     if (star.color) {
@@ -108,20 +108,28 @@ export function Constellation({
       if (star.color.startsWith('#')) {
         return star.color;
       }
-      // Otherwise treat as spectral class
+      // Otherwise treat as spectral class and convert to realistic color
       return spectralClassToColor(star.color);
     }
     
-    // Fallback to magnitude-based coloring
+    // Fallback to magnitude-based coloring only if no color data
     const brightness = Math.max(0, Math.min(5, 6 - star.magnitude));
     if (brightness > 3) return 'var(--color-accent)';
     if (brightness > 1) return 'var(--color-secondary)';
     return 'var(--color-purple)';
   };
 
-  // Helper to get star size based on magnitude
+  // Helper to get star size based on size property or magnitude
   const getStarRadius = (star: Star): number => {
-    // Calculate radius from magnitude (lower magnitude = brighter = larger)
+    // If size property is provided, use it directly
+    if (star.size !== undefined) {
+      // Size is a multiplier (0.5-3.0), convert to pixel radius
+      // Base radius of 5px, scaled by size multiplier
+      const baseRadius = 5;
+      return baseRadius * star.size;
+    }
+    
+    // Fallback: Calculate radius from magnitude (lower magnitude = brighter = larger)
     // Magnitude scale: -1 (very bright) to 6 (very dim)
     const magnitude = star.magnitude ?? 3;
     
@@ -374,19 +382,38 @@ export function Constellation({
                   })}
                 </svg>
 
-                {/* Legend */}
-                <div className="mt-4 flex justify-center gap-4 text-xs font-pixel text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[var(--color-accent)]"></div>
-                    <span>Bright</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[var(--color-secondary)]"></div>
-                    <span>Medium</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[var(--color-purple)]"></div>
-                    <span>Dim</span>
+                {/* Spectral Class Legend */}
+                <div className="mt-4 space-y-2">
+                  <div className="text-center text-xs font-pixel text-gray-500 uppercase">Type Stars</div>
+                  <div className="flex flex-wrap justify-center gap-3 text-xs font-pixel text-gray-400">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#2E7DFF' }}></div>
+                      <span>O</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#5599FF' }}></div>
+                      <span>B</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#DDEEFF' }}></div>
+                      <span>A</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FFFFCC' }}></div>
+                      <span>F</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FFCC00' }}></div>
+                      <span>G</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FF9933' }}></div>
+                      <span>K</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FF3300' }}></div>
+                      <span>M</span>
+                    </div>
                   </div>
                 </div>
               </div>
