@@ -221,15 +221,16 @@ export async function queryLangflow(
     console.error('Langflow query error:', error);
     
     if (axios.isAxiosError(error)) {
+      // Return sanitized error message - don't expose internal URLs or details
       return {
         answer: '',
-        error: error.response?.data?.message || error.message || 'Failed to connect to Langflow',
+        error: 'Service temporarily unavailable. Please try again later.',
       };
     }
-
+  
     return {
       answer: '',
-      error: 'An unexpected error occurred',
+      error: 'An unexpected error occurred. Please try again later.',
     };
   }
 }
@@ -385,8 +386,8 @@ export async function queryLangflowStreaming(
     }
   } catch (error) {
     console.error('[Langflow Streaming] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-    onError(errorMessage);
+    // Return sanitized error message
+    onError('Service temporarily unavailable. Please try again later.');
   }
 }
 

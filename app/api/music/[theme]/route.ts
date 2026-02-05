@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { isValidThemeId } from '@/constants/theme';
 import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
 
 /**
  * GET /api/music/[theme]
@@ -101,28 +102,37 @@ export async function GET(
         });
       }
 
-      // Other file system errors
-      console.error(`Error reading music directory for theme '${theme}':`, error);
+      // Other file system errors - sanitize to avoid exposing paths
+      const sanitized = sanitizeError(error, {
+        endpoint: request.url,
+        ip: clientIp,
+        additionalInfo: { theme },
+      });
+      
       return NextResponse.json(
         {
-          error: 'File system error',
-          message: 'Unable to read music directory',
+          error: sanitized.message,
+          errorId: sanitized.errorId,
           files: []
         },
-        { status: 500 }
+        { status: sanitized.statusCode }
       );
     }
 
   } catch (error) {
-    // Catch-all for unexpected errors
-    console.error('Unexpected error in music API:', error);
+    // Catch-all for unexpected errors - sanitize to prevent information leakage
+    const sanitized = sanitizeError(error, {
+      endpoint: request.url,
+      ip: getErrorClientIp(request),
+    });
+    
     return NextResponse.json(
       {
-        error: 'Internal server error',
-        message: 'An unexpected error occurred',
+        error: sanitized.message,
+        errorId: sanitized.errorId,
         files: []
       },
-      { status: 500 }
+      { status: sanitized.statusCode }
     );
   }
 }

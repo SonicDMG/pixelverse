@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { sanitizeError } from '@/lib/error-handling';
 
 const GUEST_COOKIE_NAME = 'pixelverse_guest';
 const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
@@ -33,13 +34,18 @@ export async function POST() {
       message: 'Guest session created',
     });
   } catch (error) {
-    console.error('Guest session error:', error);
+    // Sanitize error for client response
+    const sanitized = sanitizeError(error, {
+      endpoint: '/api/auth/guest',
+    });
+    
     return NextResponse.json(
       {
         success: false,
-        error: 'An error occurred creating guest session',
+        error: sanitized.message,
+        errorId: sanitized.errorId,
       },
-      { status: 500 }
+      { status: sanitized.statusCode }
     );
   }
 }

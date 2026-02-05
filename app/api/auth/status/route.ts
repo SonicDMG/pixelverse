@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { isAuthenticated, isGuest } from '@/lib/auth';
+import { sanitizeError } from '@/lib/error-handling';
 
 /**
  * GET /api/auth/status
@@ -21,15 +22,20 @@ export async function GET() {
       hasAccess: authenticated || guest,
     });
   } catch (error) {
-    console.error('Status check error:', error);
+    // Sanitize error for client response
+    const sanitized = sanitizeError(error, {
+      endpoint: '/api/auth/status',
+    });
+    
     return NextResponse.json(
       {
         isAuthenticated: false,
         isGuest: false,
         hasAccess: false,
-        error: 'Failed to check authentication status',
+        error: sanitized.message,
+        errorId: sanitized.errorId,
       },
-      { status: 500 }
+      { status: sanitized.statusCode }
     );
   }
 }

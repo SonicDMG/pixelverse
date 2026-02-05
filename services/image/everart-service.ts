@@ -64,9 +64,8 @@ export class EverArtService {
       };
     } catch (error) {
       console.error('EverArt generation error:', error);
-      throw new Error(
-        `Image generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      // Throw sanitized error message - don't expose API details
+      throw new Error('Image generation service temporarily unavailable');
     }
   }
 }

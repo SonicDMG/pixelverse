@@ -167,7 +167,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: No generations returned'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -179,7 +179,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: No generations returned'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -197,7 +197,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: No image URL returned'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -211,7 +211,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: API rate limit exceeded'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -227,7 +227,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: Polling timeout'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -241,7 +241,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: Network connection failed'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -253,7 +253,7 @@ describe('EverArtService', () => {
       };
 
       await expect(service.generateImage(options)).rejects.toThrow(
-        'Image generation failed: Unknown error'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -484,7 +484,7 @@ describe('EverArtService', () => {
       getMockClient().v1.generations.create.mockRejectedValue(testError);
 
       await expect(service.generateImage({ prompt: 'Test' })).rejects.toThrow(
-        'Image generation failed: Specific error message'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -495,7 +495,7 @@ describe('EverArtService', () => {
       getMockClient().v1.generations.create.mockRejectedValue(testError);
 
       await expect(service.generateImage({ prompt: 'Test' })).rejects.toThrow(
-        'Image generation failed:'
+        'Image generation service temporarily unavailable'
       );
     });
 
@@ -505,7 +505,7 @@ describe('EverArtService', () => {
       getMockClient().v1.generations.create.mockRejectedValue({ custom: 'error' });
 
       await expect(service.generateImage({ prompt: 'Test' })).rejects.toThrow(
-        'Image generation failed:'
+        'Image generation service temporarily unavailable'
       );
     });
   });

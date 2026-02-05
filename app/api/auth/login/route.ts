@@ -13,6 +13,7 @@ import {
   getClientIp,
   logAuthAttempt,
 } from '@/lib/auth';
+import { sanitizeError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
 
 /**
  * POST /api/auth/login
@@ -77,13 +78,19 @@ export async function POST(request: NextRequest) {
       message: 'Authentication successful',
     });
   } catch (error) {
-    console.error('Login error:', error);
+    // Sanitize error for client response
+    const sanitized = sanitizeError(error, {
+      endpoint: request.url,
+      ip: getErrorClientIp(request),
+    });
+    
     return NextResponse.json(
       {
         success: false,
-        error: 'An error occurred during authentication',
+        error: sanitized.message,
+        errorId: sanitized.errorId,
       },
-      { status: 500 }
+      { status: sanitized.statusCode }
     );
   }
 }

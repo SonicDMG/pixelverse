@@ -322,7 +322,7 @@ describe('Langflow Service', () => {
       const result = await queryLangflow('Test');
 
       expect(result.answer).toBe('');
-      expect(result.error).toBe('Server error');
+      expect(result.error).toBe('Service temporarily unavailable. Please try again later.');
     });
 
     it('should handle axios errors without response data', async () => {
@@ -337,7 +337,7 @@ describe('Langflow Service', () => {
       const result = await queryLangflow('Test');
 
       expect(result.answer).toBe('');
-      expect(result.error).toBe('Network error');
+      expect(result.error).toBe('Service temporarily unavailable. Please try again later.');
     });
 
     it('should handle non-axios errors', async () => {
@@ -347,7 +347,7 @@ describe('Langflow Service', () => {
       const result = await queryLangflow('Test');
 
       expect(result.answer).toBe('');
-      expect(result.error).toBe('An unexpected error occurred');
+      expect(result.error).toBe('An unexpected error occurred. Please try again later.');
     });
 
     it('should handle timeout errors', async () => {
@@ -362,7 +362,7 @@ describe('Langflow Service', () => {
 
       const result = await queryLangflow('Test');
 
-      expect(result.error).toBe('timeout of 120000ms exceeded');
+      expect(result.error).toBe('Service temporarily unavailable. Please try again later.');
     });
 
     it('should omit API key header if not configured', async () => {

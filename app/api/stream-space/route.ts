@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 import { trackConnection, releaseConnection, getClientIp, createRateLimitHeaders } from '@/lib/rate-limit';
+import { sanitizeError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
 
 // Server-side only - no NEXT_PUBLIC_ prefix for security
 const LANGFLOW_URL = process.env.LANGFLOW_URL || 'http://localhost:7861';
@@ -103,9 +104,22 @@ export async function POST(request: NextRequest) {
       console.error('[Stream Space API] ❌ Langflow error:', response.status);
       const errorText = await response.text();
       console.error('[Stream Space API] Error details:', errorText);
+      
+      // Sanitize service error
+      const error = new Error(`Langflow returned status ${response.status}`);
+      const sanitized = sanitizeError(error, {
+        endpoint: request.url,
+        ip: clientIp,
+        additionalInfo: { service: 'Langflow', statusCode: response.status },
+      });
+      
       return new Response(
-        JSON.stringify({ error: `Langflow error: ${response.status}`, details: errorText }),
-        { status: response.status, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          error: sanitized.message,
+          errorId: sanitized.errorId,
+          timestamp: sanitized.timestamp,
+        }),
+        { status: sanitized.statusCode, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -151,12 +165,22 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Stream Space API] ❌ Error:', error);
     // Release connection on error
     releaseConnection(clientIp, connectionId);
+    
+    // Sanitize error for client response
+    const sanitized = sanitizeError(error, {
+      endpoint: request.url,
+      ip: clientIp,
+    });
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        error: sanitized.message,
+        errorId: sanitized.errorId,
+        timestamp: sanitized.timestamp,
+      }),
+      { status: sanitized.statusCode, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

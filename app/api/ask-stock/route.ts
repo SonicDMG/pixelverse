@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryLangflow } from '@/services/langflow';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
 
 /**
  * API Error response interface
@@ -81,22 +82,20 @@ export async function POST(request: NextRequest) {
       headers: createRateLimitHeaders(rateLimitResult),
     });
   } catch (error) {
-    console.error('API route error:', error);
+    // Sanitize error for client response while logging full details server-side
+    const sanitized = sanitizeError(error, {
+      endpoint: request.url,
+      ip: getErrorClientIp(request),
+    });
     
-    // Provide more context in development
-    const errorMessage = process.env.NODE_ENV === 'development' && error instanceof Error
-      ? error.message
-      : 'Internal server error';
-    
-    const response: ApiErrorResponse = {
-      error: 'Internal server error',
-    };
-
-    if (process.env.NODE_ENV === 'development') {
-      response.details = errorMessage;
-    }
-
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(
+      {
+        error: sanitized.message,
+        errorId: sanitized.errorId,
+        timestamp: sanitized.timestamp,
+      },
+      { status: sanitized.statusCode }
+    );
   }
 }
 

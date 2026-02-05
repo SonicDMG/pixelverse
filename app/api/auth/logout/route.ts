@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { clearAuthCookie } from '@/lib/auth';
+import { sanitizeError } from '@/lib/error-handling';
 
 /**
  * POST /api/auth/logout
@@ -20,13 +21,18 @@ export async function POST() {
       message: 'Logged out successfully',
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    // Sanitize error for client response
+    const sanitized = sanitizeError(error, {
+      endpoint: '/api/auth/logout',
+    });
+    
     return NextResponse.json(
       {
         success: false,
-        error: 'An error occurred during logout',
+        error: sanitized.message,
+        errorId: sanitized.errorId,
       },
-      { status: 500 }
+      { status: sanitized.statusCode }
     );
   }
 }

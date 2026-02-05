@@ -3,6 +3,7 @@ import { EverArtService } from '@/services/image/everart-service';
 import { SpacePromptBuilder } from '@/services/space/prompt-builder';
 import { validateImageGenerationInput } from '@/lib/input-validation';
 import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeError, sanitizeServiceError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
 
 /**
  * ============================================================================
@@ -393,28 +394,34 @@ export async function POST(request: NextRequest) {
         }
       );
     } catch (error) {
-      console.error('[Generate Space Image API] Image generation failed:', error);
-      
-      // Sanitize error message for client
-      const errorMessage = error instanceof Error
-        ? 'Image generation failed. Please try again.'
-        : 'Unknown error occurred during image generation';
+      // Sanitize service error (EverArt API)
+      const sanitized = sanitizeServiceError(error, 'EverArt', {
+        endpoint: request.url,
+        ip: getErrorClientIp(request),
+      });
 
       return NextResponse.json<GenerateImageResponse>(
-        { success: false, error: errorMessage },
-        { status: 500 }
+        {
+          success: false,
+          error: sanitized.message,
+        },
+        { status: sanitized.statusCode }
       );
     }
   } catch (error) {
-    console.error('[Generate Space Image API] Route error:', error);
+    // Sanitize general route error
+    const sanitized = sanitizeError(error, {
+      endpoint: request.url,
+      ip: getErrorClientIp(request),
+    });
 
-    // Provide sanitized error response
-    const response: GenerateImageResponse = {
-      success: false,
-      error: 'Internal server error',
-    };
-
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json<GenerateImageResponse>(
+      {
+        success: false,
+        error: sanitized.message,
+      },
+      { status: sanitized.statusCode }
+    );
   }
 }
 
