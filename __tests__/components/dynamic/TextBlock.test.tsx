@@ -10,10 +10,14 @@ describe('TextBlock', () => {
       expect(screen.getByText('Simple text content')).toBeInTheDocument();
     });
 
-    it('should use plain format by default', () => {
-      render(<TextBlock content="Default format text" />);
+    it('should use markdown format by default', () => {
+      const content = '**Bold text**';
+      const { container } = render(<TextBlock content={content} />);
 
-      expect(screen.getByText('Default format text')).toBeInTheDocument();
+      // Should render markdown by default (bold text becomes <strong>)
+      const strong = container.querySelector('strong');
+      expect(strong).toBeInTheDocument();
+      expect(strong).toHaveTextContent('Bold text');
     });
 
     it('should preserve whitespace in plain text', () => {
@@ -171,8 +175,9 @@ describe('TextBlock', () => {
 
   describe('edge cases', () => {
     it('should handle empty content', () => {
-      const { container } = render(<TextBlock content="" />);
+      const { container } = render(<TextBlock content="" format="plain" />);
 
+      // With plain format, empty content should still render a <p> tag
       expect(container.querySelector('p')).toBeInTheDocument();
     });
 
