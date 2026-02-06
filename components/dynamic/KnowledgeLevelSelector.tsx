@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { KnowledgeLevel } from '@/types/ui-spec';
+import { KnowledgeLevel } from '@/types';
 
 interface KnowledgeLevelSelectorProps {
   currentLevel: KnowledgeLevel;

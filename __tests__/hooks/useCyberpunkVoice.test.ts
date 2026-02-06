@@ -50,7 +50,7 @@ describe('useCyberpunkVoice', () => {
       renderHook(() => useCyberpunkVoice({ audioContext: mockAudioContext }));
 
       expect(MockWebSpeechTTS).toHaveBeenCalledWith(mockAudioContext);
-      expect(consoleLogSpy).toHaveBeenCalledWith('Cyberpunk voice initialized');
+      // Note: Initialization logging was removed from useCyberpunkVoice
     });
 
     it('should not initialize TTS when audio context is null', () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ComponentSpec } from '@/types/ui-spec';
+import { ComponentSpec } from '@/types';
 import { StockChart } from './StockChart';
 import { ComparisonChart } from './dynamic/ComparisonChart';
 import { DataTable } from './dynamic/DataTable';

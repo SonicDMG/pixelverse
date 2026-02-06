@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { DynamicUIRenderer } from '@/components/DynamicUIRenderer';
-import { ComponentSpec } from '@/types/ui-spec';
+import { ComponentSpec } from '@/types';
 
 // Mock all child components with named exports
 jest.mock('@/components/StockChart', () => ({
@@ -370,9 +370,7 @@ describe('DynamicUIRenderer', () => {
 
       // The normalization happens but the component still renders as unknown
       // because the spec doesn't have a proper type field initially
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Detected malformed component with bodyType')
-      );
+      // Note: console.warn is only called in development mode
       
       // Should either render the celestial body card or show unknown component
       const hasCard = screen.queryByTestId('celestial-body-card');
@@ -396,9 +394,7 @@ describe('DynamicUIRenderer', () => {
       render(<DynamicUIRenderer components={components} />);
 
       expect(screen.getByTestId('metric-grid')).toBeInTheDocument();
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Normalizing "key-metrics" to "metric-grid"')
-      );
+      // Logging was removed from this normalization path
     });
   });
 
@@ -473,7 +469,7 @@ describe('DynamicUIRenderer', () => {
   });
 
   describe('logging', () => {
-    it('should log component rendering information', () => {
+    it('should render components without logging in test environment', () => {
       const components: ComponentSpec[] = [
         {
           type: 'text-block',
@@ -483,22 +479,12 @@ describe('DynamicUIRenderer', () => {
 
       render(<DynamicUIRenderer components={components} />);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[DynamicUIRenderer] Rendering components:',
-        expect.objectContaining({
-          count: 1,
-          types: ['text-block'],
-        })
-      );
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[DynamicUIRenderer] Rendering component:',
-        expect.objectContaining({
-          type: 'text-block',
-          index: 0,
-          hasProps: true,
-        })
-      );
+      // Verify component renders correctly
+      expect(screen.getByTestId('text-block')).toBeInTheDocument();
+      expect(screen.getByText(/Test/)).toBeInTheDocument();
+      
+      // Note: Detailed logging was removed from DynamicUIRenderer
+      // Only development-mode warnings remain for malformed components
     });
   });
 

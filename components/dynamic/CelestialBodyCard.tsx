@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CelestialBodyCardSpec } from '@/types/ui-spec';
+import { CelestialBodyCardSpec } from '@/types';
 
 /**
  * Props for the CelestialBodyCard component

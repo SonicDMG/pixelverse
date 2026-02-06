@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DynamicUIRenderer } from '@/components/DynamicUIRenderer';
-import { ExplainOMaticSpec, KnowledgeLevel } from '@/types/ui-spec';
+import { ExplainOMaticSpec, KnowledgeLevel } from '@/types';
 
 export default function TestExplainOMaticPage() {
   const [selectedTopic, setSelectedTopic] = useState<string>('quantum-entanglement');

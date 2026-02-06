@@ -1,5 +1,4 @@
-import { Message } from '@/types';
-import { ComponentSpec } from '@/types/ui-spec';
+import { Message, ComponentSpec } from '@/types';
 import { DynamicUIRenderer } from './DynamicUIRenderer';
 import { StockChart } from './StockChart';
 import { StreamingDataLoader } from './dynamic/StreamingDataLoader';

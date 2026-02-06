@@ -1,71 +1,15 @@
-// Stock data point for charts
-export interface StockDataPoint {
-  date: string;
-  price: number;
-  volume?: number;
-}
-
-// Message in the chat history
-export interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  stockData?: StockDataPoint[];
-}
-
 /**
- * Loading status for async operations in the stock query flow
- * - 'choosing_agent': AI is selecting the appropriate agent
- * - 'getting_data': Fetching stock data from external sources
- * - 'processing': Processing and analyzing the data
- * - 'done': Operation completed successfully
- * - null: No active loading operation
+ * Types Barrel Export
+ * Re-exports all types from subdirectories for backward compatibility
  */
-export type LoadingStatus = 'choosing_agent' | 'getting_data' | 'processing' | 'done' | null;
 
-// Conversation group - pairs user question with assistant response and visualizations
-export interface ConversationGroup {
-  id: string;
-  userMessage: Message;
-  assistantMessage: Message;
-  components?: import('./ui-spec').ComponentSpec[];
-  stockData?: StockDataPoint[];
-  symbol?: string;
-  timestamp: Date;
-  durationSeconds?: number;
-  streamingChunks?: number; // Number of chunks received during streaming
-}
+// UI component types
+export * from './ui';
 
-// Langflow API request
-export interface LangflowRequest {
-  input_value: string;
-  output_type?: string;
-  input_type?: string;
-  tweaks?: Record<string, any>;
-}
+// API types
+export * from './api';
 
-// Langflow API response
-export interface LangflowResponse {
-  outputs: Array<{
-    outputs: Array<{
-      results: {
-        message: {
-          text: string;
-          data?: any;
-        };
-      };
-    }>;
-  }>;
-}
-
-// Stock query result
-export interface StockQueryResult {
-  answer: string;
-  stockData?: StockDataPoint[];
-  symbol?: string;
-  error?: string;
-  components?: import('./ui-spec').ComponentSpec[];
-}
+// Conversation types
+export * from './conversation';
 
 // Made with Bob

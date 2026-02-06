@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { KnowledgeLevel, ExplainOMaticLevelData } from '@/types/ui-spec';
+import { KnowledgeLevel, ExplainOMaticLevelData } from '@/types';
 import { KnowledgeLevelSelector } from './KnowledgeLevelSelector';
 import { PixelCard } from '@/components/shared/PixelCard';
 

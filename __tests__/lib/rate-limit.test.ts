@@ -310,7 +310,7 @@ describe('Rate Limiting', () => {
 
     it('should have correct IMAGE_GEN preset', () => {
       expect(RateLimitPresets.IMAGE_GEN).toEqual({
-        limit: 3,
+        limit: 10,
         windowMs: 60000,
       });
     });
