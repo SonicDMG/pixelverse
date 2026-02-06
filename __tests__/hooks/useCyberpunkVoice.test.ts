@@ -1,9 +1,9 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCyberpunkVoice } from '@/hooks/useCyberpunkVoice';
-import { WebSpeechTTS } from '@/utils/tts-web-speech';
+import { WebSpeechTTS } from '@/utils/audio/tts-web-speech';
 
 // Mock the WebSpeechTTS class
-jest.mock('@/utils/tts-web-speech');
+jest.mock('@/utils/audio/tts-web-speech');
 
 const MockWebSpeechTTS = WebSpeechTTS as jest.MockedClass<typeof WebSpeechTTS>;
 

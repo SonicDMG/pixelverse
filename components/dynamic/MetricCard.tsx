@@ -1,6 +1,6 @@
 'use client';
 
-import { formatValue } from '@/utils/formatters';
+import { formatValue } from '@/utils/formatting/formatters';
 import { ChangeIndicator } from '@/components/shared';
 import { CARD_STYLES, TEXT_STYLES } from '@/constants/styles';
 

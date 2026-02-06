@@ -1,6 +1,6 @@
 'use client';
 
-import { formatAbsolutePercentage, formatPercentage } from '@/utils/formatters';
+import { formatAbsolutePercentage, formatPercentage } from '@/utils/formatting/formatters';
 
 interface ChangeIndicatorProps {
   /** The change value (percentage) */

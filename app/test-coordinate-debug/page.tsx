@@ -6,8 +6,8 @@ import {
   decToDecimalDegrees,
   calculateConstellationBounds,
   convertStarsToCanvasWithProjection,
-  type CelestialCoordinate 
-} from '@/utils/celestial-coordinates';
+  type CelestialCoordinate
+} from '@/utils/space/celestial-coordinates';
 
 export default function TestCoordinateDebugPage() {
   // Test data for three constellations

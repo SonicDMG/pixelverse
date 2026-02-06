@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { convertStarsToCanvasWithProjection, type CelestialCoordinate } from '@/utils/celestial-coordinates';
+import { convertStarsToCanvasWithProjection, type CelestialCoordinate } from '@/utils/space/celestial-coordinates';
 
 interface Star {
   name: string;

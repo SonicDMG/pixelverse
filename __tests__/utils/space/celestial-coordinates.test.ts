@@ -8,7 +8,7 @@ import {
   getProjectionType,
   CelestialCoordinate,
   ConstellationBounds,
-} from '@/utils/celestial-coordinates'
+} from '@/utils/space/celestial-coordinates'
 
 describe('celestial-coordinates', () => {
   describe('raToDecimalDegrees', () => {

@@ -3,7 +3,7 @@
  * Tests WebSpeechTTS class focusing on core functionality
  */
 
-import { WebSpeechTTS, CyberpunkVoiceSettings, AudioEffectSettings } from '@/utils/tts-web-speech';
+import { WebSpeechTTS, CyberpunkVoiceSettings, AudioEffectSettings } from '@/utils/audio/tts-web-speech';
 
 describe('WebSpeechTTS', () => {
   let audioContext: AudioContext;

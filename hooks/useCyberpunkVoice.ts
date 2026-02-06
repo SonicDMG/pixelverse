@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
-import { WebSpeechTTS, CyberpunkVoiceSettings, AudioEffectSettings } from '@/utils/tts-web-speech';
+import { WebSpeechTTS, CyberpunkVoiceSettings, AudioEffectSettings } from '@/utils/audio/tts-web-speech';
 
 export type AnnouncementType = 'alert' | 'info' | 'price';
 

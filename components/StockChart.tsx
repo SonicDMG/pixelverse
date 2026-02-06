@@ -2,7 +2,7 @@
 
 import { StockDataPoint } from '@/types';
 import { useChartAnimation } from '@/hooks/useChartAnimation';
-import { getBaseChartOptions, getDatasetConfig, CHART_COLORS } from '@/utils/chart-config';
+import { getBaseChartOptions, getDatasetConfig, CHART_COLORS } from '@/utils/charts/chart-config';
 import { BaseChart } from '@/components/shared';
 
 interface StockChartProps {

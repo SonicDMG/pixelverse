@@ -1,4 +1,4 @@
-import { formatValue, formatPercentage, formatAbsolutePercentage } from '@/utils/formatters';
+import { formatValue, formatPercentage, formatAbsolutePercentage } from '@/utils/formatting/formatters';
 
 describe('formatters', () => {
   describe('formatValue', () => {

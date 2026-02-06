@@ -2,7 +2,7 @@
 
 import { Constellation } from '@/components/dynamic/Constellation';
 import { ConstellationComparison } from '@/components/dynamic/ConstellationComparison';
-import { getProjectionType } from '@/utils/celestial-coordinates';
+import { getProjectionType } from '@/utils/space/celestial-coordinates';
 
 export default function TestProjectionsPage() {
   // Test constellation 1: Orion (Equatorial, ~0-10° dec) - Should use equirectangular

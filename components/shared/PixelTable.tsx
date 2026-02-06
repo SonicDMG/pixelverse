@@ -1,7 +1,7 @@
 'use client';
 
 import { TABLE_STYLES, TEXT_STYLES } from '@/constants/styles';
-import { formatValue } from '@/utils/formatters';
+import { formatValue } from '@/utils/formatting/formatters';
 
 interface PixelTableProps {
   /** Table title */

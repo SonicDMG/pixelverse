@@ -3,7 +3,7 @@
  * Tests getBaseChartOptions() and getDatasetConfig() functions
  */
 
-import { getBaseChartOptions, getDatasetConfig, CHART_COLORS, PIXEL_FONT } from '@/utils/chart-config';
+import { getBaseChartOptions, getDatasetConfig, CHART_COLORS, PIXEL_FONT } from '@/utils/charts/chart-config';
 
 describe('chart-config utilities', () => {
   describe('CHART_COLORS constant', () => {

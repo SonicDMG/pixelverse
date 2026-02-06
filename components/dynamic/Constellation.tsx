@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { convertStarsToCanvas } from '@/utils/celestial-coordinates';
+import { convertStarsToCanvas } from '@/utils/space/celestial-coordinates';
 
 interface Star {
   name: string;

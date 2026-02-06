@@ -1,7 +1,7 @@
 'use client';
 
 import { useChartAnimation } from '@/hooks/useChartAnimation';
-import { getBaseChartOptions, getDatasetConfig, CHART_COLORS, PIXEL_FONT } from '@/utils/chart-config';
+import { getBaseChartOptions, getDatasetConfig, CHART_COLORS, PIXEL_FONT } from '@/utils/charts/chart-config';
 import { BaseChart } from '@/components/shared';
 
 interface ComparisonChartProps {
