@@ -142,6 +142,7 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
             </div>
           );
 
+        case 'text':
         case 'text-block':
           return (
             <TextBlock

@@ -99,6 +99,14 @@ export interface AlertBoxSpec extends UIComponentSpec {
   };
 }
 
+export interface TextSpec extends UIComponentSpec {
+  type: 'text';
+  props: {
+    content: string;
+    format?: 'plain' | 'markdown';
+  };
+}
+
 export interface TextBlockSpec extends UIComponentSpec {
   type: 'text-block';
   props: {
@@ -350,6 +358,7 @@ export type ComponentSpec =
   | MetricCardSpec
   | MetricGridSpec
   | AlertBoxSpec
+  | TextSpec
   | TextBlockSpec
   | PlanetCardSpec
   | CelestialBodyCardSpec
