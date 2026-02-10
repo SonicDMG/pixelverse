@@ -1,26 +1,103 @@
-# 🎮 PixelVerse
+<div align="center">
 
-A cyberpunk pixel art application suite (PixelTicker & PixelSpace) powered by Langflow, MCP, and OpenRAG.
+<pre style="font-family: monospace; line-height: 1.2;">
+<span style="color: #ff00ff;">████████████████████████████████████████████████████████████████████████████████</span>
+<span style="color: #ff00ff;">█</span>                                                                              <span style="color: #ff00ff;">█</span>
+<span style="color: #ff00ff;">█</span>  <span style="color: #00ff9f;">██████╗ ██╗██╗  ██╗███████╗██╗</span>     <span style="color: #00d4ff;">██╗   ██╗███████╗██████╗ ███████╗███████╗</span>
+<span style="color: #ff00ff;">█</span>  <span style="color: #00ff9f;">██╔══██╗██║╚██╗██╔╝██╔════╝██║</span>     <span style="color: #00d4ff;">██║   ██║██╔════╝██╔══██╗██╔════╝██╔════╝</span>
+<span style="color: #ff00ff;">█</span>  <span style="color: #00ff9f;">██████╔╝██║ ╚███╔╝ █████╗  ██║</span>     <span style="color: #00d4ff;">██║   ██║█████╗  ██████╔╝███████╗█████╗</span>
+<span style="color: #ff00ff;">█</span>  <span style="color: #00ff9f;">██╔═══╝ ██║ ██╔██╗ ██╔══╝  ██║</span>     <span style="color: #00d4ff;">╚██╗ ██╔╝██╔══╝  ██╔══██╗╚════██║██╔══╝</span>
+<span style="color: #ff00ff;">█</span>  <span style="color: #00ff9f;">██║     ██║██╔╝ ██╗███████╗███████╗</span> <span style="color: #00d4ff;">╚████╔╝ ███████╗██║  ██║███████║███████╗</span>
+<span style="color: #ff00ff;">█</span>  <span style="color: #00ff9f;">╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝</span>  <span style="color: #00d4ff;">╚═══╝  ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝</span>
+<span style="color: #ff00ff;">█</span>                                                                              <span style="color: #ff00ff;">█</span>
+<span style="color: #ff00ff;">████████████████████████████████████████████████████████████████████████████████</span>
+</pre>
 
-![PixelTicker](https://img.shields.io/badge/Next.js-16.1.4-black?style=for-the-badge&logo=next.js)
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=16&duration=3000&pause=1000&color=00FF9F&center=true&vCenter=true&width=800&lines=Welcome+to+the+PixelVerse;Your+gateway+to+a+retro+agentic+experience;Powered+by+Langflow+%7C+MCP+%7C+OpenRAG" alt="Typing SVG" />
+
+</div>
+
+<div align="center">
+
+**Welcome to the <span style="color: #00ff9f;">Pixel</span><span style="color: #00d4ff;">Verse</span>.** Your gateway to a retro agentic experience where cyberpunk aesthetics meet cutting-edge AI. Powered by [Langflow](https://github.com/langflow-ai/langflow), [MCP](https://modelcontextprotocol.io), and [OpenRAG](https://github.com/langflow-ai/openrag).
+
+<br/>
+
+[![OpenRAG](https://img.shields.io/badge/OpenRAG-Powered-orange?style=for-the-badge&logo=github)](https://github.com/langflow-ai/openrag)
+[![Langflow](https://img.shields.io/badge/Langflow-Integration-purple?style=for-the-badge&logo=github)](https://github.com/langflow-ai/langflow)
+![PixelTicker](https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 
-## 🌟 Features
+</div>
 
-- **🔐 Secure Authentication**: HTTP Basic Auth with cyberpunk-styled landing page
-- **Retro Cyberpunk UI**: Pixel art design with neon cyan and magenta colors
-- **Stock Analysis**: Ask natural language questions about stock performance (PixelTicker)
-- **Space Exploration**: Explore the cosmos with AI-powered space data (PixelSpace)
-- **Interactive Charts**: Visualize data with pixel art styled charts
-- **Langflow Integration**: Powered by Langflow agents with MCP and OpenRAG
-- **Real-time Updates**: Get instant responses to your queries
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
+---
+
+<table align="center">
+<tr>
+<td width="45%" align="center" valign="top">
+
+### 📈 PixelTicker
+
+<img src="public/images/pixel-ticker.png" alt="PixelTicker App" width="100%" />
+
+**Stock Analysis** • Ask natural language questions about stock performance with AI-powered insights and pixel art styled charts
+
+</td>
+<td width="10%"></td>
+<td width="45%" align="center" valign="top">
+
+### 🌌 PixelSpace
+
+<img src="public/images/pixel-space.png" alt="PixelSpace App" width="100%" />
+
+**Space Exploration** • Explore the cosmos with AI-powered space data, celestial visualizations, and interactive timelines
+
+</td>
+</tr>
+</table>
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ installed
+- npm or yarn package manager
+
+### Get Running in 3 Steps
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables:**
+   ```bash
+   cp .env.example .env.local
+   ```
+   Edit `.env.local` and add your API keys (see [Configuration](#-configuration) for details)
+
+3. **Start the app:**
+   ```bash
+   npm run dev
+   ```
+
+Open `http://localhost:3000` and click **"GUEST ACCESS"** to start exploring!
+
+> 💡 **Guest mode** gives you full access to PixelTicker and PixelSpace without authentication. For full access including test pages, see [Authentication](#-authentication) below.
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16.1.4 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + Custom CSS
+- **Charts**: Chart.js + react-chartjs-2
+- **HTTP Client**: Axios
+- **Font**: Press Start 2P
 
 ## 🏗️ Architecture
 
 ```
-PixelTicker/
+PixelVerse/
 ├── app/
 │   ├── page.tsx              # Main UI with state management
 │   ├── layout.tsx            # Root layout with metadata
@@ -39,82 +116,53 @@ PixelTicker/
     └── index.ts              # TypeScript interfaces
 ```
 
-## 🚀 Getting Started
+## ⚙️ Configuration
 
-### Prerequisites
+### Environment Variables
 
-- Node.js 18+ installed
-- npm or yarn package manager
+Copy the example environment file and configure it:
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and set your values:
+```env
+# Authentication (REQUIRED - minimum 8 characters)
+AUTH_PASSWORD=your_secure_password_here
+
+# Langflow Configuration (REQUIRED)
+LANGFLOW_URL=http://localhost:7861
+LANGFLOW_API_KEY=your_langflow_api_key
+
+# EverArt Configuration (REQUIRED)
+EVERART_API_KEY=your_everart_api_key
+
+# Optional: Flow IDs for different themes
+# LANGFLOW_FLOW_ID_TICKER=your_ticker_flow_id
+# LANGFLOW_FLOW_ID_SPACE=your_space_flow_id
+```
+
+**Important Security Notes:**
+- Set a strong password for `AUTH_PASSWORD` (minimum 8 characters, 12+ recommended for production)
+- All required environment variables are validated at startup
+- In development mode, localhost and private IPs are allowed for `LANGFLOW_URL`
+- In production mode, `LANGFLOW_URL` must be a public URL (SSRF protection)
+- Never commit `.env.local` to version control
+- See `.env.example` for detailed documentation
+
+### Langflow Setup
+
+**Prerequisites:**
 - Langflow instance running on port 7861
 - Stock MCP server configured in Langflow
 
-### Installation
-
-1. **Clone or navigate to the project directory:**
-   ```bash
-   cd pixelticker
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables:**
-   
-   Copy the example environment file and configure it:
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Edit `.env.local` and set your values:
-   ```env
-   # Authentication (REQUIRED - minimum 8 characters)
-   AUTH_PASSWORD=your_secure_password_here
-   
-   # Langflow Configuration (REQUIRED)
-   LANGFLOW_URL=http://localhost:7861
-   LANGFLOW_API_KEY=your_langflow_api_key
-   
-   # EverArt Configuration (REQUIRED)
-   EVERART_API_KEY=your_everart_api_key
-   
-   # Optional: Flow IDs for different themes
-   # LANGFLOW_FLOW_ID_TICKER=your_ticker_flow_id
-   # LANGFLOW_FLOW_ID_SPACE=your_space_flow_id
-   ```
-   
-   **Important Security Notes:**
-   - Set a strong password for `AUTH_PASSWORD` (minimum 8 characters, 12+ recommended for production)
-   - All required environment variables are validated at startup
-   - In development mode, localhost and private IPs are allowed for `LANGFLOW_URL`
-   - In production mode, `LANGFLOW_URL` must be a public URL (SSRF protection)
-   - Never commit `.env.local` to version control
-   - See `.env.example` for detailed documentation
-
-4. **Update Langflow Flow ID:**
-   
-   Open `services/langflow.ts` and replace `your-flow-id` with your actual Langflow flow ID:
-   ```typescript
-   `${LANGFLOW_URL}/api/v1/run/your-actual-flow-id`
-   ```
-
-### Running the App
-
-**Development mode:**
-```bash
-npm run dev
+**Update Flow ID:**
+Open `services/langflow.ts` and replace `your-flow-id` with your actual Langflow flow ID:
+```typescript
+`${LANGFLOW_URL}/api/v1/run/your-actual-flow-id`
 ```
 
-**Production build:**
-```bash
-npm run build
-npm start
-```
-
-The app will be available at `http://localhost:3000`
-
-### 🔐 Authentication
+## 🔐 Authentication
 
 On first visit, you'll see a cyberpunk-styled authentication page with two access options:
 
@@ -204,13 +252,6 @@ LANGFLOW_URL=https://api.langflow.io  # ✅ Must be public URL
 
 For detailed security documentation, see `.env.example`.
 
-## 🎨 Design Theme
-
-- **Colors**: Neon cyan (#00ff9f) and magenta (#ff00ff) on dark backgrounds
-- **Font**: Press Start 2P (retro pixel font from Google Fonts)
-- **Style**: Cyberpunk pixel art with glowing effects
-- **Charts**: Pixelated line charts with no curves for authentic retro feel
-
 ## 🔧 Configuration
 
 ### Langflow Setup
@@ -242,15 +283,6 @@ The app expects Langflow responses in this format:
   }]
 }
 ```
-
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 16.1.4 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + Custom CSS
-- **Charts**: Chart.js + react-chartjs-2
-- **HTTP Client**: Axios
-- **Font**: Press Start 2P (Google Fonts)
 
 ## 📝 API Routes
 
@@ -301,15 +333,6 @@ This is a demo application. Feel free to fork and customize for your needs!
 ## 📄 License
 
 MIT License - feel free to use this project for learning and development.
-
-## 🎮 Demo Queries
-
-Try these example questions:
-- "How has IBM's stock performed over the last 2 weeks?"
-- "What is Apple's current stock price?"
-- "Compare AAPL vs GOOGL performance this month"
-- "Show me Tesla stock trends for the past week"
-- "What's the volume for Microsoft stock today?"
 
 ---
 
