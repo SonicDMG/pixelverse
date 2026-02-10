@@ -57,33 +57,58 @@
 </tr>
 </table>
 
+<div align="center">
+<img src="public/images/pixel-space-orbit.gif" alt="PixelSpace Orbit Animation" width="100%" />
+</div>
+
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ installed
-- npm or yarn package manager
+- `Node.js 18+` installed
+- `npm` or `yarn` package manager
 
-### Get Running in 3 Steps
+### Installation
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+**[STEP 1]** Install dependencies:
+```bash
+$ npm install
+# Installing PixelVerse dependencies...
+# ████████████████████████████████████████ 100%
+```
 
-2. **Set up environment variables:**
-   ```bash
-   cp .env.example .env.local
-   ```
-   Edit `.env.local` and add your API keys (see [Configuration](#-configuration) for details)
+**[STEP 2]** Configure environment:
+```bash
+$ cp .env.example .env.local
+# Environment template copied
+# Edit .env.local with your API keys
+```
+📝 See [Configuration](#-configuration) for detailed setup
 
-3. **Start the app:**
-   ```bash
-   npm run dev
-   ```
+**[STEP 3]** Launch application:
+```bash
+$ npm run dev
+# Starting PixelVerse development server...
+# ✓ Ready on http://localhost:3000
+```
 
-Open `http://localhost:3000` and click **"GUEST ACCESS"** to start exploring!
+<div align="center">
 
-> 💡 **Guest mode** gives you full access to PixelTicker and PixelSpace without authentication. For full access including test pages, see [Authentication](#-authentication) below.
+```diff
++ ACCESS GRANTED
+```
+
+🌐 Navigate to `http://localhost:3000`
+
+Click **"GUEST ACCESS"** to enter the PixelVerse
+
+</div>
+
+> 💡 **GUEST MODE**: Full access to PixelTicker & PixelSpace • No authentication required
+> 🔐 **FULL AUTH**: Includes test pages • See [Authentication](#-authentication)
+
+```
+═══════════════════════════════════════════════════════════════════════════════
+```
 
 ## 🛠️ Tech Stack
 
@@ -91,30 +116,7 @@ Open `http://localhost:3000` and click **"GUEST ACCESS"** to start exploring!
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + Custom CSS
 - **Charts**: Chart.js + react-chartjs-2
-- **HTTP Client**: Axios
-- **Font**: Press Start 2P
-
-## 🏗️ Architecture
-
-```
-PixelVerse/
-├── app/
-│   ├── page.tsx              # Main UI with state management
-│   ├── layout.tsx            # Root layout with metadata
-│   ├── globals.css           # Cyberpunk pixel art theme
-│   └── api/
-│       └── ask-stock/
-│           └── route.ts      # API proxy to Langflow
-├── components/
-│   ├── StockChart.tsx        # Chart.js pixel art charts
-│   ├── QuestionInput.tsx     # Input with example questions
-│   ├── MessageHistory.tsx    # Q&A conversation display
-│   └── LoadingSpinner.tsx    # Pixel art loading animation
-├── services/
-│   └── langflow.ts           # Langflow API client
-└── types/
-    └── index.ts              # TypeScript interfaces
-```
+- **Font**: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P)
 
 ## ⚙️ Configuration
 
@@ -126,7 +128,7 @@ cp .env.example .env.local
 ```
 
 Edit `.env.local` and set your values:
-```env
+```js
 # Authentication (REQUIRED - minimum 8 characters)
 AUTH_PASSWORD=your_secure_password_here
 
@@ -147,7 +149,6 @@ EVERART_API_KEY=your_everart_api_key
 - All required environment variables are validated at startup
 - In development mode, localhost and private IPs are allowed for `LANGFLOW_URL`
 - In production mode, `LANGFLOW_URL` must be a public URL (SSRF protection)
-- Never commit `.env.local` to version control
 - See `.env.example` for detailed documentation
 
 ### Langflow Setup
@@ -164,7 +165,13 @@ Open `services/langflow.ts` and replace `your-flow-id` with your actual Langflow
 
 ## 🔐 Authentication
 
-On first visit, you'll see a cyberpunk-styled authentication page with two access options:
+<div align="center">
+<img src="public/images/login.png" alt="PixelVerse Login Screen" width="70%" />
+</div>
+
+<br/>
+
+On first visit, you'll see an authentication page with two access options:
 
 #### Full Authentication
 Enter the password you set in `AUTH_PASSWORD` to get full access to all features including test pages.
@@ -239,7 +246,7 @@ All environment variables are validated at application startup to prevent securi
 - Warnings are shown for optional variables or weak configurations
 
 **Development vs Production:**
-```bash
+```js
 # Development (.env.local)
 NODE_ENV=development
 LANGFLOW_URL=http://localhost:7861  # ✅ Allowed in development
@@ -251,80 +258,6 @@ LANGFLOW_URL=https://api.langflow.io  # ✅ Must be public URL
 ```
 
 For detailed security documentation, see `.env.example`.
-
-## 🔧 Configuration
-
-### Langflow Setup
-
-Your Langflow flow should:
-1. Accept text input (stock questions)
-2. Use MCP tools to fetch stock data
-3. Return responses with:
-   - Text answer
-   - Optional structured stock data (array of {date, price, volume})
-
-### Response Format
-
-The app expects Langflow responses in this format:
-```json
-{
-  "outputs": [{
-    "outputs": [{
-      "results": {
-        "message": {
-          "text": "Answer text here",
-          "data": [
-            {"date": "2024-01-01", "price": 150.25, "volume": 1000000},
-            ...
-          ]
-        }
-      }
-    }]
-  }]
-}
-```
-
-## 📝 API Routes
-
-### POST /api/ask-stock
-
-Ask a stock-related question.
-
-**Request:**
-```json
-{
-  "question": "How has IBM's stock performed?"
-}
-```
-
-**Response:**
-```json
-{
-  "answer": "IBM stock has...",
-  "stockData": [...],
-  "symbol": "IBM"
-}
-```
-
-## 🐛 Troubleshooting
-
-### Langflow Connection Issues
-
-- Verify Langflow is running on port 7861
-- Check the flow ID in `services/langflow.ts`
-- Ensure CORS is enabled in Langflow
-
-### Chart Not Displaying
-
-- Verify stock data is in the correct format
-- Check browser console for errors
-- Ensure Chart.js is properly registered
-
-### Build Errors
-
-- Clear `.next` folder: `rm -rf .next`
-- Reinstall dependencies: `rm -rf node_modules && npm install`
-- Check TypeScript errors: `npm run build`
 
 ## 🤝 Contributing
 
