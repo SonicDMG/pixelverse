@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# RAG corpus database (built by scripts/ingest-corpus.ts)
+/data/corpus.db
+/data/corpus.db-shm
+/data/corpus.db-wal
