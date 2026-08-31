@@ -521,6 +521,7 @@ function DocViewer({ docId, title, onClose }: { docId: string; title: string; on
   const [sections, setSections] = useState<DocSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [rawMode, setRawMode] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -532,6 +533,7 @@ function DocViewer({ docId, title, onClose }: { docId: string; title: string; on
 
   // Concatenate all section doclang into one markdown string
   const markdown = sections.map(s => docLangToMarkdown(s.doclang)).join('\n\n');
+  const raw = sections.map(s => s.doclang).join('\n\n---\n\n');
 
   return (
     <div
@@ -546,13 +548,22 @@ function DocViewer({ docId, title, onClose }: { docId: string; title: string; on
         <span className="text-[9px] font-pixel tracking-widest truncate" style={{ color: 'var(--color-neon-magenta)' }}>
           ◈ {title}
         </span>
-        <button
-          onClick={onClose}
-          className="text-[9px] font-pixel shrink-0 ml-2"
-          style={{ color: 'rgba(255,0,255,0.6)' }}
-        >
-          [×]
-        </button>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          <button
+            onClick={() => setRawMode(v => !v)}
+            className="text-[9px] font-pixel"
+            style={{ color: rawMode ? 'var(--color-accent)' : 'rgba(255,0,255,0.5)' }}
+          >
+            [{rawMode ? 'RENDERED' : 'RAW'}]
+          </button>
+          <button
+            onClick={onClose}
+            className="text-[9px] font-pixel"
+            style={{ color: 'rgba(255,0,255,0.6)' }}
+          >
+            [×]
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -569,7 +580,9 @@ function DocViewer({ docId, title, onClose }: { docId: string; title: string; on
           <p className="text-[9px] font-pixel" style={{ color: 'rgba(0,255,159,0.4)' }}>NO CONTENT</p>
         )}
         {!loading && !error && sections.length > 0 && (
-          <PixelMarkdown text={markdown} />
+          rawMode
+            ? <pre className="text-[9px] font-pixel whitespace-pre-wrap break-all" style={{ color: 'rgba(0,255,159,0.7)', lineHeight: '1.6' }}>{raw}</pre>
+            : <PixelMarkdown text={markdown} />
         )}
       </div>
     </div>

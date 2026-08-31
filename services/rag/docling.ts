@@ -23,9 +23,12 @@ export function isSidecarConfigured(): boolean {
 
 /**
  * POST the file to the Python sidecar and return native DocLang XML.
- * The sidecar runs DocumentConverter + export_to_doclang() in-process,
- * so tables, location tags, and OTSL cells are preserved exactly as
- * Singularity produces them.
+ *
+ * If DOCLING_API_URL is also configured, uses /convert-saas so the sidecar
+ * delegates to DoclingServiceClient (same path as Singularity) and then calls
+ * export_to_doclang() locally — full fidelity with location tags, tables, etc.
+ *
+ * Otherwise falls back to /convert which runs DocumentConverter locally.
  */
 export async function convertWithSidecar(
   fileBuffer: Buffer,
@@ -33,18 +36,20 @@ export async function convertWithSidecar(
   mimeType: string,
 ): Promise<string> {
   const baseUrl = process.env.DOCLING_SIDECAR_URL!.replace(/\/$/, '');
+  const endpoint = isDoclingConfigured() ? '/convert-saas' : '/convert';
 
   const form = new FormData();
   form.append('file', new Blob([new Uint8Array(fileBuffer)], { type: mimeType }), filename);
 
-  const resp = await fetch(`${baseUrl}/convert`, { method: 'POST', body: form });
+  console.log(`[sidecar] → ${endpoint} for ${filename}`);
+  const resp = await fetch(`${baseUrl}${endpoint}`, { method: 'POST', body: form });
   if (!resp.ok) {
     const body = await resp.text().catch(() => '');
-    throw new Error(`Sidecar convert error ${resp.status}: ${body.slice(0, 300)}`);
+    throw new Error(`Sidecar ${endpoint} error ${resp.status}: ${body.slice(0, 300)}`);
   }
 
   const json = await resp.json();
-  if (!json?.doclang) throw new Error('Sidecar returned no doclang field');
+  if (!json?.doclang) throw new Error(`Sidecar ${endpoint} returned no doclang field`);
   return json.doclang as string;
 }
 

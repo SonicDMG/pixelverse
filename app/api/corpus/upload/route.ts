@@ -21,8 +21,8 @@ const ACCEPTED_MIME: Record<string, 'docling' | 'text'> = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docling',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'docling',
   'application/msword': 'docling',
+  'text/markdown': 'docling',
   'text/plain': 'text',
-  'text/markdown': 'text',
   'text/csv': 'text',
 };
 
@@ -74,22 +74,10 @@ export async function POST(req: NextRequest) {
 
   if (handler === 'docling') {
     const buffer = Buffer.from(await file.arrayBuffer());
-    if (isDoclingConfigured()) {
-      // Mode B or C — SaaS does the heavy lifting; sidecar handles DocLang export if available
-      const mode = isSidecarConfigured() ? 'B (SaaS → sidecar DocLang)' : 'C (SaaS → markdown)';
-      console.log(`[upload] → mode ${mode} via ${process.env.DOCLING_API_URL}`);
-      try {
-        doclang = await convertWithDocling(buffer, file.name, mimeType);
-        console.log(`[upload] ✔ SaaS done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
-      } catch (err) {
-        console.error('[upload] ✖ SaaS conversion failed:', err);
-        return NextResponse.json(
-          { error: `Docling conversion failed: ${err instanceof Error ? err.message : err}` },
-          { status: 502 }
-        );
-      }
-    } else if (isSidecarConfigured()) {
-      // Mode A — fully local
+    if (isSidecarConfigured()) {
+      // Mode A — sidecar handles the file directly via DocumentConverter.
+      // Preferred over SaaS for text-based files (md, txt) because SaaS only
+      // returns a markdown artifact for these, losing all doclang structure.
       console.log(`[upload] → mode A (local sidecar) via ${process.env.DOCLING_SIDECAR_URL}`);
       try {
         doclang = await convertWithSidecar(buffer, file.name, mimeType);
@@ -98,6 +86,19 @@ export async function POST(req: NextRequest) {
         console.error('[upload] ✖ sidecar conversion failed:', err);
         return NextResponse.json(
           { error: `Sidecar conversion failed: ${err instanceof Error ? err.message : err}` },
+          { status: 502 }
+        );
+      }
+    } else if (isDoclingConfigured()) {
+      // Mode C — SaaS only (no sidecar). Returns markdown wrapped as pseudo-doclang.
+      console.log(`[upload] → mode C (SaaS only) via ${process.env.DOCLING_API_URL}`);
+      try {
+        doclang = await convertWithDocling(buffer, file.name, mimeType);
+        console.log(`[upload] ✔ SaaS done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
+      } catch (err) {
+        console.error('[upload] ✖ SaaS conversion failed:', err);
+        return NextResponse.json(
+          { error: `Docling conversion failed: ${err instanceof Error ? err.message : err}` },
           { status: 502 }
         );
       }

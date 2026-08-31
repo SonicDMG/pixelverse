@@ -1,9 +1,11 @@
 """
 Docling → DocLang sidecar.
 
-Single endpoint:
-  POST /convert   multipart: file=<bytes>
-  Returns:        { "doclang": "<document>…</document>" }
+Endpoints:
+  POST /convert        multipart: file=<bytes>  — local DocumentConverter
+  POST /convert-saas   multipart: file=<bytes>  — DoclingServiceClient → SaaS
+  POST /convert-json   body: DoclingDocument JSON
+  Returns: { "doclang": "<document>…</document>" }
 
 Run:
   uvicorn sidecar.main:app --port 7421
@@ -12,8 +14,20 @@ Run:
 from __future__ import annotations
 
 import logging
+import os
 import tempfile
 from pathlib import Path
+
+# Load .env.local from the project root (parent of the sidecar/ directory)
+# so DOCLING_SERVICE_URL / DOCLING_API_KEY are available without shell exports.
+_env_path = Path(__file__).parent.parent / ".env.local"
+if _env_path.exists():
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,6 +49,72 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.post("/convert-saas")
+async def convert_saas(file: UploadFile = File(...)) -> dict:
+    """
+    Upload a file to Docling SaaS via DoclingServiceClient, receive the
+    DoclingDocument, and return native DocLang via export_to_doclang().
+
+    Requires DOCLING_SERVICE_URL and DOCLING_API_KEY env vars.
+    """
+    import os
+    import time
+    import tempfile
+    from pathlib import Path as _Path
+
+    service_url = os.environ.get("DOCLING_API_URL", "").strip()
+    api_key = os.environ.get("DOCLING_API_KEY", "").strip()
+    if not service_url or not api_key:
+        raise HTTPException(
+            status_code=422,
+            detail="DOCLING_API_URL and DOCLING_API_KEY must be set in .env.local",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    suffix = _Path(file.filename or "upload").suffix or ".bin"
+    kb = len(content) / 1024
+    log.info("▶ /convert-saas received '%s' (%.1f KB)", file.filename, kb)
+
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = _Path(tmp.name)
+
+    try:
+        t0 = time.monotonic()
+        from docling.service_client import DoclingServiceClient
+        from docling.service_client.client import ConvertDocumentsRequestOptions
+
+        opts = ConvertDocumentsRequestOptions(do_ocr=True, do_table_structure=True)
+        log.info("→ DoclingServiceClient.convert() starting…")
+        with DoclingServiceClient(url=service_url, api_key=api_key) as client:
+            result = client.convert(source=tmp_path, options=opts)
+
+        log.info("  SaaS convert done in %.2fs", time.monotonic() - t0)
+        doc = result.document
+
+        t1 = time.monotonic()
+        doclang = doc.export_to_doclang()
+        log.info("  export_to_doclang() done in %.2fs — %d chars", time.monotonic() - t1, len(doclang))
+
+        import re
+        log.info(
+            "  structure — headings:%d text:%d tables:%d locations:%d",
+            len(re.findall(r"<heading", doclang)),
+            len(re.findall(r"<text", doclang)),
+            len(re.findall(r"<table", doclang)),
+            len(re.findall(r"<location", doclang)),
+        )
+        return {"doclang": doclang}
+    except Exception as exc:
+        log.exception("✖ /convert-saas failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 @app.post("/convert-json")
