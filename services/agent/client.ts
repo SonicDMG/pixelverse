@@ -68,6 +68,7 @@ function formatReferences(sections: SectionResult[]): ReferenceSource[] {
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 220),
+    doclang: s.doclang,
   }));
 }
 

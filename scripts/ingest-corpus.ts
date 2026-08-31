@@ -44,6 +44,7 @@ const RAG_DB_PATH = process.env.RAG_DB_PATH || path.join(process.cwd(), 'data', 
 const args = process.argv.slice(2);
 const themeArg = args.find(a => a.startsWith('--theme='))?.split('=')[1] ?? 'all';
 const limitArg = parseInt(args.find(a => a.startsWith('--limit='))?.split('=')[1] ?? '0', 10);
+const idsArg = args.find(a => a.startsWith('--ids='))?.split('=')[1]?.split(',').map(s => s.trim()).filter(Boolean) ?? [];
 
 // ── Corpus definitions ────────────────────────────────────────────────────
 
@@ -98,6 +99,10 @@ const SPACE_CORPUS: CorpusEntry[] = [
   // Concepts
   { id: 'wp-big-bang', title: 'Big Bang', url: 'https://en.wikipedia.org/wiki/Big_Bang', wikipediaTitle: 'Big_Bang', theme: 'space' },
   { id: 'wp-dark-matter', title: 'Dark matter', url: 'https://en.wikipedia.org/wiki/Dark_matter', wikipediaTitle: 'Dark_matter', theme: 'space' },
+  { id: 'wp-dark-energy', title: 'Dark energy', url: 'https://en.wikipedia.org/wiki/Dark_energy', wikipediaTitle: 'Dark_energy', theme: 'space' },
+  { id: 'wp-weakly-interacting', title: 'Weakly interacting massive particle', url: 'https://en.wikipedia.org/wiki/Weakly_interacting_massive_particle', wikipediaTitle: 'Weakly_interacting_massive_particle', theme: 'space' },
+  { id: 'wp-bullet-cluster', title: 'Bullet Cluster', url: 'https://en.wikipedia.org/wiki/Bullet_Cluster', wikipediaTitle: 'Bullet_Cluster', theme: 'space' },
+  { id: 'wp-lambda-cdm', title: 'Lambda-CDM model', url: 'https://en.wikipedia.org/wiki/Lambda-CDM_model', wikipediaTitle: 'Lambda-CDM_model', theme: 'space' },
   { id: 'wp-exoplanet', title: 'Exoplanet', url: 'https://en.wikipedia.org/wiki/Exoplanet', wikipediaTitle: 'Exoplanet', theme: 'space' },
   { id: 'wp-solar-system', title: 'Solar System', url: 'https://en.wikipedia.org/wiki/Solar_System', wikipediaTitle: 'Solar_System', theme: 'space' },
 ];
@@ -146,7 +151,8 @@ async function embedBatch(texts: string[]): Promise<number[][]> {
 // ── Main ingest loop ──────────────────────────────────────────────────────
 
 async function ingest(entries: CorpusEntry[], db: ReturnType<typeof openWritable>): Promise<void> {
-  const limited = limitArg > 0 ? entries.slice(0, limitArg) : entries;
+  let limited = limitArg > 0 ? entries.slice(0, limitArg) : entries;
+  if (idsArg.length > 0) limited = limited.filter(e => idsArg.includes(e.id));
 
   for (const entry of limited) {
     console.log(`\n📄 ${entry.title} [${entry.theme}]`);

@@ -19,6 +19,7 @@ export interface ReferenceSource {
   pageNum?: number | null;
   url?: string;
   excerpt: string;
+  doclang?: string;
 }
 
 // Stock query result

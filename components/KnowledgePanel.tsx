@@ -331,33 +331,37 @@ interface MySourcesTabProps {
 }
 
 function MySourcesTab({ docs, onDelete, onAdded }: MySourcesTabProps) {
-  const [inputMode, setInputMode] = useState<'text' | 'file'>('text');
+  const [inputMode, setInputMode] = useState<'text' | 'url' | 'file'>('text');
+
+  const MODES: { id: 'text' | 'url' | 'file'; label: string }[] = [
+    { id: 'text', label: 'PASTE TEXT' },
+    { id: 'url',  label: 'FROM URL' },
+    { id: 'file', label: 'UPLOAD FILE' },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
       {/* Input mode toggle */}
       <div className="flex" style={{ border: '1px solid var(--color-neon-cyan)' }}>
-        {(['text', 'file'] as const).map(mode => (
+        {MODES.map((mode, i) => (
           <button
-            key={mode}
-            onClick={() => setInputMode(mode)}
+            key={mode.id}
+            onClick={() => setInputMode(mode.id)}
             className="flex-1 py-1 text-[10px] font-pixel tracking-wider transition-colors"
             style={{
-              color: inputMode === mode ? 'var(--color-bg-darker)' : 'var(--color-neon-cyan)',
-              background: inputMode === mode ? 'var(--color-neon-cyan)' : 'transparent',
-              borderRight: mode === 'text' ? '1px solid var(--color-neon-cyan)' : undefined,
+              color: inputMode === mode.id ? 'var(--color-bg-darker)' : 'var(--color-neon-cyan)',
+              background: inputMode === mode.id ? 'var(--color-neon-cyan)' : 'transparent',
+              borderRight: i < MODES.length - 1 ? '1px solid var(--color-neon-cyan)' : undefined,
             }}
           >
-            {mode === 'text' ? 'PASTE TEXT' : 'UPLOAD FILE'}
+            {mode.label}
           </button>
         ))}
       </div>
 
-      {inputMode === 'text' ? (
-        <AddDocForm onAdded={onAdded} />
-      ) : (
-        <UploadDocForm onAdded={onAdded} />
-      )}
+      {inputMode === 'text' && <AddDocForm onAdded={onAdded} />}
+      {inputMode === 'url'  && <UrlIngestForm onAdded={onAdded} />}
+      {inputMode === 'file' && <UploadDocForm onAdded={onAdded} />}
 
       <div>
         <div
@@ -810,6 +814,155 @@ function AddDocForm({ onAdded }: { onAdded: () => void }) {
         }}
       >
         {state === 'loading' ? 'PROCESSING...' : 'EMBED + ADD →'}
+      </button>
+    </form>
+  );
+}
+
+// ── URL Ingest Form ───────────────────────────────────────────────────────────
+
+function UrlIngestForm({ onAdded }: { onAdded: () => void }) {
+  const [url, setUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [theme, setTheme] = useState<'space' | 'ticker' | 'shared'>('space');
+  const [state, setState] = useState<AddState>('idle');
+  const [progress, setProgress] = useState('');
+  const [err, setErr] = useState('');
+
+  const canSubmit = url.trim() && state !== 'loading';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+
+    setState('loading');
+    setProgress('FETCHING URL...');
+    setErr('');
+
+    try {
+      const res = await fetch('/api/corpus/url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim(), title: title.trim() || undefined, theme }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setProgress(`✓ INDEXED ${data.section_count} SECTIONS — "${data.title}"`);
+      setState('done');
+      setUrl('');
+      setTitle('');
+      onAdded();
+
+      setTimeout(() => { setState('idle'); setProgress(''); }, 4000);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'UNKNOWN ERROR';
+      setErr(msg.toUpperCase());
+      setState('error');
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    background: 'var(--color-bg-card)',
+    border: '1px solid var(--color-neon-cyan)',
+    color: 'var(--color-neon-cyan)',
+    fontFamily: 'var(--font-family-pixel)',
+    fontSize: '10px',
+    outline: 'none',
+    width: '100%',
+    padding: '6px 8px',
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div
+        className="text-xs font-pixel tracking-widest pb-1"
+        style={{ color: 'var(--color-neon-cyan)', borderBottom: '1px solid var(--color-neon-cyan)' }}
+      >
+        ▸ INGEST FROM URL
+      </div>
+
+      {/* URL */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[9px] font-pixel tracking-widest" style={{ color: 'rgba(0,255,159,0.6)' }}>
+          URL
+        </label>
+        <input
+          type="url"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="HTTPS://..."
+          style={inputStyle}
+          disabled={state === 'loading'}
+        />
+      </div>
+
+      {/* Title (optional) */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[9px] font-pixel tracking-widest" style={{ color: 'rgba(0,255,159,0.6)' }}>
+          TITLE <span style={{ color: 'rgba(0,255,159,0.35)' }}>(OPTIONAL — AUTO-DETECTED)</span>
+        </label>
+        <input
+          type="text"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="LEAVE BLANK TO USE PAGE TITLE..."
+          maxLength={200}
+          style={inputStyle}
+          disabled={state === 'loading'}
+        />
+      </div>
+
+      {/* Theme */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[9px] font-pixel tracking-widest" style={{ color: 'rgba(0,255,159,0.6)' }}>
+          THEME
+        </label>
+        <select
+          value={theme}
+          onChange={e => setTheme(e.target.value as 'space' | 'ticker' | 'shared')}
+          style={inputStyle}
+          disabled={state === 'loading'}
+        >
+          <option value="space">SPACE</option>
+          <option value="ticker">TICKER</option>
+          <option value="shared">SHARED</option>
+        </select>
+      </div>
+
+      {/* Status */}
+      {state === 'loading' && (
+        <div className="text-[9px] font-pixel animated-ellipsis" style={{ color: 'var(--color-neon-cyan)' }}>
+          ⟳ {progress}
+        </div>
+      )}
+      {state === 'done' && (
+        <div className="text-[9px] font-pixel" style={{ color: 'var(--color-success)' }}>
+          {progress}
+        </div>
+      )}
+      {state === 'error' && (
+        <div className="text-[9px] font-pixel break-words" style={{ color: 'var(--color-error)' }}>
+          ⚠ {err}
+        </div>
+      )}
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="px-4 py-2 text-xs font-pixel tracking-widest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: canSubmit ? 'var(--color-neon-cyan)' : 'transparent',
+          color: canSubmit ? 'var(--color-bg-darker)' : 'var(--color-neon-cyan)',
+          border: '1px solid var(--color-neon-cyan)',
+        }}
+      >
+        {state === 'loading' ? 'FETCHING...' : 'FETCH + EMBED →'}
       </button>
     </form>
   );

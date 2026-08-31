@@ -34,7 +34,7 @@ export function convertToDocLang(text: string, title: string): string {
   const flushBuf = () => {
     const chunk = buf.join('\n').trim();
     if (chunk) {
-      parts.push(`<text>${esc(chunk)}</text>`);
+      parts.push(`<text>${chunk}</text>`);
     }
     buf = [];
   };
@@ -46,14 +46,14 @@ export function convertToDocLang(text: string, title: string): string {
     if (h) {
       flushBuf();
       const level = h[1].length;
-      parts.push(`<heading level="${level}">${esc(h[2].trim())}</heading>`);
+      parts.push(`<heading level="${level}">${h[2].trim()}</heading>`);
     } else {
       buf.push(line);
     }
   }
   flushBuf();
 
-  return `<document>\n<heading level="1">${esc(title)}</heading>\n${parts.join('\n')}\n</document>`;
+  return `<document>\n<heading level="1">${title}</heading>\n${parts.join('\n')}\n</document>`;
 }
 
 // ── splitDocLangSections ──────────────────────────────────────────────────────
@@ -124,12 +124,6 @@ export function stripDocLangTags(text: string): string {
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-// ── Internal helpers ──────────────────────────────────────────────────────────
-
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Made with Bob

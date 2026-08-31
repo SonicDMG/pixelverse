@@ -104,43 +104,7 @@ export function ConversationGroup({
             {showReferences && (
               <div className="mt-2 space-y-2 pl-2 border-l-2 border-[#444] animate-fade-in">
                 {references.map((ref, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 bg-black/40 border border-[#2a2a2a] text-xs font-pixel space-y-1"
-                  >
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-1.5 text-white font-medium">
-                        <span className="text-cyan-400">[{idx + 1}]</span>
-                        {ref.url ? (
-                          <a
-                            href={ref.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-cyan-300 hover:underline inline-flex items-center gap-1"
-                          >
-                            {ref.title}
-                          </a>
-                        ) : (
-                          <span>{ref.title}</span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-gray-500">
-                        {ref.pageNum !== null && ref.pageNum !== undefined && `p. ${ref.pageNum}`}
-                      </div>
-                    </div>
-
-                    {ref.heading && (
-                      <div className="text-[11px] text-gray-400">
-                        § {ref.heading}
-                      </div>
-                    )}
-
-                    {ref.excerpt && (
-                      <p className="text-[11px] text-gray-400/90 leading-relaxed italic bg-black/30 p-1.5 rounded-none border-l-2 border-cyan-500/40">
-                        &ldquo;{ref.excerpt}&hellip;&rdquo;
-                      </p>
-                    )}
-                  </div>
+                  <ReferenceCard key={idx} ref={ref} idx={idx} theme={theme} />
                 ))}
               </div>
             )}
@@ -160,6 +124,70 @@ export function ConversationGroup({
         <div className="animate-fade-in mt-6">
           <StockChart data={stockData} symbol={symbol} />
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── ReferenceCard ─────────────────────────────────────────────────────────────
+
+function ReferenceCard({ ref, idx, theme }: { ref: ReferenceSource; idx: number; theme: any }) {
+  const [showRaw, setShowRaw] = useState(false);
+
+  return (
+    <div className="p-2.5 bg-black/40 border border-[#2a2a2a] text-xs font-pixel space-y-1">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 text-white font-medium">
+          <span className="text-cyan-400">[{idx + 1}]</span>
+          {ref.url ? (
+            <a
+              href={ref.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-300 hover:underline inline-flex items-center gap-1"
+            >
+              {ref.title}
+            </a>
+          ) : (
+            <span>{ref.title}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {ref.pageNum !== null && ref.pageNum !== undefined && (
+            <span className="text-[10px] text-gray-500">p. {ref.pageNum}</span>
+          )}
+          {ref.doclang && (
+            <button
+              type="button"
+              onClick={() => setShowRaw(prev => !prev)}
+              className="text-[10px] font-pixel px-1.5 py-0.5 border transition-colors cursor-pointer"
+              style={{
+                borderColor: showRaw ? theme.colors.primary : '#444',
+                color: showRaw ? theme.colors.primary : '#666',
+              }}
+            >
+              {showRaw ? 'EXCERPT' : 'RAW'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {ref.heading && (
+        <div className="text-[11px] text-gray-400">
+          § {ref.heading}
+        </div>
+      )}
+
+      {!showRaw && ref.excerpt && (
+        <p className="text-[11px] text-gray-400/90 leading-relaxed italic bg-black/30 p-1.5 rounded-none border-l-2 border-cyan-500/40">
+          &ldquo;{ref.excerpt}&hellip;&rdquo;
+        </p>
+      )}
+
+      {showRaw && ref.doclang && (
+        <pre className="text-[10px] text-green-400/80 leading-relaxed bg-black/60 p-1.5 border-l-2 border-green-500/40 overflow-x-auto whitespace-pre-wrap break-words font-mono">
+          {ref.doclang}
+        </pre>
       )}
     </div>
   );

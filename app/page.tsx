@@ -183,7 +183,7 @@ export default function Home() {
             className="mb-2"
           />
           <p className="text-xs text-gray-500 font-pixel">
-            2026 {theme.name.toUpperCase()} | POWERED BY {appMode === 'ticker' ? 'LANGFLOW' : 'OPENRAG'}
+            2026 {theme.name.toUpperCase()} | POWERED BY {appMode === 'ticker' ? 'DOCLING' : 'DOCLANG'}
           </p>
         </footer>
       </div>
