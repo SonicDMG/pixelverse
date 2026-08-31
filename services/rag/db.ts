@@ -22,6 +22,7 @@ import fs from 'fs';
 const DEFAULT_DB_PATH = path.join(process.cwd(), 'data', 'corpus.db');
 
 let _db: Database.Database | null = null;
+let _dbWritable: Database.Database | null = null;
 
 /**
  * Return a singleton SQLite connection with sqlite-vec loaded.
@@ -47,6 +48,30 @@ export function getDb(): Database.Database {
 
   _db = db;
   return _db;
+}
+
+/**
+ * Return a singleton writable SQLite connection for API mutations.
+ * Creates the DB (with schema) if it doesn't exist yet.
+ */
+export function getWritableDb(): Database.Database {
+  if (_dbWritable) return _dbWritable;
+
+  const dbPath = process.env.RAG_DB_PATH || DEFAULT_DB_PATH;
+  const dir = path.dirname(dbPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+  const db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  sqliteVec.load(db);
+  applySchema(db);
+
+  // Invalidate any existing read-only singleton so next getDb() call reopens
+  _db = null;
+
+  _dbWritable = db;
+  return _dbWritable;
 }
 
 /**
