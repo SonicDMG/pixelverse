@@ -31,7 +31,7 @@ config({ path: resolve(process.cwd(), '.env') });
 
 import OpenAI from 'openai';
 import { openWritable, insertDocument, insertSection, insertEmbedding, rebuildFts } from '../services/rag/db';
-import { randomUUID } from 'crypto';
+import { convertToDocLang, splitDocLangSections } from '../services/rag/doclang';
 import path from 'path';
 
 // ── Config ────────────────────────────────────────────────────────────────
@@ -129,113 +129,6 @@ async function fetchWikipediaText(title: string): Promise<string> {
     return page?.extract ?? '';
   }
   throw new Error(`Wikipedia fetch failed after 3 attempts for "${title}"`);
-}
-
-// ── Markdown → pseudo-DocLang wrapper ────────────────────────────────────
-// Using plain markdown for now; DocLang via Docling SaaS can be swapped in later.
-
-function convertToDocLang(text: string, title: string): string {
-  // Wrap markdown headings as <heading> tags so the section splitter works.
-  // Everything else is passed through as <text> content.
-  const lines = text.split('\n');
-  const parts: string[] = [];
-  let buf: string[] = [];
-
-  const flushBuf = () => {
-    const chunk = buf.join('\n').trim();
-    if (chunk) parts.push(`<text>${chunk.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>`);
-    buf = [];
-  };
-
-  for (const line of lines) {
-    // Match markdown headings (## Foo) or MediaWiki headings (== Foo ==)
-    const mdH = line.match(/^(#{1,6})\s+(.+)/);
-    const wikiH = !mdH && line.match(/^(={1,6})\s*(.+?)\s*={1,6}\s*$/);
-    const h = mdH ?? wikiH;
-    if (h) {
-      flushBuf();
-      const level = h[1].length;
-      const heading = h[2].trim().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      parts.push(`<heading level="${level}">${heading}</heading>`);
-    } else {
-      buf.push(line);
-    }
-  }
-  flushBuf();
-
-  return `<document>\n<heading level="1">${title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</heading>\n${parts.join('\n')}\n</document>`;
-}
-
-// ── DocLang section splitter ──────────────────────────────────────────────
-
-interface RawSection {
-  id: string;
-  heading: string | null;
-  doclang: string;
-  plain_text: string;
-  page_num: number | null;
-  seq: number;
-}
-
-function splitDocLangSections(doclang: string): RawSection[] {
-  const headingRe = /<heading(?:\s[^>]*)?>.*?<\/heading>|<page_break\s*\/>/gs;
-  const sections: RawSection[] = [];
-  let pos = 0;
-  let currentHeading: string | null = null;
-  let currentStart = 0;
-  let pageNum = 1;
-  let seq = 0;
-
-  const flush = (end: number, nextPage = false) => {
-    const chunk = doclang.slice(currentStart, end).trim();
-    if (!chunk) return;
-    const plain = stripDocLangTags(chunk);
-    if (plain.trim()) {
-      sections.push({
-        id: randomUUID(),
-        heading: currentHeading,
-        doclang: chunk,
-        plain_text: plain,
-        page_num: pageNum,
-        seq: seq++,
-      });
-    }
-    if (nextPage) pageNum++;
-    currentHeading = null;
-    currentStart = end;
-  };
-
-  for (const m of doclang.matchAll(headingRe)) {
-    const tag = m[0];
-    if (tag.includes('<page_break')) {
-      flush(m.index!);
-      currentStart = m.index! + tag.length;
-    } else {
-      flush(m.index!);
-      currentHeading = stripDocLangTags(tag).trim();
-      currentStart = m.index!;
-    }
-  }
-  flush(doclang.length);
-
-  // No sections found — treat whole doc as one
-  if (!sections.length && doclang.trim()) {
-    const plain = stripDocLangTags(doclang);
-    if (plain.trim()) {
-      sections.push({ id: randomUUID(), heading: null, doclang, plain_text: plain, page_num: 1, seq: 0 });
-    }
-  }
-
-  return sections;
-}
-
-function stripDocLangTags(text: string): string {
-  return text
-    .replace(/<!\[CDATA\[(.*?)]]>/gs, '$1')
-    .replace(/<[^>]+\/>/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 // ── Embedding ─────────────────────────────────────────────────────────────

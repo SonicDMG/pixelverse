@@ -8,6 +8,7 @@ import {
   insertEmbedding,
   rebuildFts,
 } from '@/services/rag/db';
+import { convertToDocLang, splitDocLangSections } from '@/services/rag/doclang';
 
 // ── GET /api/corpus ───────────────────────────────────────────────────────────
 // Returns all documents with section counts, grouped by theme.
@@ -76,8 +77,10 @@ export async function POST(req: NextRequest) {
       created_at: now,
     });
 
-    // Convert plain text → pseudo-DocLang sections
-    const sections = _splitTextToSections(text.trim(), docId, theme);
+    // Convert plain text → DocLang, then split into sections
+    const doclang = convertToDocLang(text.trim(), title.trim());
+    const rawSections = splitDocLangSections(doclang);
+    const sections = rawSections.map(s => ({ ...s, doc_id: docId, theme }));
 
     for (const s of sections) {
       insertSection(db, s);
@@ -105,49 +108,6 @@ export async function POST(req: NextRequest) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-interface SectionRow {
-  id: string;
-  doc_id: string;
-  heading: string | null;
-  doclang: string;
-  plain_text: string;
-  page_num: number | null;
-  seq: number;
-  theme: string;
-}
-
-/** Split plain text by double-newline paragraphs; keep chunks ≤ 800 chars. */
-function _splitTextToSections(text: string, docId: string, theme: string): SectionRow[] {
-  const paragraphs = text.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
-  const sections: SectionRow[] = [];
-  let seq = 0;
-  let buf = '';
-
-  const flush = () => {
-    if (!buf.trim()) return;
-    const esc = buf.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    sections.push({
-      id: randomUUID(),
-      doc_id: docId,
-      heading: null,
-      doclang: `<text>${esc}</text>`,
-      plain_text: buf.trim(),
-      page_num: 1,
-      seq: seq++,
-      theme,
-    });
-    buf = '';
-  };
-
-  for (const para of paragraphs) {
-    if ((buf + '\n\n' + para).length > 800 && buf) flush();
-    buf = buf ? buf + '\n\n' + para : para;
-  }
-  flush();
-
-  return sections;
-}
 
 async function _embedTexts(texts: string[]): Promise<number[][]> {
   if (!texts.length) return [];

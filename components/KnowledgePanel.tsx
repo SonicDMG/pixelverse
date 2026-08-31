@@ -216,7 +216,7 @@ function ThemeGroup({ theme, docs }: { theme: string; docs: CorpusDocument[] }) 
 function DocRow({ doc }: { doc: CorpusDocument }) {
   const sourceColor =
     doc.source === 'wikipedia'
-      ? '#aabfff'
+      ? 'rgba(0,255,159,0.5)'
       : doc.source === 'user'
       ? 'var(--color-neon-magenta)'
       : 'var(--color-accent)';
@@ -245,7 +245,11 @@ function DocRow({ doc }: { doc: CorpusDocument }) {
             target="_blank"
             rel="noopener noreferrer"
             className="truncate hover:underline"
-            style={{ color: 'rgba(0,255,159,0.85)' }}
+            style={{
+              color: 'rgba(0,255,159,0.85)',
+              textDecoration: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
             title={doc.title}
           >
             {doc.title}
@@ -272,9 +276,33 @@ interface MySourcesTabProps {
 }
 
 function MySourcesTab({ docs, onDelete, onAdded }: MySourcesTabProps) {
+  const [inputMode, setInputMode] = useState<'text' | 'file'>('text');
+
   return (
     <div className="flex flex-col gap-6">
-      <AddDocForm onAdded={onAdded} />
+      {/* Input mode toggle */}
+      <div className="flex" style={{ border: '1px solid var(--color-neon-cyan)' }}>
+        {(['text', 'file'] as const).map(mode => (
+          <button
+            key={mode}
+            onClick={() => setInputMode(mode)}
+            className="flex-1 py-1 text-[10px] font-pixel tracking-wider transition-colors"
+            style={{
+              color: inputMode === mode ? 'var(--color-bg-darker)' : 'var(--color-neon-cyan)',
+              background: inputMode === mode ? 'var(--color-neon-cyan)' : 'transparent',
+              borderRight: mode === 'text' ? '1px solid var(--color-neon-cyan)' : undefined,
+            }}
+          >
+            {mode === 'text' ? 'PASTE TEXT' : 'UPLOAD FILE'}
+          </button>
+        ))}
+      </div>
+
+      {inputMode === 'text' ? (
+        <AddDocForm onAdded={onAdded} />
+      ) : (
+        <UploadDocForm onAdded={onAdded} />
+      )}
 
       <div>
         <div
@@ -496,6 +524,194 @@ function AddDocForm({ onAdded }: { onAdded: () => void }) {
       )}
       {state === 'error' && (
         <div className="text-[9px] font-pixel" style={{ color: 'var(--color-error)' }}>
+          ⚠ {err}
+        </div>
+      )}
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="px-4 py-2 text-xs font-pixel tracking-widest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: canSubmit ? 'var(--color-neon-cyan)' : 'transparent',
+          color: canSubmit ? 'var(--color-bg-darker)' : 'var(--color-neon-cyan)',
+          border: '1px solid var(--color-neon-cyan)',
+        }}
+      >
+        {state === 'loading' ? 'PROCESSING...' : 'EMBED + ADD →'}
+      </button>
+    </form>
+  );
+}
+
+// ── Upload Document Form ──────────────────────────────────────────────────────
+
+const ACCEPTED_EXTENSIONS = '.pdf,.docx,.pptx,.doc,.txt,.md,.csv';
+const ACCEPTED_LABEL = 'PDF, DOCX, PPTX, TXT, MD';
+
+function UploadDocForm({ onAdded }: { onAdded: () => void }) {
+  const [title, setTitle] = useState('');
+  const [theme, setTheme] = useState<'space' | 'ticker' | 'shared'>('space');
+  const [file, setFile] = useState<File | null>(null);
+  const [state, setState] = useState<AddState>('idle');
+  const [progress, setProgress] = useState('');
+  const [err, setErr] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const canSubmit = title.trim() && file && state !== 'loading';
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+    // Auto-fill title from filename if blank
+    if (f && !title.trim()) {
+      setTitle(f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit || !file) return;
+
+    setState('loading');
+    setProgress('UPLOADING...');
+    setErr('');
+
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('title', title.trim());
+      form.append('theme', theme);
+
+      const res = await fetch('/api/corpus/upload', { method: 'POST', body: form });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        // Surface the docling_required hint as a friendlier message
+        if (data.docling_required) {
+          throw new Error('DOCLING NOT CONFIGURED — UPLOAD A .TXT OR .MD FILE, OR SET DOCLING_API_URL IN .ENV.LOCAL');
+        }
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const via = data.via_docling ? ' VIA DOCLING' : '';
+      setProgress(`✓ INDEXED ${data.section_count} SECTIONS${via}`);
+      setState('done');
+      setTitle('');
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      onAdded();
+
+      setTimeout(() => { setState('idle'); setProgress(''); }, 4000);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'UNKNOWN ERROR';
+      setErr(msg);
+      setState('error');
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    background: 'var(--color-bg-card)',
+    border: '1px solid var(--color-neon-cyan)',
+    color: 'var(--color-neon-cyan)',
+    fontFamily: 'var(--font-family-pixel)',
+    fontSize: '10px',
+    outline: 'none',
+    width: '100%',
+    padding: '6px 8px',
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div
+        className="text-xs font-pixel tracking-widest pb-1"
+        style={{ color: 'var(--color-neon-cyan)', borderBottom: '1px solid var(--color-neon-cyan)' }}
+      >
+        ▸ UPLOAD DOCUMENT
+      </div>
+
+      {/* Title */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[9px] font-pixel tracking-widest" style={{ color: 'rgba(0,255,159,0.6)' }}>
+          TITLE
+        </label>
+        <input
+          type="text"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="DOCUMENT TITLE..."
+          maxLength={200}
+          style={inputStyle}
+          disabled={state === 'loading'}
+        />
+      </div>
+
+      {/* Theme */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[9px] font-pixel tracking-widest" style={{ color: 'rgba(0,255,159,0.6)' }}>
+          THEME
+        </label>
+        <select
+          value={theme}
+          onChange={e => setTheme(e.target.value as 'space' | 'ticker' | 'shared')}
+          style={inputStyle}
+          disabled={state === 'loading'}
+        >
+          <option value="space">SPACE</option>
+          <option value="ticker">TICKER</option>
+          <option value="shared">SHARED</option>
+        </select>
+      </div>
+
+      {/* File picker */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[9px] font-pixel tracking-widest" style={{ color: 'rgba(0,255,159,0.6)' }}>
+          FILE <span style={{ color: 'rgba(0,255,159,0.35)' }}>({ACCEPTED_LABEL})</span>
+        </label>
+        <div
+          className="flex items-center gap-2 px-2 py-2 cursor-pointer"
+          style={{ border: '1px solid var(--color-neon-cyan)', background: 'var(--color-bg-card)' }}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <span className="text-[9px] font-pixel" style={{ color: 'var(--color-neon-cyan)' }}>
+            {file ? file.name : 'CHOOSE FILE...'}
+          </span>
+          {file && (
+            <span className="text-[9px] font-pixel ml-auto shrink-0" style={{ color: 'rgba(0,255,159,0.4)' }}>
+              {(file.size / 1024).toFixed(0)}KB
+            </span>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_EXTENSIONS}
+          onChange={handleFile}
+          className="hidden"
+          disabled={state === 'loading'}
+        />
+      </div>
+
+      {/* Docling hint */}
+      <p className="text-[9px] font-pixel" style={{ color: 'rgba(0,255,159,0.35)' }}>
+        PDF/DOCX/PPTX REQUIRE DOCLING_API_URL. TXT/MD WORK WITHOUT IT.
+      </p>
+
+      {/* Status */}
+      {state === 'loading' && (
+        <div className="text-[9px] font-pixel" style={{ color: 'var(--color-neon-cyan)' }}>
+          ⟳ {progress}
+        </div>
+      )}
+      {state === 'done' && (
+        <div className="text-[9px] font-pixel" style={{ color: 'var(--color-success)' }}>
+          {progress}
+        </div>
+      )}
+      {state === 'error' && (
+        <div className="text-[9px] font-pixel break-words" style={{ color: 'var(--color-error)' }}>
           ⚠ {err}
         </div>
       )}
