@@ -44,3 +44,8 @@ next-env.d.ts
 /data/corpus.db
 /data/corpus.db-shm
 /data/corpus.db-wal
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
