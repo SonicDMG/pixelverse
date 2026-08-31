@@ -13,7 +13,6 @@
  */
 
 import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
 import { jsonrepair } from 'jsonrepair';
 import { getDb, hybridSearch, buildContext } from '@/services/rag';
 import { SPACE_SYSTEM_PROMPT, TICKER_SYSTEM_PROMPT } from './prompts';
@@ -26,21 +25,26 @@ export type AgentTheme = 'space' | 'ticker';
 
 const isStrata = () => process.env.LLM_PROVIDER === 'strata';
 
+// ── Strata helpers — raw fetch to /v1/messages (Anthropic wire) ───────────
+
+function strataHeaders() {
+  return {
+    'content-type': 'application/json',
+    'anthropic-version': '2023-06-01',
+    'Authorization': `Bearer ${process.env.STRATA_API_KEY || ''}`,
+  };
+}
+
+function strataBaseUrl() {
+  return (process.env.STRATA_BASE_URL || '').replace(/\/$/, '');
+}
+
 // ── OpenAI client (default / non-strata) ──────────────────────────────────
 
 function getOpenAI(): OpenAI {
   return new OpenAI({
     apiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || '',
     baseURL: process.env.LLM_BASE_URL || undefined,
-  });
-}
-
-// ── Anthropic client (strata provider — uses /v1/messages wire) ───────────
-
-function getAnthropic(): Anthropic {
-  return new Anthropic({
-    apiKey: process.env.LLM_API_KEY || process.env.STRATA_API_KEY || 'sk-local',
-    baseURL: process.env.LLM_BASE_URL || process.env.STRATA_BASE_URL || undefined,
   });
 }
 
@@ -122,14 +126,21 @@ export async function queryAgent(
     let raw: string;
 
     if (isStrata()) {
-      const anthropic = getAnthropic();
-      const msg = await anthropic.messages.create({
-        model: LLM_MODEL(),
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }],
+      const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
+        method: 'POST',
+        headers: strataHeaders(),
+        body: JSON.stringify({
+          model: LLM_MODEL(),
+          max_tokens: 4096,
+          system: [{ type: 'text', text: systemPrompt }],
+          messages: [{
+            role: 'user',
+            content: [{ type: 'text', text: userContent }],
+          }],
+        }),
       });
-      raw = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+      const json = await res.json() as { content?: Array<{ type: string; text: string }> };
+      raw = json.content?.[0]?.type === 'text' ? json.content[0].text : '';
     } else {
       const openai = getOpenAI();
       const completion = await openai.chat.completions.create({
@@ -172,22 +183,43 @@ export async function* streamAgent(
     let accumulated = '';
 
     if (isStrata()) {
-      const anthropic = getAnthropic();
-      const stream = anthropic.messages.stream({
-        model: LLM_MODEL(),
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }],
+      const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
+        method: 'POST',
+        headers: strataHeaders(),
+        body: JSON.stringify({
+          model: LLM_MODEL(),
+          max_tokens: 4096,
+          stream: true,
+          system: [{ type: 'text', text: systemPrompt }],
+          messages: [{
+            role: 'user',
+            content: [{ type: 'text', text: userContent }],
+          }],
+        }),
       });
 
-      for await (const event of stream) {
-        if (
-          event.type === 'content_block_delta' &&
-          event.delta.type === 'text_delta'
-        ) {
-          const token = event.delta.text;
-          accumulated += token;
-          yield JSON.stringify({ event: 'token', data: { chunk: token } }) + '\n';
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const evt = JSON.parse(data) as { type: string; delta?: { type: string; text: string } };
+            if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+              const token = evt.delta.text;
+              accumulated += token;
+              yield JSON.stringify({ event: 'token', data: { chunk: token } }) + '\n';
+            }
+          } catch { /* skip malformed lines */ }
         }
       }
     } else {
