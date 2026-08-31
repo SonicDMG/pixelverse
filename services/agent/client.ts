@@ -16,7 +16,8 @@ import OpenAI from 'openai';
 import { jsonrepair } from 'jsonrepair';
 import { getDb, hybridSearch, buildContext } from '@/services/rag';
 import { SPACE_SYSTEM_PROMPT, TICKER_SYSTEM_PROMPT } from './prompts';
-import type { StockQueryResult } from '@/types';
+import type { StockQueryResult, ReferenceSource } from '@/types';
+import type { SectionResult } from '@/services/rag';
 
 export type AgentTheme = 'space' | 'ticker';
 
@@ -57,15 +58,34 @@ async function embedQuery(text: string): Promise<number[]> {
 
 // ── RAG context retrieval ──────────────────────────────────────────────────
 
-async function retrieveContext(question: string, theme: AgentTheme): Promise<string> {
+function formatReferences(sections: SectionResult[]): ReferenceSource[] {
+  return sections.map((s) => ({
+    title: s.title,
+    heading: s.heading ?? null,
+    pageNum: s.page_num ?? null,
+    url: s.url ?? undefined,
+    excerpt: (s.plain_text || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 220),
+  }));
+}
+
+async function retrieveContext(
+  question: string,
+  theme: AgentTheme
+): Promise<{ context: string; references: ReferenceSource[] }> {
   try {
     const db = getDb();
     const embedding = await embedQuery(question);
     const sections = hybridSearch(db, question, embedding, { theme, limit: 8 });
-    return buildContext(sections);
+    return {
+      context: buildContext(sections),
+      references: formatReferences(sections),
+    };
   } catch (err) {
     console.warn('[Agent] RAG retrieval failed, proceeding without context:', err);
-    return '';
+    return { context: '', references: [] };
   }
 }
 
@@ -79,7 +99,7 @@ export async function queryAgent(
   const systemPrompt = theme === 'space' ? SPACE_SYSTEM_PROMPT : TICKER_SYSTEM_PROMPT;
 
   try {
-    const context = await retrieveContext(question, theme);
+    const { context, references } = await retrieveContext(question, theme);
     const userContent = context
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;
@@ -96,7 +116,7 @@ export async function queryAgent(
     });
 
     const raw = completion.choices[0]?.message?.content ?? '';
-    return _parseResponse(raw, question);
+    return _parseResponse(raw, question, references);
   } catch (err) {
     console.error('[Agent] queryAgent error:', err);
     return {
@@ -116,7 +136,7 @@ export async function* streamAgent(
   const systemPrompt = theme === 'space' ? SPACE_SYSTEM_PROMPT : TICKER_SYSTEM_PROMPT;
 
   try {
-    const context = await retrieveContext(question, theme);
+    const { context, references } = await retrieveContext(question, theme);
     const userContent = context
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;
@@ -144,7 +164,7 @@ export async function* streamAgent(
     }
 
     // Emit final parsed result as the end event
-    const result = _parseResponse(accumulated, question);
+    const result = _parseResponse(accumulated, question, references);
     yield JSON.stringify({ event: 'end', data: { result } }) + '\n';
 
   } catch (err) {
@@ -155,7 +175,13 @@ export async function* streamAgent(
 
 // ── Response parsing ───────────────────────────────────────────────────────
 
-function _parseResponse(raw: string, question: string): StockQueryResult {
+function _parseResponse(
+  raw: string,
+  question: string,
+  references?: ReferenceSource[]
+): StockQueryResult {
+  const refs = references && references.length > 0 ? references : undefined;
+
   try {
     const repaired = jsonrepair(raw.trim());
     const parsed = JSON.parse(repaired);
@@ -165,6 +191,7 @@ function _parseResponse(raw: string, question: string): StockQueryResult {
         answer: parsed.answer || parsed.text || raw,
         components: parsed.components,
         symbol: _extractSymbol(question),
+        references: refs,
       };
     }
 
@@ -172,12 +199,14 @@ function _parseResponse(raw: string, question: string): StockQueryResult {
     return {
       answer: parsed.answer || parsed.text || raw,
       symbol: _extractSymbol(question),
+      references: refs,
     };
   } catch {
     // Not JSON — return as plain text
     return {
       answer: raw,
       symbol: _extractSymbol(question),
+      references: refs,
     };
   }
 }

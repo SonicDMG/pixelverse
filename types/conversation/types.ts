@@ -4,7 +4,7 @@
  */
 
 import type { ComponentSpec } from '../ui';
-import type { StockDataPoint } from '../api/stock';
+import type { StockDataPoint, ReferenceSource } from '../api/stock';
 
 // Message in the chat history
 export interface Message {
@@ -33,6 +33,7 @@ export interface ConversationGroup {
   components?: ComponentSpec[];
   stockData?: StockDataPoint[];
   symbol?: string;
+  references?: ReferenceSource[];
   timestamp: Date;
   durationSeconds?: number;
   streamingChunks?: number; // Number of chunks received during streaming

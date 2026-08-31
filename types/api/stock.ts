@@ -13,12 +13,22 @@ export interface StockDataPoint {
 }
 
 // Stock query result
+export interface ReferenceSource {
+  title: string;
+  heading?: string | null;
+  pageNum?: number | null;
+  url?: string;
+  excerpt: string;
+}
+
+// Stock query result
 export interface StockQueryResult {
   answer: string;
   stockData?: StockDataPoint[];
   symbol?: string;
   error?: string;
   components?: ComponentSpec[];
+  references?: ReferenceSource[];
 }
 
 // Made with Bob

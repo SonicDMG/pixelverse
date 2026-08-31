@@ -202,6 +202,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
             components: finalResult.components,
             stockData: finalResult.stockData,
             symbol: finalResult.symbol || extractSymbol(questionText),
+            references: finalResult.references,
           };
         } else {
           // Legacy Langflow shape: outputs[0].outputs[0].results.message.text
@@ -241,6 +242,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
         components: result.components,
         stockData: result.stockData,
         symbol: result.symbol,
+        references: result.references,
         timestamp: new Date(),
         streamingChunks: chunkIndex, // Store the number of chunks received
       };
