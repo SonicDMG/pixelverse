@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { queryLangflow } from '@/services/langflow';
+import { queryAgent } from '@/services/agent';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
 import { sanitizeError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
@@ -67,9 +67,7 @@ export async function POST(request: NextRequest) {
     console.log('[Stock API] Validation passed. Sanitized question:', questionValidation.sanitized);
     console.log('[Stock API] Session ID provided:', !!session_id);
 
-    // Query Langflow with sanitized input using the 'ticker' theme
-    // Pass session_id for conversation tracking (backward compatible - optional parameter)
-    const result = await queryLangflow(questionValidation.sanitized!, 'ticker', session_id);
+    const result = await queryAgent(questionValidation.sanitized!, 'ticker', session_id);
 
     if (result.error) {
       return NextResponse.json<ApiErrorResponse>(

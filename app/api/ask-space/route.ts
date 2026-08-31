@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { queryLangflow } from '@/services/langflow';
+import { queryAgent } from '@/services/agent';
 import { validateAndSanitizeQuestion, validateSessionId } from '@/lib/input-validation';
 import { rateLimit, getClientIp, createRateLimitHeaders, RateLimitPresets } from '@/lib/rate-limit';
 import { sanitizeError, getClientIp as getErrorClientIp } from '@/lib/error-handling';
@@ -752,27 +752,7 @@ export async function POST(request: NextRequest) {
     // Falls back to mock responses if Langflow is not configured or fails
     let result: SpaceQueryResult;
     
-    try {
-      console.log('[Space API] Attempting Langflow query with space theme');
-      result = await queryLangflow(questionValidation.sanitized!, 'space', session_id);
-      console.log('[Space API] Langflow response received:', {
-        hasAnswer: !!result.answer,
-        answerLength: result.answer?.length,
-        hasComponents: !!result.components,
-        componentCount: result.components?.length,
-        hasError: !!result.error
-      });
-    } catch (error) {
-      console.warn('[Space API] Langflow query failed, falling back to mock responses:', error);
-      result = getMockSpaceResponse(questionValidation.sanitized!);
-      console.log('[Space API] Mock response generated:', {
-        hasAnswer: !!result.answer,
-        answerLength: result.answer?.length,
-        hasComponents: !!result.components,
-        componentCount: result.components?.length,
-        hasError: !!result.error
-      });
-    }
+    result = await queryAgent(questionValidation.sanitized!, 'space', session_id);
     
     // Sanitize constellation data to remove pre-calculated coordinates
     result = sanitizeConstellationData(result);

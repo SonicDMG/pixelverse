@@ -12,7 +12,9 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "axios": "^1.13.2",
+    "better-sqlite3": "^13.0.3",
     "chart.js": "^4.5.1",
     "d3-geo": "^3.1.1",
     "d3-geo-projection": "^4.0.0",
@@ -21,9 +23,11 @@
     "everart": "^1.2.2",
     "jsonrepair": "^3.13.2",
     "next": "16.1.6",
+    "openai": "^7.8.0",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "sqlite-vec": "^0.1.9"
   },
   "devDependencies": {
     "@babel/core": "^7.28.6",
