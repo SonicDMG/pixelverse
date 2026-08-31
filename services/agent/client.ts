@@ -36,7 +36,9 @@ function strataHeaders() {
 }
 
 function strataBaseUrl() {
-  return (process.env.STRATA_BASE_URL || '').replace(/\/$/, '');
+  // Prefer STRATA_BASE_URL; fall back to LLM_BASE_URL with /v1 stripped
+  const base = process.env.STRATA_BASE_URL || (process.env.LLM_BASE_URL || '').replace(/\/v1\/?$/, '');
+  return base.replace(/\/$/, '');
 }
 
 // ── OpenAI client (default / non-strata) ──────────────────────────────────
