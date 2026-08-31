@@ -13,6 +13,7 @@
  */
 
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { jsonrepair } from 'jsonrepair';
 import { getDb, hybridSearch, buildContext } from '@/services/rag';
 import { SPACE_SYSTEM_PROMPT, TICKER_SYSTEM_PROMPT } from './prompts';
@@ -21,12 +22,25 @@ import type { SectionResult } from '@/services/rag';
 
 export type AgentTheme = 'space' | 'ticker';
 
-// ── OpenAI client (also works with any OpenAI-compatible endpoint) ─────────
+// ── Provider detection ────────────────────────────────────────────────────
+
+const isStrata = () => process.env.LLM_PROVIDER === 'strata';
+
+// ── OpenAI client (default / non-strata) ──────────────────────────────────
 
 function getOpenAI(): OpenAI {
   return new OpenAI({
     apiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || '',
-    baseURL: process.env.LLM_BASE_URL || undefined, // undefined = default OpenAI endpoint
+    baseURL: process.env.LLM_BASE_URL || undefined,
+  });
+}
+
+// ── Anthropic client (strata provider — uses /v1/messages wire) ───────────
+
+function getAnthropic(): Anthropic {
+  return new Anthropic({
+    apiKey: process.env.LLM_API_KEY || process.env.STRATA_API_KEY || 'sk-local',
+    baseURL: process.env.LLM_BASE_URL || process.env.STRATA_BASE_URL || undefined,
   });
 }
 
@@ -105,18 +119,31 @@ export async function queryAgent(
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;
 
-    const openai = getOpenAI();
-    const completion = await openai.chat.completions.create({
-      model: LLM_MODEL(),
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent },
-      ],
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-    });
+    let raw: string;
 
-    const raw = completion.choices[0]?.message?.content ?? '';
+    if (isStrata()) {
+      const anthropic = getAnthropic();
+      const msg = await anthropic.messages.create({
+        model: LLM_MODEL(),
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }],
+      });
+      raw = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+    } else {
+      const openai = getOpenAI();
+      const completion = await openai.chat.completions.create({
+        model: LLM_MODEL(),
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+      });
+      raw = completion.choices[0]?.message?.content ?? '';
+    }
+
     return _parseResponse(raw, question, references);
   } catch (err) {
     console.error('[Agent] queryAgent error:', err);
@@ -142,26 +169,46 @@ export async function* streamAgent(
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;
 
-    const openai = getOpenAI();
-    const stream = await openai.chat.completions.create({
-      model: LLM_MODEL(),
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent },
-      ],
-      temperature: 0.2,
-      stream: true,
-      stream_options: { include_usage: true },
-    });
-
     let accumulated = '';
 
-    for await (const chunk of stream) {
-      const token = chunk.choices[0]?.delta?.content ?? '';
-      if (token) {
-        accumulated += token;
-        // Emit bare JSON line matching useConversation's expected {event:'token'} format
-        yield JSON.stringify({ event: 'token', data: { chunk: token } }) + '\n';
+    if (isStrata()) {
+      const anthropic = getAnthropic();
+      const stream = anthropic.messages.stream({
+        model: LLM_MODEL(),
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }],
+      });
+
+      for await (const event of stream) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          const token = event.delta.text;
+          accumulated += token;
+          yield JSON.stringify({ event: 'token', data: { chunk: token } }) + '\n';
+        }
+      }
+    } else {
+      const openai = getOpenAI();
+      const stream = await openai.chat.completions.create({
+        model: LLM_MODEL(),
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.2,
+        stream: true,
+        stream_options: { include_usage: true },
+      });
+
+      for await (const chunk of stream) {
+        const token = chunk.choices[0]?.delta?.content ?? '';
+        if (token) {
+          accumulated += token;
+          yield JSON.stringify({ event: 'token', data: { chunk: token } }) + '\n';
+        }
       }
     }
 
