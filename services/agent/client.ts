@@ -151,6 +151,7 @@ export async function* streamAgent(
       ],
       temperature: 0.2,
       stream: true,
+      stream_options: { include_usage: true },
     });
 
     let accumulated = '';
