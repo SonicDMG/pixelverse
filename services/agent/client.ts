@@ -138,20 +138,18 @@ export async function* streamAgent(
       const token = chunk.choices[0]?.delta?.content ?? '';
       if (token) {
         accumulated += token;
-        // Emit raw SSE data line matching Langflow's prior format so the
-        // existing stream-space/stream-stock routes need minimal changes.
-        yield `data: ${JSON.stringify({ chunk: token, text: token })}\n\n`;
+        // Emit bare JSON line matching useConversation's expected {event:'token'} format
+        yield JSON.stringify({ event: 'token', data: { chunk: token } }) + '\n';
       }
     }
 
-    // Emit final parsed result as the last SSE event
+    // Emit final parsed result as the end event
     const result = _parseResponse(accumulated, question);
-    yield `data: ${JSON.stringify({ outputs: [{ outputs: [{ results: { message: { text: JSON.stringify(result) } } }] }] })}\n\n`;
-    yield 'data: [DONE]\n\n';
+    yield JSON.stringify({ event: 'end', data: { result } }) + '\n';
+
   } catch (err) {
     console.error('[Agent] streamAgent error:', err);
-    yield `data: ${JSON.stringify({ error: 'Service temporarily unavailable.' })}\n\n`;
-    yield 'data: [DONE]\n\n';
+    yield JSON.stringify({ event: 'error', data: { error: 'Service temporarily unavailable.' } }) + '\n';
   }
 }
 

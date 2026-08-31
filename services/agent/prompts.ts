@@ -56,7 +56,7 @@ Select components based on query intent:
     "description": "2-3 sentences: educational facts, context, significance (required)",
     "visualDescription": "colors, size, appearance only — used for image generation",
     "enableImageGeneration": true,
-    // PLANET: diameter, mass, distanceFrom, distanceFromLabel, orbitalPeriod, satellites, satelliteLabel, planetType
+    // PLANET: diameter, mass, distanceFrom, distanceFromLabel, orbitalPeriod, satellites, satelliteLabel, planetType (MUST be one of: "terrestrial", "gas-giant", "ice-giant", "dwarf")
     // MOON:   diameter, mass, distanceFrom, distanceFromLabel, orbitalPeriod, parentBody
     // STAR:   diameter, mass, spectralClass, temperature, luminosity, satellites, satelliteLabel, starType
     // GALAXY: galaxyType, diameter, starCount, distanceFromEarth

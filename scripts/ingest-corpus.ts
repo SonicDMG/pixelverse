@@ -1,4 +1,11 @@
 #!/usr/bin/env tsx
+import { config } from 'dotenv';
+import { resolve } from 'path';
+// Load .env / .env.local before anything else
+config({ path: resolve(process.cwd(), '.env.local') });
+config({ path: resolve(process.cwd(), '.env') });
+
+
 /**
  * Corpus ingest script — Docling SaaS → DocLang → SQLite + sqlite-vec
  *
@@ -29,7 +36,7 @@ import path from 'path';
 
 // ── Config ────────────────────────────────────────────────────────────────
 
-const DOCLING_API_URL = process.env.DOCLING_API_URL;
+const DOCLING_API_URL = process.env.DOCLING_API_URL && process.env.DOCLING_API_URL.trim() !== '' ? process.env.DOCLING_API_URL : undefined;
 const DOCLING_API_KEY = process.env.DOCLING_API_KEY || '';
 const EMBED_MODEL = process.env.EMBED_MODEL || 'text-embedding-3-small';
 const RAG_DB_PATH = process.env.RAG_DB_PATH || path.join(process.cwd(), 'data', 'corpus.db');
@@ -108,39 +115,55 @@ const TICKER_CORPUS: CorpusEntry[] = [
 
 async function fetchWikipediaText(title: string): Promise<string> {
   const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&explaintext=true&format=json&origin=*`;
-  const resp = await fetch(url, { headers: { 'User-Agent': 'Pixelverse-IngestScript/1.0' } });
-  const json = await resp.json();
-  const pages = json.query?.pages ?? {};
-  const page = Object.values(pages)[0] as any;
-  return page?.extract ?? '';
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 5000 * attempt));
+    const resp = await fetch(url, { headers: { 'User-Agent': 'Pixelverse-IngestScript/1.0 (pixelverse app)' } });
+    const text = await resp.text();
+    let json: any;
+    try { json = JSON.parse(text); } catch {
+      console.log(`  [wiki] non-JSON response, retrying (attempt ${attempt + 1})…`);
+      continue;
+    }
+    const pages = json.query?.pages ?? {};
+    const page = Object.values(pages)[0] as any;
+    return page?.extract ?? '';
+  }
+  throw new Error(`Wikipedia fetch failed after 3 attempts for "${title}"`);
 }
 
-// ── Docling SaaS convert ──────────────────────────────────────────────────
+// ── Markdown → pseudo-DocLang wrapper ────────────────────────────────────
+// Using plain markdown for now; DocLang via Docling SaaS can be swapped in later.
 
-async function convertToDocLang(text: string, title: string): Promise<string> {
-  if (!DOCLING_API_URL) {
-    // No Docling SaaS — wrap plain text in minimal DocLang XML so the
-    // section splitter and DB schema still work correctly.
-    console.log(`  [docling] No DOCLING_API_URL — using plain-text DocLang stub for "${title}"`);
-    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return `<document>\n<heading level="1">${title}</heading>\n<text>${escaped}</text>\n</document>`;
+function convertToDocLang(text: string, title: string): string {
+  // Wrap markdown headings as <heading> tags so the section splitter works.
+  // Everything else is passed through as <text> content.
+  const lines = text.split('\n');
+  const parts: string[] = [];
+  let buf: string[] = [];
+
+  const flushBuf = () => {
+    const chunk = buf.join('\n').trim();
+    if (chunk) parts.push(`<text>${chunk.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>`);
+    buf = [];
+  };
+
+  for (const line of lines) {
+    // Match markdown headings (## Foo) or MediaWiki headings (== Foo ==)
+    const mdH = line.match(/^(#{1,6})\s+(.+)/);
+    const wikiH = !mdH && line.match(/^(={1,6})\s*(.+?)\s*={1,6}\s*$/);
+    const h = mdH ?? wikiH;
+    if (h) {
+      flushBuf();
+      const level = h[1].length;
+      const heading = h[2].trim().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      parts.push(`<heading level="${level}">${heading}</heading>`);
+    } else {
+      buf.push(line);
+    }
   }
+  flushBuf();
 
-  const resp = await fetch(`${DOCLING_API_URL}/v1/convert/source`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(DOCLING_API_KEY ? { 'Authorization': `Bearer ${DOCLING_API_KEY}` } : {}),
-    },
-    body: JSON.stringify({ source: text, to: 'doclang', from: 'markdown' }),
-  });
-
-  if (!resp.ok) {
-    throw new Error(`Docling SaaS returned ${resp.status} for "${title}"`);
-  }
-
-  const json = await resp.json();
-  return json.output ?? json.doclang ?? json.result ?? '';
+  return `<document>\n<heading level="1">${title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</heading>\n${parts.join('\n')}\n</document>`;
 }
 
 // ── DocLang section splitter ──────────────────────────────────────────────
@@ -235,15 +258,18 @@ async function ingest(entries: CorpusEntry[], db: ReturnType<typeof openWritable
   for (const entry of limited) {
     console.log(`\n📄 ${entry.title} [${entry.theme}]`);
 
+    // Polite delay between articles to avoid Wikipedia rate limiting
+    if (limited.indexOf(entry) > 0) await new Promise(r => setTimeout(r, 2000));
+
     try {
       // 1. Fetch Wikipedia text
       process.stdout.write('  fetching Wikipedia… ');
       const wikiText = await fetchWikipediaText(entry.wikipediaTitle);
       console.log(`${wikiText.length} chars`);
 
-      // 2. Convert to DocLang
+      // 2. Convert to pseudo-DocLang (markdown wrapped with heading tags)
       process.stdout.write('  converting to DocLang… ');
-      const doclang = await convertToDocLang(wikiText, entry.title);
+      const doclang = convertToDocLang(wikiText, entry.title);
       console.log(`${doclang.length} chars`);
 
       // 3. Insert document

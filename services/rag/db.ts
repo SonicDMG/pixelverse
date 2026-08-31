@@ -108,11 +108,10 @@ export function applySchema(db: Database.Database): void {
     );
 
     -- sqlite-vec ANN search over section embeddings.
-    -- Dimension is 1536 (text-embedding-3-small).
-    -- Override with EMBED_DIMENSIONS env var at ingest time.
+    -- Dimension matches EMBED_MODEL: 768 for nomic-embed-text, 1536 for text-embedding-3-small.
     CREATE VIRTUAL TABLE IF NOT EXISTS vec_sections USING vec0(
       section_id TEXT PRIMARY KEY,
-      embedding  FLOAT[1536]
+      embedding  FLOAT[768]
     );
   `);
 }

@@ -1,20 +1,8 @@
 /**
- * Integration tests for /api/ask-stock route
- * Tests validation logic, OWASP security compliance, and Langflow integration
- * 
- * Note: These tests focus on the validation and business logic rather than
- * full integration testing of the Next.js route handler due to mocking complexity.
+ * Tests for /api/ask-stock — validation logic and OWASP security compliance.
  */
 
-import * as langflowService from '@/services/langflow';
-
-// Mock the Langflow service
-jest.mock('@/services/langflow');
-const mockedQueryLangflow = langflowService.queryLangflow as jest.MockedFunction<typeof langflowService.queryLangflow>;
-
-// Import the validation function by extracting it from the route file
-// We'll test the validation logic directly
-function validateQuestion(question: unknown): { valid: boolean; error?: string; sanitized?: string } {
+function validateStockQuestion(question: unknown): { valid: boolean; error?: string; sanitized?: string } {
   if (!question || typeof question !== 'string') {
     return { valid: false, error: 'Question is required and must be a string' };
   }
@@ -36,25 +24,9 @@ function validateQuestion(question: unknown): { valid: boolean; error?: string; 
 }
 
 describe('/api/ask-stock - Validation Logic', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    process.env = {
-      ...originalEnv,
-      LANGFLOW_URL: 'http://test-langflow.com',
-      LANGFLOW_API_KEY: 'test-api-key',
-      LANGFLOW_FLOW_ID_TICKER: 'ticker-flow-id',
-    };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  describe('validateQuestion() - Input validation', () => {
+  describe('validateStockQuestion() - Input validation', () => {
     it('should accept valid question', () => {
-      const result = validateQuestion('What is the price of AAPL?');
+      const result = validateStockQuestion('What is the price of AAPL?');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('What is the price of AAPL?');
@@ -62,7 +34,7 @@ describe('/api/ask-stock - Validation Logic', () => {
     });
 
     it('should reject non-string question', () => {
-      const result = validateQuestion(123);
+      const result = validateStockQuestion(123);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question is required and must be a string');
@@ -70,21 +42,21 @@ describe('/api/ask-stock - Validation Logic', () => {
     });
 
     it('should reject null question', () => {
-      const result = validateQuestion(null);
+      const result = validateStockQuestion(null);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question is required and must be a string');
     });
 
     it('should reject undefined question', () => {
-      const result = validateQuestion(undefined);
+      const result = validateStockQuestion(undefined);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question is required and must be a string');
     });
 
     it('should reject empty string question', () => {
-      const result = validateQuestion('');
+      const result = validateStockQuestion('');
       
       expect(result.valid).toBe(false);
       // Empty string fails the type check first
@@ -92,7 +64,7 @@ describe('/api/ask-stock - Validation Logic', () => {
     });
 
     it('should reject whitespace-only question', () => {
-      const result = validateQuestion('   \t\n   ');
+      const result = validateStockQuestion('   \t\n   ');
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question cannot be empty');
@@ -100,7 +72,7 @@ describe('/api/ask-stock - Validation Logic', () => {
 
     it('should reject question exceeding 500 characters', () => {
       const longQuestion = 'a'.repeat(501);
-      const result = validateQuestion(longQuestion);
+      const result = validateStockQuestion(longQuestion);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question too long (max 500 characters)');
@@ -108,14 +80,14 @@ describe('/api/ask-stock - Validation Logic', () => {
 
     it('should accept question at exactly 500 characters', () => {
       const maxLengthQuestion = 'a'.repeat(500);
-      const result = validateQuestion(maxLengthQuestion);
+      const result = validateStockQuestion(maxLengthQuestion);
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe(maxLengthQuestion);
     });
 
     it('should trim whitespace from question', () => {
-      const result = validateQuestion('   What is AAPL?   ');
+      const result = validateStockQuestion('   What is AAPL?   ');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('What is AAPL?');
@@ -124,7 +96,7 @@ describe('/api/ask-stock - Validation Logic', () => {
 
   describe('OWASP Security - Input Sanitization', () => {
     it('should remove null bytes', () => {
-      const result = validateQuestion('What is AAPL?\x00');
+      const result = validateStockQuestion('What is AAPL?\x00');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('What is AAPL?');
@@ -132,35 +104,35 @@ describe('/api/ask-stock - Validation Logic', () => {
     });
 
     it('should remove control characters', () => {
-      const result = validateQuestion('What\x01is\x02AAPL\x1F?');
+      const result = validateStockQuestion('What\x01is\x02AAPL\x1F?');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('WhatisAAPL?');
     });
 
     it('should remove DEL character', () => {
-      const result = validateQuestion('What is AAPL?\x7F');
+      const result = validateStockQuestion('What is AAPL?\x7F');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('What is AAPL?');
     });
 
     it('should handle multiple control characters', () => {
-      const result = validateQuestion('\x00\x01\x02What\x03\x04is\x05AAPL?\x1F\x7F');
+      const result = validateStockQuestion('\x00\x01\x02What\x03\x04is\x05AAPL?\x1F\x7F');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('WhatisAAPL?');
     });
 
     it('should preserve Unicode characters', () => {
-      const result = validateQuestion('What is AAPL? 你好 🚀');
+      const result = validateStockQuestion('What is AAPL? 你好 🚀');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('What is AAPL? 你好 🚀');
     });
 
     it('should remove newlines and tabs (they are control chars)', () => {
-      const result = validateQuestion('What is\nAAPL\tprice?');
+      const result = validateStockQuestion('What is\nAAPL\tprice?');
       
       expect(result.valid).toBe(true);
       // \n (0x0A) and \t (0x09) are in the control character range 0x00-0x1F
@@ -168,7 +140,7 @@ describe('/api/ask-stock - Validation Logic', () => {
     });
 
     it('should handle script tags (passed through for rendering layer)', () => {
-      const result = validateQuestion('<script>alert("xss")</script>What is AAPL?');
+      const result = validateStockQuestion('<script>alert("xss")</script>What is AAPL?');
       
       expect(result.valid).toBe(true);
       // HTML tags are not sanitized at this layer - that's for the rendering layer
@@ -176,7 +148,7 @@ describe('/api/ask-stock - Validation Logic', () => {
     });
 
     it('should handle special characters', () => {
-      const result = validateQuestion('!@#$%^&*()');
+      const result = validateStockQuestion('!@#$%^&*()');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('!@#$%^&*()');
@@ -212,81 +184,6 @@ describe('/api/ask-stock - Validation Logic', () => {
     it('should allow undefined session_id', () => {
       const sessionId = undefined;
       expect(sessionId).toBeUndefined();
-    });
-  });
-
-  describe('Langflow integration', () => {
-    it('should call queryLangflow with correct parameters', async () => {
-      const mockResponse = {
-        answer: 'AAPL is trading at $150.00',
-        symbol: 'AAPL',
-      };
-      mockedQueryLangflow.mockResolvedValue(mockResponse);
-
-      const question = 'What is the price of AAPL?';
-      const theme = 'ticker';
-      const sessionId = 'test-session-123';
-
-      const result = await langflowService.queryLangflow(question, theme, sessionId);
-
-      expect(mockedQueryLangflow).toHaveBeenCalledWith(question, theme, sessionId);
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should handle Langflow error response', async () => {
-      mockedQueryLangflow.mockResolvedValue({
-        answer: '',
-        error: 'Langflow service unavailable',
-      });
-
-      const result = await langflowService.queryLangflow('What is AAPL?', 'ticker');
-
-      expect(result.error).toBe('Langflow service unavailable');
-    });
-
-    it('should use ticker theme for stock queries', async () => {
-      const mockResponse = { answer: 'Response' };
-      mockedQueryLangflow.mockResolvedValue(mockResponse);
-
-      await langflowService.queryLangflow('What is AAPL?', 'ticker');
-
-      expect(mockedQueryLangflow).toHaveBeenCalledWith(
-        'What is AAPL?',
-        'ticker'
-      );
-    });
-
-    it('should handle response with components', async () => {
-      const mockResponse = {
-        answer: 'Here is the stock data',
-        components: [
-          { 
-            type: 'metric-card' as const,
-            props: { 
-              title: 'AAPL Price',
-              value: 150,
-              change: 2.5
-            } 
-          },
-        ],
-      };
-      mockedQueryLangflow.mockResolvedValue(mockResponse);
-
-      const result = await langflowService.queryLangflow('Show me AAPL', 'ticker');
-
-      expect(result.components).toHaveLength(1);
-      expect(result.components?.[0].type).toBe('metric-card');
-    });
-
-    it('should handle timeout errors', async () => {
-      mockedQueryLangflow.mockResolvedValue({
-        answer: '',
-        error: 'Request timeout',
-      });
-
-      const result = await langflowService.queryLangflow('What is AAPL?', 'ticker');
-
-      expect(result.error).toBe('Request timeout');
     });
   });
 
@@ -373,14 +270,14 @@ describe('/api/ask-stock - Validation Logic', () => {
 
   describe('Edge cases', () => {
     it('should handle question with only special characters', () => {
-      const result = validateQuestion('!@#$%^&*()');
+      const result = validateStockQuestion('!@#$%^&*()');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('!@#$%^&*()');
     });
 
     it('should handle question with mixed content', () => {
-      const result = validateQuestion('What is AAPL? 🚀 Price: $150');
+      const result = validateStockQuestion('What is AAPL? 🚀 Price: $150');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toContain('AAPL');
@@ -392,9 +289,9 @@ describe('/api/ask-stock - Validation Logic', () => {
       const question500 = 'a'.repeat(500);
       const question501 = 'a'.repeat(501);
       
-      expect(validateQuestion(question499).valid).toBe(true);
-      expect(validateQuestion(question500).valid).toBe(true);
-      expect(validateQuestion(question501).valid).toBe(false);
+      expect(validateStockQuestion(question499).valid).toBe(true);
+      expect(validateStockQuestion(question500).valid).toBe(true);
+      expect(validateStockQuestion(question501).valid).toBe(false);
     });
   });
 });

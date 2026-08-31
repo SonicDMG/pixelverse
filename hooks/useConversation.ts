@@ -121,12 +121,14 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          // Skip empty lines
-          if (!line.trim()) continue;
+          // Skip empty lines and SSE comment lines
+          if (!line.trim() || line.startsWith(':')) continue;
           
           try {
-            // Langflow sends raw JSON objects, not SSE format
-            const parsed = JSON.parse(line);
+            // Strip SSE "data: " prefix if present
+            const raw = line.startsWith('data: ') ? line.slice(6) : line;
+            if (raw === '[DONE]') break;
+            const parsed = JSON.parse(raw);
             
             // Handle different Langflow event types
             if (parsed.event === 'token') {
@@ -193,33 +195,27 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
       };
       
       if (finalResult) {
-        // Try to extract from Langflow's standard response format
-        const outputs = finalResult.outputs?.[0]?.outputs?.[0]?.results;
-        const messageText = outputs?.message?.text || accumulatedText || 'No response received';
-        
-        // Try to parse as UI specification response
-        let uiResponse: any = null;
-        try {
-          if (messageText.trim().startsWith('{')) {
-            // Defer JSON parsing to prevent blocking
-            uiResponse = JSON.parse(messageText);
-          }
-        } catch (e) {
-          // Not JSON, use as plain text
-        }
-        
-        // Build result
-        if (uiResponse && uiResponse.components && Array.isArray(uiResponse.components)) {
+        // Direct StockQueryResult shape from the new agent (has answer/components directly)
+        if (typeof finalResult.answer === 'string') {
           result = {
-            answer: uiResponse.answer || uiResponse.text || messageText,
-            components: uiResponse.components,
-            symbol: extractSymbol(questionText),
+            answer: finalResult.answer,
+            components: finalResult.components,
+            stockData: finalResult.stockData,
+            symbol: finalResult.symbol || extractSymbol(questionText),
           };
         } else {
-          result = {
-            answer: messageText,
-            symbol: extractSymbol(questionText),
-          };
+          // Legacy Langflow shape: outputs[0].outputs[0].results.message.text
+          const outputs = finalResult.outputs?.[0]?.outputs?.[0]?.results;
+          const messageText = outputs?.message?.text || accumulatedText || 'No response received';
+          let uiResponse: any = null;
+          try {
+            if (messageText.trim().startsWith('{')) {
+              uiResponse = JSON.parse(messageText);
+            }
+          } catch (e) { /* not JSON */ }
+          result = uiResponse?.components
+            ? { answer: uiResponse.answer || messageText, components: uiResponse.components, symbol: extractSymbol(questionText) }
+            : { answer: messageText, symbol: extractSymbol(questionText) };
         }
       } else {
         // Fallback: use accumulated text
