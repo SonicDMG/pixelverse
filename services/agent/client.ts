@@ -31,14 +31,12 @@ function strataHeaders() {
   return {
     'content-type': 'application/json',
     'anthropic-version': '2023-06-01',
-    'Authorization': `Bearer ${process.env.STRATA_API_KEY || ''}`,
+    'Authorization': `Bearer ${process.env.LLM_API_KEY || ''}`,
   };
 }
 
 function strataBaseUrl() {
-  // Prefer STRATA_BASE_URL; fall back to LLM_BASE_URL with /v1 stripped
-  const base = process.env.STRATA_BASE_URL || (process.env.LLM_BASE_URL || '').replace(/\/v1\/?$/, '');
-  return base.replace(/\/$/, '');
+  return (process.env.LLM_BASE_URL || '').replace(/\/v1\/?$/, '').replace(/\/$/, '');
 }
 
 // ── OpenAI client (default / non-strata) ──────────────────────────────────
