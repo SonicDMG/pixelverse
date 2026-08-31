@@ -9,7 +9,10 @@ import {
   rebuildFts,
 } from '@/services/rag/db';
 import { convertToDocLang, splitDocLangSections } from '@/services/rag/doclang';
-import { isDoclingConfigured, convertWithDocling } from '@/services/rag/docling';
+import {
+  isSidecarConfigured, convertWithSidecar,
+  isDoclingConfigured, convertWithDocling,
+} from '@/services/rag/docling';
 
 // Accepted MIME types — Docling handles PDF/DOCX/PPTX/images; plain text
 // uses our own converter. Anything else is rejected.
@@ -58,34 +61,62 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File exceeds 20 MB limit' }, { status: 413 });
   }
 
+  const kb = (file.size / 1024).toFixed(1);
+  console.log(`[upload] ▶ received "${file.name}" (${kb} KB, ${mimeType}) title="${title}" theme=${theme} handler=${handler}`);
+
   // ── Convert to DocLang ────────────────────────────────────────────────────
+  // Mode A: sidecar only          → local DocumentConverter + export_to_doclang()
+  // Mode B: SaaS + sidecar        → SaaS OCR/layout, sidecar export_to_doclang() on JSON
+  // Mode C: SaaS only             → SaaS markdown wrapped in pseudo-DocLang (lossy)
 
   let doclang: string;
+  const t0 = Date.now();
 
   if (handler === 'docling') {
-    if (!isDoclingConfigured()) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (isDoclingConfigured()) {
+      // Mode B or C — SaaS does the heavy lifting; sidecar handles DocLang export if available
+      const mode = isSidecarConfigured() ? 'B (SaaS → sidecar DocLang)' : 'C (SaaS → markdown)';
+      console.log(`[upload] → mode ${mode} via ${process.env.DOCLING_API_URL}`);
+      try {
+        doclang = await convertWithDocling(buffer, file.name, mimeType);
+        console.log(`[upload] ✔ SaaS done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
+      } catch (err) {
+        console.error('[upload] ✖ SaaS conversion failed:', err);
+        return NextResponse.json(
+          { error: `Docling conversion failed: ${err instanceof Error ? err.message : err}` },
+          { status: 502 }
+        );
+      }
+    } else if (isSidecarConfigured()) {
+      // Mode A — fully local
+      console.log(`[upload] → mode A (local sidecar) via ${process.env.DOCLING_SIDECAR_URL}`);
+      try {
+        doclang = await convertWithSidecar(buffer, file.name, mimeType);
+        console.log(`[upload] ✔ sidecar done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
+      } catch (err) {
+        console.error('[upload] ✖ sidecar conversion failed:', err);
+        return NextResponse.json(
+          { error: `Sidecar conversion failed: ${err instanceof Error ? err.message : err}` },
+          { status: 502 }
+        );
+      }
+    } else {
+      console.warn('[upload] ✖ no conversion backend configured');
       return NextResponse.json(
         {
-          error: 'Docling is not configured. Set DOCLING_API_URL in .env.local, or upload a plain .txt or .md file instead.',
+          error: 'No conversion backend configured. Set DOCLING_SIDECAR_URL and/or DOCLING_API_URL in .env.local, or upload a plain .txt or .md file instead.',
           docling_required: true,
         },
         { status: 422 }
       );
     }
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      doclang = await convertWithDocling(buffer, file.name, mimeType);
-    } catch (err) {
-      console.error('[upload] Docling conversion failed:', err);
-      return NextResponse.json(
-        { error: `Docling conversion failed: ${err instanceof Error ? err.message : err}` },
-        { status: 502 }
-      );
-    }
   } else {
     // Plain text — wrap in pseudo-DocLang
+    console.log(`[upload] → plain text path (no docling needed)`);
     const text = await file.text();
     doclang = convertToDocLang(text, title);
+    console.log(`[upload] ✔ convertToDocLang done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
   }
 
   // ── Split + embed + insert ────────────────────────────────────────────────
@@ -93,6 +124,10 @@ export async function POST(req: NextRequest) {
   const db = getWritableDb();
   const docId = `user-${randomUUID()}`;
   const now = new Date().toISOString();
+
+  console.log(`[upload] splitting doclang into sections (docId=${docId})`);
+  const rawSections = splitDocLangSections(doclang);
+  console.log(`[upload] → ${rawSections.length} section(s)`);
 
   insertDocument(db, {
     id: docId,
@@ -103,24 +138,30 @@ export async function POST(req: NextRequest) {
     created_at: now,
   });
 
-  const rawSections = splitDocLangSections(doclang);
   for (const s of rawSections) {
     insertSection(db, { ...s, doc_id: docId, theme });
   }
+  console.log(`[upload] sections inserted`);
 
+  console.log(`[upload] embedding ${rawSections.length} section(s)…`);
+  const tEmbed = Date.now();
   const embeddings = await _embedTexts(rawSections.map(s => s.plain_text));
+  let embeddedCount = 0;
   for (let i = 0; i < rawSections.length; i++) {
-    if (embeddings[i]?.length) insertEmbedding(db, rawSections[i].id, embeddings[i]);
+    if (embeddings[i]?.length) { insertEmbedding(db, rawSections[i].id, embeddings[i]); embeddedCount++; }
   }
+  console.log(`[upload] ✔ ${embeddedCount}/${rawSections.length} embeddings inserted in ${Date.now() - tEmbed}ms`);
 
   rebuildFts(db);
+  console.log(`[upload] ✔ FTS index rebuilt — total ${Date.now() - t0}ms`);
 
   return NextResponse.json({
     id: docId,
     title,
     theme,
     section_count: rawSections.length,
-    via_docling: handler === 'docling',
+    via_saas: handler === 'docling' && isDoclingConfigured(),
+    via_sidecar: handler === 'docling' && isSidecarConfigured(),
   });
 }
 
