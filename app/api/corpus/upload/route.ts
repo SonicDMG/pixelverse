@@ -10,8 +10,8 @@ import {
 } from '@/services/rag/db';
 import { convertToDocLang, splitDocLangSections } from '@/services/rag/doclang';
 import {
+  getDoclingMode,
   isSidecarConfigured, convertWithSidecar,
-  isDoclingConfigured, convertWithDocling,
 } from '@/services/rag/docling';
 
 // Accepted MIME types — Docling handles PDF/DOCX/PPTX/images; plain text
@@ -65,20 +65,25 @@ export async function POST(req: NextRequest) {
   console.log(`[upload] ▶ received "${file.name}" (${kb} KB, ${mimeType}) title="${title}" theme=${theme} handler=${handler}`);
 
   // ── Convert to DocLang ────────────────────────────────────────────────────
-  // Mode A: sidecar only          → local DocumentConverter + export_to_doclang()
-  // Mode B: SaaS + sidecar        → SaaS OCR/layout, sidecar export_to_doclang() on JSON
-  // Mode C: SaaS only             → SaaS markdown wrapped in pseudo-DocLang (lossy)
+  // DOCLING_MODE is the authority:
+  //   local — sidecar /convert  (DocumentConverter on-device + export_to_doclang)
+  //   saas  — SaaS OCR/layout, sidecar /convert-json (export_to_doclang on DoclingDocument JSON)
 
   let doclang: string;
   const t0 = Date.now();
 
   if (handler === 'docling') {
     const buffer = Buffer.from(await file.arrayBuffer());
-    if (isSidecarConfigured()) {
-      // Mode A — sidecar handles the file directly via DocumentConverter.
-      // Preferred over SaaS for text-based files (md, txt) because SaaS only
-      // returns a markdown artifact for these, losing all doclang structure.
-      console.log(`[upload] → mode A (local sidecar) via ${process.env.DOCLING_SIDECAR_URL}`);
+    const doclingMode = getDoclingMode();
+
+    if (doclingMode === 'local') {
+      if (!isSidecarConfigured()) {
+        return NextResponse.json(
+          { error: 'DOCLING_MODE=local requires DOCLING_SIDECAR_URL to be set in .env.local.' },
+          { status: 422 }
+        );
+      }
+      console.log(`[upload] → mode local (sidecar /convert) via ${process.env.DOCLING_SIDECAR_URL}`);
       try {
         doclang = await convertWithSidecar(buffer, file.name, mimeType);
         console.log(`[upload] ✔ sidecar done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
@@ -89,28 +94,25 @@ export async function POST(req: NextRequest) {
           { status: 502 }
         );
       }
-    } else if (isDoclingConfigured()) {
-      // Mode C — SaaS only (no sidecar). Returns markdown wrapped as pseudo-doclang.
-      console.log(`[upload] → mode C (SaaS only) via ${process.env.DOCLING_API_URL}`);
+    } else {
+      // saas mode — sidecar calls DoclingServiceClient → export_to_doclang() locally
+      if (!isSidecarConfigured()) {
+        return NextResponse.json(
+          { error: 'DOCLING_MODE=saas requires DOCLING_SIDECAR_URL — the sidecar calls DoclingServiceClient and export_to_doclang().' },
+          { status: 422 }
+        );
+      }
+      console.log(`[upload] → mode saas (sidecar /convert-saas) via ${process.env.DOCLING_SIDECAR_URL}`);
       try {
-        doclang = await convertWithDocling(buffer, file.name, mimeType);
-        console.log(`[upload] ✔ SaaS done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
+        doclang = await convertWithSidecar(buffer, file.name, mimeType);
+        console.log(`[upload] ✔ saas done in ${Date.now() - t0}ms — doclang ${doclang.length} chars`);
       } catch (err) {
-        console.error('[upload] ✖ SaaS conversion failed:', err);
+        console.error('[upload] ✖ saas conversion failed:', err);
         return NextResponse.json(
           { error: `Docling conversion failed: ${err instanceof Error ? err.message : err}` },
           { status: 502 }
         );
       }
-    } else {
-      console.warn('[upload] ✖ no conversion backend configured');
-      return NextResponse.json(
-        {
-          error: 'No conversion backend configured. Set DOCLING_SIDECAR_URL and/or DOCLING_API_URL in .env.local, or upload a plain .txt or .md file instead.',
-          docling_required: true,
-        },
-        { status: 422 }
-      );
     }
   } else {
     // Plain text — wrap in pseudo-DocLang
@@ -161,7 +163,7 @@ export async function POST(req: NextRequest) {
     title,
     theme,
     section_count: rawSections.length,
-    via_saas: handler === 'docling' && isDoclingConfigured(),
+    via_saas: handler === 'docling' && getDoclingMode() === 'saas',
     via_sidecar: handler === 'docling' && isSidecarConfigured(),
   });
 }

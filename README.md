@@ -140,12 +140,19 @@ LLM_API_KEY=your_llm_api_key_here
 # Embeddings — can reuse LLM_API_KEY if same provider
 EMBED_API_KEY=your_embed_api_key_here
 # EMBED_MODEL=text-embedding-3-small
+# EMBED_BASE_URL=https://your-provider.com/v1
 
-# EverArt Configuration (REQUIRED)
-EVERART_API_KEY=your_everart_api_key
+# EverArt — pixel-art image generation for celestial body cards
+EVERART_API_KEY=your_everart_api_key_here
 
-# Docling sidecar (document → DocLang conversion)
+# RAG corpus DB (built once via: npx tsx scripts/ingest-corpus.ts)
+# RAG_DB_PATH=data/corpus.db
+
+# Docling — "local" or "saas" (see Docling Setup section)
+DOCLING_MODE=local
 DOCLING_SIDECAR_URL=http://localhost:7421
+# DOCLING_API_URL=https://your-docling-instance.com  # required for saas mode
+# DOCLING_API_KEY=your_docling_api_key_here          # required for saas mode
 ```
 
 **Important Security Notes:**
@@ -153,19 +160,27 @@ DOCLING_SIDECAR_URL=http://localhost:7421
 - All required environment variables are validated at startup
 - See `.env.example` for detailed documentation and all optional variables
 
-### Docling Sidecar Setup
+### Docling Setup
 
-**Prerequisites:**
-- Python 3.10+ installed
+Set `DOCLING_MODE` in `.env.local` to choose how documents are converted to DocLang:
 
-**Install sidecar dependencies (once):**
+| `DOCLING_MODE` | How it works | Required vars |
+|----------------|--------------|---------------|
+| `local` (default) | Sidecar runs `DocumentConverter` + `export_to_doclang()` on-device | `DOCLING_SIDECAR_URL` |
+| `saas` | Docling SaaS handles OCR/layout; sidecar calls `export_to_doclang()` on the result JSON | `DOCLING_API_URL` + `DOCLING_API_KEY` + `DOCLING_SIDECAR_URL` |
+
+Both modes produce native DocLang (tables, `<location>` tags, OTSL markup preserved). The sidecar is required for both.
+
+**Sidecar setup (required for both modes)**
+
+**Prerequisites:** Python 3.10+ installed
+
+**Install once:**
 ```bash
 npm run setup:sidecar
 ```
 
-This creates a `.venv` inside `sidecar/` and installs `docling`, `fastapi`, `uvicorn`, and friends.
-
-**Start (sidecar launches automatically alongside Next.js):**
+**Start** (sidecar launches automatically alongside Next.js):
 ```bash
 npm run dev
 ```
@@ -175,7 +190,25 @@ Or standalone from the repo root:
 sidecar/.venv/bin/uvicorn sidecar.main:app --port 7421
 ```
 
-The sidecar converts PDFs/DOCX/PPTX to native DocLang XML (preserves tables, layout tags, and structure — richer than plain Markdown). The RAG corpus is built once via:
+**`DOCLING_MODE=local`**
+
+```js
+DOCLING_MODE=local
+DOCLING_SIDECAR_URL=http://localhost:7421
+```
+
+**`DOCLING_MODE=saas`**
+
+```js
+DOCLING_MODE=saas
+DOCLING_SIDECAR_URL=http://localhost:7421
+DOCLING_API_URL=https://your-docling-instance.com
+DOCLING_API_KEY=your_docling_api_key_here
+```
+
+---
+
+The RAG corpus is built once after setup:
 ```bash
 npx tsx scripts/ingest-corpus.ts
 ```
@@ -225,7 +258,7 @@ Click "GUEST ACCESS" for limited access to main application features. Guest user
 
 ## 🎯 Usage
 
-1. **Install and start**: run `npm run setup:sidecar` once, then `npm run dev` (starts Next.js + sidecar together). Ingest the RAG corpus once with `npx tsx scripts/ingest-corpus.ts`
+1. **Configure Docling** — see [Docling Setup](#docling-setup) for the three conversion modes (local sidecar, SaaS + sidecar, or SaaS-only). Run `npm run setup:sidecar` if using the sidecar, then `npm run dev`. Ingest the RAG corpus once with `npx tsx scripts/ingest-corpus.ts`
 2. **Open PixelTicker** in your browser
 3. **Ask stock questions** like:
    - "How has IBM's stock performed over the last 2 weeks?"

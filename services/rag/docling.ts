@@ -1,18 +1,21 @@
 /**
- * Docling converters — two modes:
+ * Docling converters.
  *
- * A. Local-only  (DOCLING_SIDECAR_URL, no DOCLING_API_URL)
- *    POST /convert → sidecar runs DocumentConverter + export_to_doclang() locally.
- *
- * B. SaaS + sidecar  (both URLs set)
- *    SaaS handles the heavy OCR/layout work and returns a DoclingDocument JSON.
- *    Sidecar calls export_to_doclang() on that JSON locally → native DocLang.
- *    Best of both: cloud compute, local DocLang fidelity.
- *
- * C. SaaS-only  (DOCLING_API_URL only, no sidecar)
- *    SaaS returns Markdown; wrapped in pseudo-DocLang via convertToDocLang().
- *    Tables and location tags are lost — legacy fallback only.
+ * Mode is driven by DOCLING_MODE env var:
+ *   "local" — sidecar runs DocumentConverter + export_to_doclang() locally.
+ *             Requires DOCLING_SIDECAR_URL.
+ *   "saas"  — Docling SaaS handles OCR/layout; sidecar calls export_to_doclang()
+ *             on the returned DoclingDocument JSON (full fidelity, cloud compute).
+ *             Requires DOCLING_API_URL + DOCLING_API_KEY + DOCLING_SIDECAR_URL.
  */
+
+export type DoclingMode = 'local' | 'saas';
+
+export function getDoclingMode(): DoclingMode {
+  const mode = process.env.DOCLING_MODE?.trim().toLowerCase();
+  if (mode === 'saas') return 'saas';
+  return 'local'; // default
+}
 
 // ── Sidecar ───────────────────────────────────────────────────────────────────
 
@@ -24,11 +27,8 @@ export function isSidecarConfigured(): boolean {
 /**
  * POST the file to the Python sidecar and return native DocLang XML.
  *
- * If DOCLING_API_URL is also configured, uses /convert-saas so the sidecar
- * delegates to DoclingServiceClient (same path as Singularity) and then calls
- * export_to_doclang() locally — full fidelity with location tags, tables, etc.
- *
- * Otherwise falls back to /convert which runs DocumentConverter locally.
+ * DOCLING_MODE=local  → /convert        (DocumentConverter runs on-device)
+ * DOCLING_MODE=saas   → /convert-saas   (sidecar delegates to DoclingServiceClient)
  */
 export async function convertWithSidecar(
   fileBuffer: Buffer,
@@ -36,7 +36,7 @@ export async function convertWithSidecar(
   mimeType: string,
 ): Promise<string> {
   const baseUrl = process.env.DOCLING_SIDECAR_URL!.replace(/\/$/, '');
-  const endpoint = isDoclingConfigured() ? '/convert-saas' : '/convert';
+  const endpoint = getDoclingMode() === 'saas' ? '/convert-saas' : '/convert';
 
   const form = new FormData();
   form.append('file', new Blob([new Uint8Array(fileBuffer)], { type: mimeType }), filename);
@@ -55,7 +55,8 @@ export async function convertWithSidecar(
 
 // ── SaaS ─────────────────────────────────────────────────────────────────────
 
-export function isDoclingConfigured(): boolean {
+// Internal validation only — use getDoclingMode() for routing decisions.
+function isDoclingConfigured(): boolean {
   const url = process.env.DOCLING_API_URL?.trim();
   return !!url && url !== '';
 }
@@ -125,45 +126,32 @@ export async function convertWithDocling(
 
   console.log(`[docling] artifacts: ${artifacts.map(a => a.artifact_type).join(', ')}`);
 
-  // ── 4. DoclingDocument JSON → sidecar export_to_doclang() (mode B) ────────
-  // Prefer the JSON artifact so the sidecar can produce native DocLang.
-  if (isSidecarConfigured()) {
-    const jsonArtifact = artifacts.find(a => a.artifact_type?.toLowerCase().includes('json'));
-    if (jsonArtifact) {
-      let docJson: string;
-      if (jsonArtifact.content) {
-        docJson = typeof jsonArtifact.content === 'string'
-          ? jsonArtifact.content
-          : JSON.stringify(jsonArtifact.content);
-      } else if (jsonArtifact.uri) {
-        const r = await fetch(jsonArtifact.uri);
-        if (!r.ok) throw new Error(`Docling JSON artifact fetch error ${r.status}`);
-        docJson = await r.text();
-      } else {
-        throw new Error('Docling: JSON artifact has no content or uri');
-      }
-      console.log(`[docling] handing off DoclingDocument JSON (${docJson.length} chars) to sidecar`);
-      return _exportJsonViaSidecar(docJson);
-    }
-    console.warn('[docling] no JSON artifact found — falling back to markdown');
+  // ── 4. DoclingDocument JSON → sidecar export_to_doclang() ────────────────
+  // Sidecar is always required in saas mode — hand the DoclingDocument JSON
+  // to the sidecar so it can call export_to_doclang() locally.
+  const jsonArtifact = artifacts.find(a => a.artifact_type?.toLowerCase().includes('json'));
+  if (!jsonArtifact) {
+    throw new Error(
+      `Docling SaaS returned no JSON artifact (got: ${artifacts.map(a => a.artifact_type).join(', ') || 'none'}) — ` +
+      `cannot produce native DocLang. Check SaaS configuration.`
+    );
   }
 
-  // ── 5. Markdown fallback (mode C) ─────────────────────────────────────────
-  const artifact = artifacts.find(a => a.artifact_type?.toLowerCase().includes('markdown'))
-    ?? artifacts.find(a => a.artifact_type?.toLowerCase().includes('text'))
-    ?? artifacts[0];
-
-  if (!artifact) throw new Error(`Docling: no artifacts returned`);
-
-  if (artifact.content) return artifact.content as string;
-
-  if (artifact.uri) {
-    const artResp = await fetch(artifact.uri);
-    if (!artResp.ok) throw new Error(`Docling artifact fetch error ${artResp.status}`);
-    return await artResp.text();
+  let docJson: string;
+  if (jsonArtifact.content) {
+    docJson = typeof jsonArtifact.content === 'string'
+      ? jsonArtifact.content
+      : JSON.stringify(jsonArtifact.content);
+  } else if (jsonArtifact.uri) {
+    const r = await fetch(jsonArtifact.uri);
+    if (!r.ok) throw new Error(`Docling JSON artifact fetch error ${r.status}`);
+    docJson = await r.text();
+  } else {
+    throw new Error('Docling: JSON artifact has no content or uri');
   }
 
-  throw new Error(`Docling: artifact has no content or uri`);
+  console.log(`[docling] handing off DoclingDocument JSON (${docJson.length} chars) to sidecar`);
+  return _exportJsonViaSidecar(docJson);
 }
 
 /**
