@@ -13,21 +13,21 @@
 <span style="color: #ff00ff;">████████████████████████████████████████████████████████████████████████████████</span>
 </pre>
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=16&duration=3000&pause=1000&color=00FF9F&center=true&vCenter=true&width=800&lines=Welcome+to+the+PixelVerse;Your+gateway+to+a+retro+agentic+experience;Powered+by+Langflow+%7C+MCP+%7C+OpenRAG" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=16&duration=3000&pause=1000&color=00FF9F&center=true&vCenter=true&width=800&lines=Welcome+to+the+PixelVerse;Your+gateway+to+a+retro+agentic+experience;Powered+by+Docling+%7C+DocLang+%7C+MCP" alt="Typing SVG" />
 
 </div>
 
 <div align="center">
 
-**Welcome to the <span style="color: #00ff9f;">Pixel</span><span style="color: #00d4ff;">Verse</span>.** Your gateway to a retro agentic experience where cyberpunk aesthetics meet cutting-edge AI. Powered by [Langflow](https://github.com/langflow-ai/langflow), [MCP](https://modelcontextprotocol.io), and [OpenRAG](https://github.com/langflow-ai/openrag).
+**Welcome to the <span style="color: #00ff9f;">Pixel</span><span style="color: #00d4ff;">Verse</span>.** Your gateway to a retro agentic experience where cyberpunk aesthetics meet cutting-edge AI. Powered by [Docling](https://github.com/DS4SD/docling), [DocLang](https://github.com/doclang-project/doclang/), and [MCP](https://modelcontextprotocol.io).
 
 <br/>
 
-[![OpenRAG](https://img.shields.io/badge/OpenRAG-Powered-orange?style=for-the-badge&logo=github)](https://github.com/langflow-ai/openrag)
-[![Langflow](https://img.shields.io/badge/Langflow-Integration-purple?style=for-the-badge&logo=github)](https://github.com/langflow-ai/langflow)
+[![Docling](https://img.shields.io/badge/Docling-Powered-orange?style=for-the-badge&logo=github)](https://github.com/DS4SD/docling)
+[![DocLang](https://img.shields.io/badge/DocLang-Integration-purple?style=for-the-badge&logo=github)](https://github.com/doclang-project/doclang/)
 ![PixelTicker](https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
-![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)
+![Tailwind](https://img.shields.io/badge/Tailwind-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 
 </div>
 
@@ -132,35 +132,52 @@ Edit `.env.local` and set your values:
 # Authentication (REQUIRED - minimum 8 characters)
 AUTH_PASSWORD=your_secure_password_here
 
-# Langflow Configuration (REQUIRED)
-LANGFLOW_URL=http://localhost:7861
-LANGFLOW_API_KEY=your_langflow_api_key
+# LLM — OpenAI-compatible key + model
+LLM_API_KEY=your_llm_api_key_here
+# LLM_MODEL=gpt-4o-mini
+# LLM_BASE_URL=https://your-provider.com/v1
+
+# Embeddings — can reuse LLM_API_KEY if same provider
+EMBED_API_KEY=your_embed_api_key_here
+# EMBED_MODEL=text-embedding-3-small
 
 # EverArt Configuration (REQUIRED)
 EVERART_API_KEY=your_everart_api_key
 
-# Optional: Flow IDs for different themes
-# LANGFLOW_FLOW_ID_TICKER=your_ticker_flow_id
-# LANGFLOW_FLOW_ID_SPACE=your_space_flow_id
+# Docling sidecar (document → DocLang conversion)
+DOCLING_SIDECAR_URL=http://localhost:7421
 ```
 
 **Important Security Notes:**
 - Set a strong password for `AUTH_PASSWORD` (minimum 8 characters, 12+ recommended for production)
 - All required environment variables are validated at startup
-- In development mode, localhost and private IPs are allowed for `LANGFLOW_URL`
-- In production mode, `LANGFLOW_URL` must be a public URL (SSRF protection)
-- See `.env.example` for detailed documentation
+- See `.env.example` for detailed documentation and all optional variables
 
-### Langflow Setup
+### Docling Sidecar Setup
 
 **Prerequisites:**
-- Langflow instance running on port 7861
-- Stock MCP server configured in Langflow
+- Python 3.10+ installed
 
-**Update Flow ID:**
-Open `services/langflow.ts` and replace `your-flow-id` with your actual Langflow flow ID:
-```typescript
-`${LANGFLOW_URL}/api/v1/run/your-actual-flow-id`
+**Install sidecar dependencies (once):**
+```bash
+npm run setup:sidecar
+```
+
+This creates a `.venv` inside `sidecar/` and installs `docling`, `fastapi`, `uvicorn`, and friends.
+
+**Start (sidecar launches automatically alongside Next.js):**
+```bash
+npm run dev
+```
+
+Or standalone from the repo root:
+```bash
+sidecar/.venv/bin/uvicorn sidecar.main:app --port 7421
+```
+
+The sidecar converts PDFs/DOCX/PPTX to native DocLang XML (preserves tables, layout tags, and structure — richer than plain Markdown). The RAG corpus is built once via:
+```bash
+npx tsx scripts/ingest-corpus.ts
 ```
 
 ## 🔐 Authentication
@@ -208,7 +225,7 @@ Click "GUEST ACCESS" for limited access to main application features. Guest user
 
 ## 🎯 Usage
 
-1. **Start your Langflow instance** on port 7861 with the stock MCP server configured
+1. **Install and start**: run `npm run setup:sidecar` once, then `npm run dev` (starts Next.js + sidecar together). Ingest the RAG corpus once with `npx tsx scripts/ingest-corpus.ts`
 2. **Open PixelTicker** in your browser
 3. **Ask stock questions** like:
    - "How has IBM's stock performed over the last 2 weeks?"
@@ -223,15 +240,8 @@ Click "GUEST ACCESS" for limited access to main application features. Guest user
 
 All environment variables are validated at application startup to prevent security vulnerabilities:
 
-**VULN-002 (Critical) - SSRF Protection:**
-- `LANGFLOW_URL` is validated to prevent Server-Side Request Forgery (SSRF) attacks
-- In **production mode**: Private IP addresses and localhost are blocked
-- In **development mode**: Localhost and private IPs are allowed for local testing
-- Only `http://` and `https://` protocols are permitted
-- Blocked ranges in production: `127.x.x.x`, `10.x.x.x`, `192.168.x.x`, `172.16-31.x.x`, `169.254.x.x`, IPv6 private ranges
-
 **VULN-003 (Critical) - API Key Validation:**
-- `LANGFLOW_API_KEY` and `EVERART_API_KEY` must be non-empty
+- `LLM_API_KEY`, `EMBED_API_KEY`, and `EVERART_API_KEY` must be non-empty
 - Keys are validated at both startup and runtime
 - Recommendation: Rotate API keys every 90 days
 
@@ -245,18 +255,6 @@ All environment variables are validated at application startup to prevent securi
 - Clear error messages guide configuration
 - Warnings are shown for optional variables or weak configurations
 
-**Development vs Production:**
-```js
-# Development (.env.local)
-NODE_ENV=development
-LANGFLOW_URL=http://localhost:7861  # ✅ Allowed in development
-
-# Production (.env.local)
-NODE_ENV=production
-LANGFLOW_URL=https://api.langflow.io  # ✅ Must be public URL
-# LANGFLOW_URL=http://localhost:7861  # ❌ Blocked in production (SSRF protection)
-```
-
 For detailed security documentation, see `.env.example`.
 
 ## 🤝 Contributing
@@ -269,4 +267,4 @@ MIT License - feel free to use this project for learning and development.
 
 ---
 
-**Built with ❤️ using Next.js, Langflow, and MCP**
+**Built with ❤️ using Next.js, Docling, DocLang, and MCP**

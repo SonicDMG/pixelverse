@@ -26,6 +26,10 @@ if (shouldValidate) {
 }
 
 const nextConfig: NextConfig = {
+  // Prevent Turbopack/Webpack from bundling native Node addons.
+  // better-sqlite3 and sqlite-vec load .node/.dylib binaries at runtime;
+  // they must be resolved by Node directly, not by the bundler.
+  serverExternalPackages: ['better-sqlite3', 'sqlite-vec'],
   images: {
     remotePatterns: [
       {

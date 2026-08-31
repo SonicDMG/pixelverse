@@ -67,6 +67,7 @@ export function ConversationContainer({
             components={group.components}
             stockData={group.stockData}
             symbol={group.symbol}
+            references={group.references}
             durationSeconds={group.durationSeconds}
             streamingChunks={group.streamingChunks}
             onSetQuestion={onSetQuestion}

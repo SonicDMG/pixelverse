@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { ThemeConfig } from '@/constants/theme';
 import { AppSwitcher } from '@/components/AppSwitcher';
 import { UserStatus } from '@/components/UserStatus';
 import { LoadingStatus } from '@/types';
+import { KnowledgePanel } from '@/components/KnowledgePanel';
 
 /**
  * AppHeader Component
@@ -31,8 +33,11 @@ export function AppHeader({
   loadingStatus,
   onClearConversation,
 }: AppHeaderProps) {
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+
   return (
     <>
+      <KnowledgePanel open={knowledgeOpen} onClose={() => setKnowledgeOpen(false)} />
       {/* Mobile Layout: Stacked vertically (below lg breakpoint) */}
       <div className="flex flex-col gap-4 lg:hidden">
         {/* App Switcher Buttons */}
@@ -55,9 +60,20 @@ export function AppHeader({
           <UserStatus theme={theme} />
         </div>
 
-        {/* Clear Button */}
-        {hasConversation && (
-          <div className="flex justify-center mb-8">
+        {/* Knowledge + Clear Buttons */}
+        <div className="flex justify-center gap-2 mb-8">
+          <button
+            onClick={() => setKnowledgeOpen(true)}
+            className="px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors pixel-border whitespace-nowrap"
+            style={{
+              borderColor: theme.colors.secondary,
+              color: theme.colors.secondary,
+            }}
+            title="Open knowledge base"
+          >
+            KNOWLEDGE
+          </button>
+          {hasConversation && (
             <button
               onClick={onClearConversation}
               disabled={loadingStatus !== null && loadingStatus !== 'done'}
@@ -70,8 +86,8 @@ export function AppHeader({
             >
               CLEAR
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Desktop Layout: Center and Right columns only (grid created by parent) */}
@@ -97,6 +113,19 @@ export function AppHeader({
             <AppSwitcher />
           </div>
           
+          {/* Knowledge Button */}
+          <button
+            onClick={() => setKnowledgeOpen(true)}
+            className="w-full px-4 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel hover:text-[var(--color-bg-dark)] transition-colors pixel-border whitespace-nowrap"
+            style={{
+              borderColor: theme.colors.secondary,
+              color: theme.colors.secondary,
+            }}
+            title="Open knowledge base"
+          >
+            KNOWLEDGE
+          </button>
+
           {/* Clear Button (right column on desktop, under app switcher, full width) */}
           {hasConversation && (
             <button

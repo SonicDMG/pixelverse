@@ -1,19 +1,8 @@
 /**
- * Integration tests for /api/ask-space route
- * Tests validation logic, mock response patterns, OWASP security compliance, and Langflow integration
- * 
- * Note: These tests focus on the validation and business logic rather than
- * full integration testing of the Next.js route handler.
+ * Tests for /api/ask-space — validation logic, mock response patterns, OWASP security compliance.
  */
 
-import * as langflowService from '@/services/langflow';
-
-// Mock the Langflow service
-jest.mock('@/services/langflow');
-const mockedQueryLangflow = langflowService.queryLangflow as jest.MockedFunction<typeof langflowService.queryLangflow>;
-
-// Import the validation function (same as ask-stock)
-function validateQuestion(question: unknown): { valid: boolean; error?: string; sanitized?: string } {
+function validateSpaceQuestion(question: unknown): { valid: boolean; error?: string; sanitized?: string } {
   if (!question || typeof question !== 'string') {
     return { valid: false, error: 'Question is required and must be a string' };
   }
@@ -102,59 +91,44 @@ function getMockSpaceResponse(question: string): any {
 }
 
 describe('/api/ask-space - Validation Logic', () => {
-  const originalEnv = process.env;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    process.env = {
-      ...originalEnv,
-      LANGFLOW_URL: 'http://test-langflow.com',
-      LANGFLOW_API_KEY: 'test-api-key',
-      LANGFLOW_FLOW_ID_SPACE: 'space-flow-id',
-    };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  describe('validateQuestion() - Input validation', () => {
+  describe('validateSpaceQuestion() - Input validation', () => {
     it('should accept valid space question', () => {
-      const result = validateQuestion('Tell me about Mars');
+      const result = validateSpaceQuestion('Tell me about Mars');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('Tell me about Mars');
     });
 
     it('should reject non-string question', () => {
-      const result = validateQuestion(123);
+      const result = validateSpaceQuestion(123);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question is required and must be a string');
     });
 
     it('should reject null question', () => {
-      const result = validateQuestion(null);
+      const result = validateSpaceQuestion(null);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question is required and must be a string');
     });
 
     it('should reject undefined question', () => {
-      const result = validateQuestion(undefined);
+      const result = validateSpaceQuestion(undefined);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question is required and must be a string');
     });
 
     it('should reject empty string', () => {
-      const result = validateQuestion('');
+      const result = validateSpaceQuestion('');
       
       expect(result.valid).toBe(false);
     });
 
     it('should reject whitespace-only question', () => {
-      const result = validateQuestion('   \t   ');
+      const result = validateSpaceQuestion('   \t   ');
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question cannot be empty');
@@ -162,7 +136,7 @@ describe('/api/ask-space - Validation Logic', () => {
 
     it('should reject question exceeding 500 characters', () => {
       const longQuestion = 'a'.repeat(501);
-      const result = validateQuestion(longQuestion);
+      const result = validateSpaceQuestion(longQuestion);
       
       expect(result.valid).toBe(false);
       expect(result.error).toBe('Question too long (max 500 characters)');
@@ -170,7 +144,7 @@ describe('/api/ask-space - Validation Logic', () => {
 
     it('should accept question at exactly 500 characters', () => {
       const maxLengthQuestion = 'a'.repeat(500);
-      const result = validateQuestion(maxLengthQuestion);
+      const result = validateSpaceQuestion(maxLengthQuestion);
       
       expect(result.valid).toBe(true);
     });
@@ -178,21 +152,21 @@ describe('/api/ask-space - Validation Logic', () => {
 
   describe('OWASP Security - Input Sanitization', () => {
     it('should remove control characters', () => {
-      const result = validateQuestion('Tell\x01me\x02about\x1FMars');
+      const result = validateSpaceQuestion('Tell\x01me\x02about\x1FMars');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('TellmeaboutMars');
     });
 
     it('should remove null bytes', () => {
-      const result = validateQuestion('Tell me about Mars\x00');
+      const result = validateSpaceQuestion('Tell me about Mars\x00');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBe('Tell me about Mars');
     });
 
     it('should preserve Unicode characters', () => {
-      const result = validateQuestion('Tell me about Mars 火星 🚀');
+      const result = validateSpaceQuestion('Tell me about Mars 火星 🚀');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toContain('火星');
@@ -200,7 +174,7 @@ describe('/api/ask-space - Validation Logic', () => {
     });
 
     it('should handle XSS attempts', () => {
-      const result = validateQuestion('<script>alert("xss")</script>Tell me about Mars');
+      const result = validateSpaceQuestion('<script>alert("xss")</script>Tell me about Mars');
       
       expect(result.valid).toBe(true);
       // HTML is not sanitized at this layer
@@ -298,64 +272,6 @@ describe('/api/ask-space - Validation Logic', () => {
     });
   });
 
-  describe('Langflow integration', () => {
-    it('should call queryLangflow with space theme', async () => {
-      const mockResponse = {
-        answer: 'Mars is fascinating',
-      };
-      mockedQueryLangflow.mockResolvedValue(mockResponse);
-
-      const result = await langflowService.queryLangflow('Tell me about Mars', 'space');
-
-      expect(mockedQueryLangflow).toHaveBeenCalledWith('Tell me about Mars', 'space');
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should handle Langflow error response', async () => {
-      mockedQueryLangflow.mockResolvedValue({
-        answer: '',
-        error: 'Langflow service unavailable',
-      });
-
-      const result = await langflowService.queryLangflow('Tell me about Mars', 'space');
-
-      expect(result.error).toBe('Langflow service unavailable');
-    });
-
-    it('should pass session_id to Langflow', async () => {
-      const mockResponse = { answer: 'Response' };
-      mockedQueryLangflow.mockResolvedValue(mockResponse);
-
-      await langflowService.queryLangflow('Tell me about Mars', 'space', 'session-123');
-
-      expect(mockedQueryLangflow).toHaveBeenCalledWith(
-        'Tell me about Mars',
-        'space',
-        'session-123'
-      );
-    });
-
-    it('should handle response with components', async () => {
-      const mockResponse = {
-        answer: 'Here is Mars',
-        components: [{
-          type: 'celestial-body-card' as const,
-          props: {
-            name: 'Mars',
-            bodyType: 'planet' as const,
-            description: 'The Red Planet',
-          }
-        }],
-      };
-      mockedQueryLangflow.mockResolvedValue(mockResponse);
-
-      const result = await langflowService.queryLangflow('Tell me about Mars', 'space');
-
-      expect(result.components).toHaveLength(1);
-      expect(result.components?.[0].type).toBe('celestial-body-card');
-    });
-  });
-
   describe('Session ID validation', () => {
     it('should accept string session_id', () => {
       const sessionId = 'space-session-123';
@@ -400,12 +316,8 @@ describe('/api/ask-space - Validation Logic', () => {
   });
 
   describe('Fallback behavior', () => {
-    it('should fallback to mock when Langflow fails', async () => {
-      mockedQueryLangflow.mockRejectedValue(new Error('Langflow unavailable'));
-
-      // In the actual route, it would catch and use getMockSpaceResponse
+    it('should fallback to mock on unknown queries', () => {
       const mockResponse = getMockSpaceResponse('Tell me about Mars');
-      
       expect(mockResponse.answer).toContain('Mars');
       expect(mockResponse.components).toBeDefined();
     });
@@ -427,7 +339,7 @@ describe('/api/ask-space - Validation Logic', () => {
     });
 
     it('should handle special characters in query', () => {
-      const result = validateQuestion('What is Mars? 🚀');
+      const result = validateSpaceQuestion('What is Mars? 🚀');
       
       expect(result.valid).toBe(true);
       expect(result.sanitized).toContain('🚀');
@@ -438,9 +350,9 @@ describe('/api/ask-space - Validation Logic', () => {
       const question500 = 'a'.repeat(500);
       const question501 = 'a'.repeat(501);
       
-      expect(validateQuestion(question499).valid).toBe(true);
-      expect(validateQuestion(question500).valid).toBe(true);
-      expect(validateQuestion(question501).valid).toBe(false);
+      expect(validateSpaceQuestion(question499).valid).toBe(true);
+      expect(validateSpaceQuestion(question500).valid).toBe(true);
+      expect(validateSpaceQuestion(question501).valid).toBe(false);
     });
   });
 });

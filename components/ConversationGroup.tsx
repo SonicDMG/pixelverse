@@ -1,4 +1,5 @@
-import { Message, ComponentSpec } from '@/types';
+import { useState } from 'react';
+import { Message, ComponentSpec, ReferenceSource } from '@/types';
 import { DynamicUIRenderer } from './DynamicUIRenderer';
 import { StockChart } from './StockChart';
 import { StreamingDataLoader } from './dynamic/StreamingDataLoader';
@@ -10,6 +11,7 @@ interface ConversationGroupProps {
   components?: ComponentSpec[];
   stockData?: any[];
   symbol?: string;
+  references?: ReferenceSource[];
   durationSeconds?: number;
   streamingChunks?: number;
   onSetQuestion?: (question: string) => void;
@@ -25,11 +27,13 @@ export function ConversationGroup({
   components,
   stockData,
   symbol,
+  references,
   durationSeconds,
   streamingChunks,
   onSetQuestion,
 }: ConversationGroupProps) {
   const { theme } = useTheme();
+  const [showReferences, setShowReferences] = useState(false);
   
   return (
     <div className="conversation-group">
@@ -80,6 +84,68 @@ export function ConversationGroup({
         <p className="text-sm text-white font-pixel leading-relaxed whitespace-pre-wrap">
           {assistantMessage.content}
         </p>
+
+        {/* References / Citations Drawer */}
+        {references && references.length > 0 && (
+          <div className="mt-4 pt-3 border-t-2 border-[#333]">
+            <button
+              onClick={() => setShowReferences(prev => !prev)}
+              className="flex items-center gap-2 text-xs font-pixel text-gray-400 hover:text-white transition-colors cursor-pointer py-1"
+              type="button"
+            >
+              <span className="text-[10px]" style={{ color: theme.colors.primary }}>
+                {showReferences ? '▼' : '►'}
+              </span>
+              <span>
+                REFERENCES ({references.length})
+              </span>
+            </button>
+
+            {showReferences && (
+              <div className="mt-2 space-y-2 pl-2 border-l-2 border-[#444] animate-fade-in">
+                {references.map((ref, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 bg-black/40 border border-[#2a2a2a] text-xs font-pixel space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 text-white font-medium">
+                        <span className="text-cyan-400">[{idx + 1}]</span>
+                        {ref.url ? (
+                          <a
+                            href={ref.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-300 hover:underline inline-flex items-center gap-1"
+                          >
+                            {ref.title}
+                          </a>
+                        ) : (
+                          <span>{ref.title}</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-gray-500">
+                        {ref.pageNum !== null && ref.pageNum !== undefined && `p. ${ref.pageNum}`}
+                      </div>
+                    </div>
+
+                    {ref.heading && (
+                      <div className="text-[11px] text-gray-400">
+                        § {ref.heading}
+                      </div>
+                    )}
+
+                    {ref.excerpt && (
+                      <p className="text-[11px] text-gray-400/90 leading-relaxed italic bg-black/30 p-1.5 rounded-none border-l-2 border-cyan-500/40">
+                        &ldquo;{ref.excerpt}&hellip;&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* UI Components or Charts */}
