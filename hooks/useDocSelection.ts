@@ -31,6 +31,8 @@ export interface SelectableDoc {
   theme: string;
 }
 
+const CACHE_STORAGE_KEY = 'pixelverse_doc_cache';
+
 export interface DocSelectionState {
   /** null = all docs selected (no explicit filter) */
   selectedIds: Set<string> | null;
@@ -59,6 +61,14 @@ export interface DocSelectionState {
    * Returns undefined when all docs are selected (server uses no-filter path).
    */
   activeDocIds: string[] | undefined;
+  /** Set of doc IDs whose full text should be loaded directly into the prompt */
+  cachedIds: Set<string>;
+  /** Returns true if a given doc id is cached */
+  isCached: (id: string) => boolean;
+  /** Toggle cache flag for a single doc */
+  toggleCache: (id: string) => void;
+  /** Array of cached doc IDs to send with the API request (empty = none cached) */
+  activeCachedDocIds: string[] | undefined;
 }
 
 export function useDocSelection(allDocs: SelectableDoc[]): DocSelectionState {
@@ -96,7 +106,7 @@ export function useDocSelection(allDocs: SelectableDoc[]): DocSelectionState {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allIds.join(',')]);
 
-  // Persist to localStorage on every change
+  // Persist selection to localStorage on every change
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (selectedIds === null) {
@@ -105,6 +115,43 @@ export function useDocSelection(allDocs: SelectableDoc[]): DocSelectionState {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([...selectedIds]));
     }
   }, [selectedIds]);
+
+  // ── Cache state ────────────────────────────────────────────────────────────
+  const [cachedIds, setCachedIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const raw = localStorage.getItem(CACHE_STORAGE_KEY);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw) as string[];
+      return Array.isArray(arr) ? new Set(arr) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Prune stale cached IDs when corpus changes
+  useEffect(() => {
+    if (allIds.length === 0) return;
+    setCachedIds(prev => new Set([...prev].filter(id => allIds.includes(id))));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allIds.join(',')]);
+
+  // Persist cache to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify([...cachedIds]));
+  }, [cachedIds]);
+
+  const isCached = useCallback((id: string) => cachedIds.has(id), [cachedIds]);
+
+  const toggleCache = useCallback((id: string) => {
+    setCachedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   const isSelected = useCallback(
     (id: string) => selectedIds === null ? true : selectedIds.has(id),
@@ -182,6 +229,11 @@ export function useDocSelection(allDocs: SelectableDoc[]): DocSelectionState {
     return [...selectedIds];
   }, [selectedIds, isAllSelected]);
 
+  // Cached doc IDs — only send if non-empty
+  const activeCachedDocIds = useMemo((): string[] | undefined => {
+    return cachedIds.size > 0 ? [...cachedIds] : undefined;
+  }, [cachedIds]);
+
   return {
     selectedIds,
     isAllSelected,
@@ -195,6 +247,10 @@ export function useDocSelection(allDocs: SelectableDoc[]): DocSelectionState {
     isThemeAllSelected,
     isThemePartiallySelected,
     activeDocIds,
+    cachedIds,
+    isCached,
+    toggleCache,
+    activeCachedDocIds,
   };
 }
 

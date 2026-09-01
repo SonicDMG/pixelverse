@@ -14,7 +14,7 @@
 
 import OpenAI from 'openai';
 import { jsonrepair } from 'jsonrepair';
-import { getDb, hybridSearch, hybridSearchAll, hybridSearchByIds, buildContext } from '@/services/rag';
+import { getDb, hybridSearch, hybridSearchAll, hybridSearchByIds, buildContext, fetchDocSections } from '@/services/rag';
 import { SPACE_SYSTEM_PROMPT, TICKER_SYSTEM_PROMPT, GENERALIST_SYSTEM_PROMPT } from './prompts';
 import type { StockQueryResult, ReferenceSource } from '@/types';
 import type { SectionResult } from '@/services/rag';
@@ -93,23 +93,50 @@ function formatReferences(sections: SectionResult[]): ReferenceSource[] {
 async function retrieveContext(
   question: string,
   theme: AgentTheme,
-  docIds?: string[]
+  docIds?: string[],
+  cachedDocIds?: string[]
 ): Promise<{ context: string; references: ReferenceSource[] }> {
   try {
     const db = getDb();
     const embedding = await embedQuery(question);
+
+    // ── RAG retrieval ────────────────────────────────────────────────────────
     // Generalist with explicit selection → filter by doc IDs
     // Generalist with no selection → search all themes
     // Space / ticker → filter by theme as usual
-    const sections =
+    const ragSections =
       theme === 'generalist' && docIds && docIds.length > 0
         ? hybridSearchByIds(db, question, embedding, { docIds, limit: 8 })
         : theme === 'generalist'
           ? hybridSearchAll(db, question, embedding, { limit: 8 })
           : hybridSearch(db, question, embedding, { theme, limit: 8 });
+
+    // ── Cache: full document text ────────────────────────────────────────────
+    // When the user pins specific docs, load ALL their sections into the prompt
+    // ahead of RAG hits so the LLM has complete access to their content.
+    const cachedSections =
+      cachedDocIds && cachedDocIds.length > 0
+        ? fetchDocSections(db, cachedDocIds)
+        : [];
+
+    // Deduplicate: cached sections take precedence; skip any RAG hit whose
+    // section id already appears in the cached set.
+    const cachedIds = new Set(cachedSections.map(s => s.id));
+    const dedupedRag = ragSections.filter(s => !cachedIds.has(s.id));
+
+    // Build context: cached docs first (full), then RAG hits
+    let context = '';
+    if (cachedSections.length > 0) {
+      context += `[FULL DOCUMENT CONTEXT]\n${buildContext(cachedSections)}\n\n`;
+    }
+    if (dedupedRag.length > 0) {
+      context += `[RETRIEVED SECTIONS]\n${buildContext(dedupedRag)}`;
+    }
+
+    const allSections = [...cachedSections, ...dedupedRag];
     return {
-      context: buildContext(sections),
-      references: formatReferences(sections),
+      context: context.trim(),
+      references: formatReferences(allSections),
     };
   } catch (err) {
     console.warn('[Agent] RAG retrieval failed, proceeding without context:', err);
@@ -123,7 +150,8 @@ export async function queryAgent(
   question: string,
   theme: AgentTheme = 'space',
   _sessionId?: string,   // kept for API compatibility; not needed without Langflow
-  docIds?: string[]
+  docIds?: string[],
+  cachedDocIds?: string[]
 ): Promise<StockQueryResult> {
   const systemPrompt =
     theme === 'space'       ? SPACE_SYSTEM_PROMPT :
@@ -131,7 +159,7 @@ export async function queryAgent(
                               GENERALIST_SYSTEM_PROMPT;
 
   try {
-    const { context, references } = await retrieveContext(question, theme, docIds);
+    const { context, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
     const userContent = context
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;
@@ -184,7 +212,8 @@ export async function* streamAgent(
   question: string,
   theme: AgentTheme = 'space',
   _sessionId?: string,
-  docIds?: string[]
+  docIds?: string[],
+  cachedDocIds?: string[]
 ): AsyncGenerator<string> {
   const systemPrompt =
     theme === 'space'       ? SPACE_SYSTEM_PROMPT :
@@ -192,7 +221,7 @@ export async function* streamAgent(
                               GENERALIST_SYSTEM_PROMPT;
 
   try {
-    const { context, references } = await retrieveContext(question, theme, docIds);
+    const { context, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
     const userContent = context
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;

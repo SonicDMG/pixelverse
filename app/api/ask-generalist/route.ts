@@ -29,10 +29,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { question, session_id, doc_ids } = body;
+    const { question, session_id, doc_ids, cached_doc_ids } = body;
     console.log('[Generalist API] Raw question from body:', question);
     if (Array.isArray(doc_ids)) {
       console.log(`[Generalist API] doc_ids filter: ${doc_ids.length} doc(s)`);
+    }
+    if (Array.isArray(cached_doc_ids)) {
+      console.log(`[Generalist API] cached_doc_ids: ${cached_doc_ids.length} doc(s) pinned to prompt`);
     }
 
     const questionValidation = validateAndSanitizeQuestion(question);
@@ -60,7 +63,8 @@ export async function POST(request: NextRequest) {
     console.log('[Generalist API] Validation passed. Sanitized question:', questionValidation.sanitized);
 
     const docIds = Array.isArray(doc_ids) ? doc_ids as string[] : undefined;
-    const result = await queryAgent(questionValidation.sanitized!, 'generalist', session_id, docIds);
+    const cachedDocIds = Array.isArray(cached_doc_ids) ? cached_doc_ids as string[] : undefined;
+    const result = await queryAgent(questionValidation.sanitized!, 'generalist', session_id, docIds, cachedDocIds);
 
     if (result.error) {
       return NextResponse.json<ApiErrorResponse>({ error: result.error }, { status: 500 });

@@ -343,6 +343,12 @@ function ThemeGroup({ theme, docs, isGeneralist, docSelection }: ThemeGroupProps
           </button>
         )}
       </div>
+      {isGeneralist && (
+        <div className="flex items-center gap-2 px-2 mb-1 text-[9px] font-pixel" style={{ color: 'rgba(0,255,159,0.35)' }}>
+          <span className="w-4 text-center" title="Include in RAG search">RAG</span>
+          <span className="w-4 text-center" style={{ color: 'rgba(250,204,21,0.45)' }} title="Pin full doc to prompt">PIN</span>
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         {docs.map(doc => (
           <DocRow
@@ -365,6 +371,7 @@ interface DocRowProps {
 
 function DocRow({ doc, isGeneralist, docSelection }: DocRowProps) {
   const selected = docSelection.isSelected(doc.id);
+  const cached = docSelection.isCached(doc.id);
   const sourceColor =
     doc.source === 'wikipedia'
       ? 'rgba(0,255,159,0.5)'
@@ -382,7 +389,7 @@ function DocRow({ doc, isGeneralist, docSelection }: DocRowProps) {
         transition: 'opacity 0.15s, background 0.15s',
       }}
     >
-      {/* Checkbox — generalist only */}
+      {/* Select checkbox — generalist only */}
       {isGeneralist && (
         <button
           onClick={() => docSelection.toggle(doc.id)}
@@ -393,7 +400,24 @@ function DocRow({ doc, isGeneralist, docSelection }: DocRowProps) {
             color: selected ? 'var(--color-bg-darker)' : 'transparent',
           }}
           aria-label={selected ? `Deselect ${doc.title}` : `Select ${doc.title}`}
-          title={selected ? 'Deselect' : 'Select'}
+          title={selected ? 'Remove from search' : 'Include in search'}
+        >
+          ✓
+        </button>
+      )}
+
+      {/* Cache checkbox — load full doc into prompt */}
+      {isGeneralist && (
+        <button
+          onClick={() => docSelection.toggleCache(doc.id)}
+          className="shrink-0 w-4 h-4 flex items-center justify-center text-[10px]"
+          style={{
+            border: `1px solid ${cached ? '#facc15' : 'rgba(250,204,21,0.25)'}`,
+            background: cached ? '#facc15' : 'transparent',
+            color: cached ? '#0a0e27' : 'transparent',
+          }}
+          aria-label={cached ? `Unpin ${doc.title} from prompt` : `Pin ${doc.title} to prompt`}
+          title={cached ? 'Pinned to prompt — full doc loaded into context' : 'Pin to prompt — load full doc into context'}
         >
           ✓
         </button>

@@ -160,6 +160,29 @@ export function hybridSearchAll(
   return results;
 }
 
+/**
+ * Load ALL sections for a set of document IDs, ordered by doc + seq.
+ * Used for the "cache" mode where the full document text is loaded directly
+ * into the prompt rather than relying solely on RAG retrieval.
+ */
+export function fetchDocSections(
+  db: Database.Database,
+  docIds: string[]
+): SectionResult[] {
+  if (docIds.length === 0) return [];
+  const placeholders = docIds.map(() => '?').join(', ');
+  return db.prepare(`
+    SELECT
+      s.id, s.doc_id, s.heading, s.doclang, s.plain_text,
+      s.page_num, s.seq, s.theme,
+      d.title, d.url
+    FROM sections s
+    JOIN documents d ON d.id = s.doc_id
+    WHERE s.doc_id IN (${placeholders})
+    ORDER BY s.doc_id, s.seq
+  `).all(...docIds) as SectionResult[];
+}
+
 export interface SearchByIdsOptions {
   docIds: string[];
   limit?: number;

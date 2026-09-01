@@ -192,10 +192,8 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
     },
     exampleQuestions: [
       'Tell me about the most important person or entity in the document',
-      'Show me all related concepts as a constellation map',
       'Show me a timeline of key events in the document',
       'Explain the main concept like I\'m 5',
-      'Summarize the key findings as a rich text explanation',
       'What is the single most important metric or number?',
       'Show me the key statistics and figures in a grid',
       'Compare the two main approaches side by side',

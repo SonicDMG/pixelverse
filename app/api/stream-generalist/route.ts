@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { question, session_id, doc_ids } = body;
+    const { question, session_id, doc_ids, cached_doc_ids } = body;
 
     const questionValidation = validateAndSanitizeQuestion(question);
     if (!questionValidation.valid) {
@@ -56,8 +56,10 @@ export async function POST(request: NextRequest) {
     console.log('[Stream Generalist API] Streaming from agent, question:', questionValidation.sanitized);
 
     const docIds = Array.isArray(doc_ids) ? doc_ids as string[] : undefined;
+    const cachedDocIds = Array.isArray(cached_doc_ids) ? cached_doc_ids as string[] : undefined;
     if (docIds) console.log(`[Stream Generalist API] doc_ids filter: ${docIds.length} doc(s)`);
-    const agentStream = streamAgent(questionValidation.sanitized!, 'generalist', session_id, docIds);
+    if (cachedDocIds) console.log(`[Stream Generalist API] cached_doc_ids: ${cachedDocIds.length} doc(s) pinned`);
+    const agentStream = streamAgent(questionValidation.sanitized!, 'generalist', session_id, docIds, cachedDocIds);
 
     const readable = new ReadableStream({
       async start(controller) {

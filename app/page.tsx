@@ -48,11 +48,12 @@ export default function Home() {
   const handleQuestion = useCallback(async (questionText: string) => {
     const startTime = Date.now();
 
-    // In generalist mode pass the active doc selection; other modes ignore it
+    // In generalist mode pass the active doc selection + any cached docs; other modes ignore it
     const docIds = appMode === 'generalist' ? docSelection.activeDocIds : undefined;
+    const cachedDocIds = appMode === 'generalist' ? docSelection.activeCachedDocIds : undefined;
 
     // Start API call immediately (don't wait for voice)
-    const apiPromise = conversation.submitQuestion(questionText, docIds);
+    const apiPromise = conversation.submitQuestion(questionText, docIds, cachedDocIds);
     
     // Queue voice announcement independently (fire and forget)
     audio.announceWithVoice(`Processing your request: ${questionText}`, 'info');
