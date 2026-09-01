@@ -171,9 +171,12 @@ export async function queryAgent(
       // breakpoint on the stable context without touching the variable question.
       // Context block first — gateway annotates the LAST block, so the question
       // must come after the context so only the stable context prefix is cached.
+      // cache_control marks the boundary of what gets cached: the stable context
+      // block is annotated so everything up to it is eligible for caching, while
+      // the variable question block that follows is always re-evaluated.
       const userBlocks = context
         ? [
-            { type: 'text', text: `Context:\n${context}` },
+            { type: 'text', text: `Context:\n${context}`, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: `\n\nQuestion: ${question}` },
           ]
         : [{ type: 'text', text: `Question: ${question}` }];
@@ -184,7 +187,7 @@ export async function queryAgent(
         body: JSON.stringify({
           model: LLM_MODEL(),
           max_tokens: 4096,
-          system: [{ type: 'text', text: systemPrompt }],
+          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: [{
             role: 'user',
             content: userBlocks,
@@ -241,9 +244,12 @@ export async function* streamAgent(
       // breakpoint on the stable context without touching the variable question.
       // Context block first — gateway annotates the LAST block, so the question
       // must come after the context so only the stable context prefix is cached.
+      // cache_control marks the boundary of what gets cached: the stable context
+      // block is annotated so everything up to it is eligible for caching, while
+      // the variable question block that follows is always re-evaluated.
       const userBlocks = context
         ? [
-            { type: 'text', text: `Context:\n${context}` },
+            { type: 'text', text: `Context:\n${context}`, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: `\n\nQuestion: ${question}` },
           ]
         : [{ type: 'text', text: `Question: ${question}` }];
@@ -255,7 +261,7 @@ export async function* streamAgent(
           model: LLM_MODEL(),
           max_tokens: 4096,
           stream: true,
-          system: [{ type: 'text', text: systemPrompt }],
+          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: [{
             role: 'user',
             content: userBlocks,
