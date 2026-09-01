@@ -167,6 +167,17 @@ export async function queryAgent(
     let raw: string;
 
     if (isStrata()) {
+      // Split user message into two blocks so the gateway can place a cache
+      // breakpoint on the stable context without touching the variable question.
+      // Context block first — gateway annotates the LAST block, so the question
+      // must come after the context so only the stable context prefix is cached.
+      const userBlocks = context
+        ? [
+            { type: 'text', text: `Context:\n${context}` },
+            { type: 'text', text: `\n\nQuestion: ${question}` },
+          ]
+        : [{ type: 'text', text: `Question: ${question}` }];
+
       const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
         method: 'POST',
         headers: strataHeaders(),
@@ -176,7 +187,7 @@ export async function queryAgent(
           system: [{ type: 'text', text: systemPrompt }],
           messages: [{
             role: 'user',
-            content: [{ type: 'text', text: userContent }],
+            content: userBlocks,
           }],
         }),
       });
@@ -222,13 +233,21 @@ export async function* streamAgent(
 
   try {
     const { context, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
-    const userContent = context
-      ? `Context:\n${context}\n\nQuestion: ${question}`
-      : `Question: ${question}`;
 
     let accumulated = '';
 
     if (isStrata()) {
+      // Split user message into two blocks so the gateway can place a cache
+      // breakpoint on the stable context without touching the variable question.
+      // Context block first — gateway annotates the LAST block, so the question
+      // must come after the context so only the stable context prefix is cached.
+      const userBlocks = context
+        ? [
+            { type: 'text', text: `Context:\n${context}` },
+            { type: 'text', text: `\n\nQuestion: ${question}` },
+          ]
+        : [{ type: 'text', text: `Question: ${question}` }];
+
       const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
         method: 'POST',
         headers: strataHeaders(),
@@ -239,7 +258,7 @@ export async function* streamAgent(
           system: [{ type: 'text', text: systemPrompt }],
           messages: [{
             role: 'user',
-            content: [{ type: 'text', text: userContent }],
+            content: userBlocks,
           }],
         }),
       });
@@ -274,7 +293,7 @@ export async function* streamAgent(
         model: LLM_MODEL(),
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent },
+          { role: 'user', content: context ? `Context:\n${context}\n\nQuestion: ${question}` : `Question: ${question}` },
         ],
         temperature: 0.2,
         stream: true,

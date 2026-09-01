@@ -26,22 +26,22 @@ export const CARD_STYLES = {
 export const TABLE_STYLES = {
   /** Table container wrapper */
   container: 'w-full p-6 bg-[var(--color-bg-dark)] border-4 border-[var(--color-primary)] rounded-lg pixel-border scanline-container',
-  
-  /** Table header row */
-  header: 'border-b-2 border-[var(--color-primary)]',
-  
-  /** Table header cell */
-  headerCell: 'px-4 py-3 text-left font-pixel text-xs text-[var(--color-primary)]',
-  
-  /** Table body row */
-  row: 'border-b border-[var(--color-primary)]/30 hover:bg-[var(--color-bg-card)] transition-colors',
-  
-  /** Table body cell */
-  cell: 'px-4 py-3 font-pixel text-xs text-white',
-  
+
+  /** Table header row — solid background so it reads as a distinct band */
+  header: 'bg-[var(--color-primary)]/15 border-b-2 border-[var(--color-primary)]',
+
+  /** Table header cell — uppercase + tracking so columns are clearly labelled */
+  headerCell: 'px-4 py-3 text-left font-pixel text-xs text-[var(--color-primary)] uppercase tracking-widest',
+
+  /** Table body row — zebra stripe + row divider + hover highlight */
+  row: 'border-b border-[var(--color-primary)]/40 odd:bg-[var(--color-primary)]/5 even:bg-transparent hover:bg-[var(--color-primary)]/15 transition-colors',
+
+  /** Table body cell — left-aligned; first child bolded as row anchor */
+  cell: 'px-4 py-3 font-pixel text-xs text-white text-left align-top first:font-bold first:text-[var(--color-primary)] first:whitespace-nowrap',
+
   /** Overflow container for responsive tables */
   overflow: 'overflow-x-auto',
-  
+
   /** Full table element */
   table: 'w-full border-collapse',
 } as const;
