@@ -45,7 +45,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
   /**
    * Submit a question with OpenAI-compatible streaming support
    */
-  const submitQuestion = useCallback(async (questionText: string): Promise<ConversationGroup | null> => {
+  const submitQuestion = useCallback(async (questionText: string, docIds?: string[]): Promise<ConversationGroup | null> => {
     // Clear any existing timeouts
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
     timeoutsRef.current = [];
@@ -83,6 +83,7 @@ export function useConversation(sessionId: string, apiEndpoint: string) {
           question: questionText,
           session_id: sessionId,
           stream: true,
+          ...(docIds && docIds.length > 0 ? { doc_ids: docIds } : {}),
         }),
       });
 

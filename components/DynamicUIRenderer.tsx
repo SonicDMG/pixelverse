@@ -14,6 +14,7 @@ import { SolarSystem } from './dynamic/SolarSystem';
 import { TextBlock } from './dynamic/TextBlock';
 import { ExplainOMatic } from './dynamic/ExplainOMatic';
 import { StreamingDataLoader } from './dynamic/StreamingDataLoader';
+import { CodeBlock } from './dynamic/CodeBlock';
 
 interface DynamicUIRendererProps {
   components: ComponentSpec[];
@@ -220,6 +221,17 @@ export function DynamicUIRenderer({ components, onSetQuestion }: DynamicUIRender
               onFollowUpClick={onSetQuestion ? (question) => {
                 onSetQuestion(question);
               } : undefined}
+            />
+          );
+
+        case 'code-block':
+          return (
+            <CodeBlock
+              key={key}
+              code={normalizedSpec.props.code}
+              language={normalizedSpec.props.language}
+              title={normalizedSpec.props.title}
+              showLineNumbers={normalizedSpec.props.showLineNumbers}
             />
           );
 

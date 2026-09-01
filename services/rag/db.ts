@@ -148,7 +148,7 @@ export interface Document {
   title: string;
   url?: string;
   source: string;
-  theme: 'space' | 'ticker' | 'shared';
+  theme: 'space' | 'ticker' | 'shared' | 'generalist';
   created_at: string;
 }
 

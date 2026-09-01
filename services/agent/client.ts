@@ -14,12 +14,12 @@
 
 import OpenAI from 'openai';
 import { jsonrepair } from 'jsonrepair';
-import { getDb, hybridSearch, buildContext } from '@/services/rag';
-import { SPACE_SYSTEM_PROMPT, TICKER_SYSTEM_PROMPT } from './prompts';
+import { getDb, hybridSearch, hybridSearchAll, hybridSearchByIds, buildContext } from '@/services/rag';
+import { SPACE_SYSTEM_PROMPT, TICKER_SYSTEM_PROMPT, GENERALIST_SYSTEM_PROMPT } from './prompts';
 import type { StockQueryResult, ReferenceSource } from '@/types';
 import type { SectionResult } from '@/services/rag';
 
-export type AgentTheme = 'space' | 'ticker';
+export type AgentTheme = 'space' | 'ticker' | 'generalist';
 
 // ── Provider detection ────────────────────────────────────────────────────
 
@@ -92,12 +92,21 @@ function formatReferences(sections: SectionResult[]): ReferenceSource[] {
 
 async function retrieveContext(
   question: string,
-  theme: AgentTheme
+  theme: AgentTheme,
+  docIds?: string[]
 ): Promise<{ context: string; references: ReferenceSource[] }> {
   try {
     const db = getDb();
     const embedding = await embedQuery(question);
-    const sections = hybridSearch(db, question, embedding, { theme, limit: 8 });
+    // Generalist with explicit selection → filter by doc IDs
+    // Generalist with no selection → search all themes
+    // Space / ticker → filter by theme as usual
+    const sections =
+      theme === 'generalist' && docIds && docIds.length > 0
+        ? hybridSearchByIds(db, question, embedding, { docIds, limit: 8 })
+        : theme === 'generalist'
+          ? hybridSearchAll(db, question, embedding, { limit: 8 })
+          : hybridSearch(db, question, embedding, { theme, limit: 8 });
     return {
       context: buildContext(sections),
       references: formatReferences(sections),
@@ -113,12 +122,16 @@ async function retrieveContext(
 export async function queryAgent(
   question: string,
   theme: AgentTheme = 'space',
-  _sessionId?: string   // kept for API compatibility; not needed without Langflow
+  _sessionId?: string,   // kept for API compatibility; not needed without Langflow
+  docIds?: string[]
 ): Promise<StockQueryResult> {
-  const systemPrompt = theme === 'space' ? SPACE_SYSTEM_PROMPT : TICKER_SYSTEM_PROMPT;
+  const systemPrompt =
+    theme === 'space'       ? SPACE_SYSTEM_PROMPT :
+    theme === 'ticker'      ? TICKER_SYSTEM_PROMPT :
+                              GENERALIST_SYSTEM_PROMPT;
 
   try {
-    const { context, references } = await retrieveContext(question, theme);
+    const { context, references } = await retrieveContext(question, theme, docIds);
     const userContent = context
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;
@@ -170,12 +183,16 @@ export async function queryAgent(
 export async function* streamAgent(
   question: string,
   theme: AgentTheme = 'space',
-  _sessionId?: string
+  _sessionId?: string,
+  docIds?: string[]
 ): AsyncGenerator<string> {
-  const systemPrompt = theme === 'space' ? SPACE_SYSTEM_PROMPT : TICKER_SYSTEM_PROMPT;
+  const systemPrompt =
+    theme === 'space'       ? SPACE_SYSTEM_PROMPT :
+    theme === 'ticker'      ? TICKER_SYSTEM_PROMPT :
+                              GENERALIST_SYSTEM_PROMPT;
 
   try {
-    const { context, references } = await retrieveContext(question, theme);
+    const { context, references } = await retrieveContext(question, theme, docIds);
     const userContent = context
       ? `Context:\n${context}\n\nQuestion: ${question}`
       : `Question: ${question}`;

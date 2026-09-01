@@ -27,7 +27,8 @@ export type ComponentSpec =
   | import('./space').SpaceTimelineSpec
   | import('./space').SolarSystemSpec
   | import('./interactive').ExplainOMaticSpec
-  | import('./interactive').StreamingDataLoaderSpec;
+  | import('./interactive').StreamingDataLoaderSpec
+  | import('./data').CodeBlockSpec;
 
 // Response from Langflow with UI specifications
 export interface UIResponse {

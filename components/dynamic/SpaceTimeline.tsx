@@ -7,7 +7,8 @@ interface SpaceTimelineEvent {
   date: string;
   title: string;
   description: string;
-  type?: 'mission' | 'discovery' | 'observation';
+  /** Accepts the built-in values or any free-form string from the generalist agent */
+  type?: 'mission' | 'discovery' | 'observation' | string;
 }
 
 interface SpaceTimelineProps {
@@ -23,7 +24,7 @@ interface ProcessedEvent {
   date: string;
   title: string;
   description: string;
-  type?: 'mission' | 'discovery' | 'observation';
+  type?: 'mission' | 'discovery' | 'observation' | string;
   parsedDate: Date;
   originalIndex: number;
   position: number;

@@ -156,6 +156,55 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       'Explain the pillars of creation',
     ],
   },
+  generalist: {
+    id: 'generalist',
+    name: 'PixelVerse',
+    tagline: 'ASK ME ANYTHING — POWERED BY YOUR CORPUS',
+    apiEndpoint: '/api/ask-generalist',
+    musicDirectory: 'space',
+    loadingDataText: 'KNOWLEDGE',
+    icon: '🧠',
+    colors: {
+      primary: '#a855f7',      // Vivid purple — neutral / multi-domain
+      secondary: '#e879f9',    // Fuchsia
+      accent: '#facc15',       // Amber
+      neonCyan: '#22d3ee',
+      neonMagenta: '#e879f9',
+      neonBlue: '#818cf8',
+      neonYellow: '#facc15',
+      darkBg: '#0d0a1f',
+      darkerBg: '#08061a',
+      cardBg: '#1a1535',
+      error: '#ff0000',
+    },
+    fonts: {
+      pixel: "'Press Start 2P', monospace",
+    },
+    animations: {
+      duration: {
+        fast: 200,
+        normal: 500,
+        slow: 1500,
+      },
+    },
+    audio: {
+      soundEffectsVolume: 0.125,
+    },
+    exampleQuestions: [
+      'Tell me about the most important person or entity in the document',
+      'Show me all related concepts as a constellation map',
+      'Show me a timeline of key events in the document',
+      'Explain the main concept like I\'m 5',
+      'Summarize the key findings as a rich text explanation',
+      'What is the single most important metric or number?',
+      'Show me the key statistics and figures in a grid',
+      'Compare the two main approaches side by side',
+      'Show me all the data points in a structured table',
+      'Are there any warnings or caveats I should know about?',
+      'Show me the overall system or structure as a visual map',
+      'Show me a raw markup example from the document',
+    ],
+  },
 };
 
 /**

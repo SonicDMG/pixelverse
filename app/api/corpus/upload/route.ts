@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
 
   if (!file) return NextResponse.json({ error: 'file is required' }, { status: 400 });
   if (!title)  return NextResponse.json({ error: 'title is required' }, { status: 400 });
-  if (!['space', 'ticker', 'shared'].includes(theme)) {
-    return NextResponse.json({ error: 'theme must be space, ticker, or shared' }, { status: 400 });
+  if (!['space', 'ticker', 'shared', 'generalist'].includes(theme)) {
+    return NextResponse.json({ error: 'theme must be space, ticker, shared, or generalist' }, { status: 400 });
   }
 
   const mimeType = file.type || 'application/octet-stream';
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     title,
     url: undefined,
     source: 'user',
-    theme: theme as 'space' | 'ticker' | 'shared',
+    theme: theme as 'space' | 'ticker' | 'shared' | 'generalist',
     created_at: now,
   });
 

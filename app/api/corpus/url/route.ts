@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
     if (!url?.trim()) {
       return NextResponse.json({ error: 'url is required' }, { status: 400 });
     }
-    if (!['space', 'ticker', 'shared'].includes(theme ?? '')) {
-      return NextResponse.json({ error: 'theme must be space, ticker, or shared' }, { status: 400 });
+    if (!['space', 'ticker', 'shared', 'generalist'].includes(theme ?? '')) {
+      return NextResponse.json({ error: 'theme must be space, ticker, shared, or generalist' }, { status: 400 });
     }
 
     // Validate URL
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       title,
       url: parsed.href,
       source: 'user',
-      theme: theme as 'space' | 'ticker' | 'shared',
+      theme: theme as 'space' | 'ticker' | 'shared' | 'generalist',
       created_at: now,
     });
 

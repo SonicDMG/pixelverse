@@ -67,7 +67,7 @@ export function useAudioControls(appMode: string, theme: ThemeConfig) {
     setSong,
     start: startMusic,
     stop: stopMusic,
-  } = useBackgroundMusic(appMode, {
+  } = useBackgroundMusic(theme.musicDirectory, {
     volume: 0.175,
     autoPlay: false // Can't autoplay due to browser policy - user must click
   });

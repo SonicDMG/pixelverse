@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type { DocSelectionState } from '@/hooks/useDocSelection';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,13 +20,16 @@ interface CorpusDocument {
 interface KnowledgePanelProps {
   open: boolean;
   onClose: () => void;
+  appMode: string;
+  docSelection: DocSelectionState;
+  onCorpusChange: () => void;
 }
 
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 860;
 const DEFAULT_WIDTH = 512;
 
-export function KnowledgePanel({ open, onClose }: KnowledgePanelProps) {
+export function KnowledgePanel({ open, onClose, appMode, docSelection, onCorpusChange }: KnowledgePanelProps) {
   const [tab, setTab] = useState<'corpus' | 'my-sources'>('corpus');
   const [docs, setDocs] = useState<CorpusDocument[]>([]);
   const [grouped, setGrouped] = useState<Record<string, CorpusDocument[]>>({});
@@ -70,12 +74,13 @@ export function KnowledgePanel({ open, onClose }: KnowledgePanelProps) {
       const data = await res.json();
       setDocs(data.documents ?? []);
       setGrouped(data.grouped ?? {});
+      onCorpusChange(); // keep page-level doc list in sync
     } catch {
       setError('FAILED TO LOAD CORPUS');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onCorpusChange]);
 
   useEffect(() => {
     if (open) fetchCorpus();
@@ -210,7 +215,11 @@ export function KnowledgePanel({ open, onClose }: KnowledgePanelProps) {
           )}
 
           {!loading && !error && tab === 'corpus' && (
-            <CorpusTab grouped={grouped} />
+            <CorpusTab
+              grouped={grouped}
+              appMode={appMode}
+              docSelection={docSelection}
+            />
           )}
 
           {!loading && !error && tab === 'my-sources' && (
@@ -218,6 +227,8 @@ export function KnowledgePanel({ open, onClose }: KnowledgePanelProps) {
               docs={docs.filter(d => d.source === 'user')}
               onDelete={handleDelete}
               onAdded={fetchCorpus}
+              appMode={appMode}
+              docSelection={docSelection}
             />
           )}
         </div>
@@ -228,8 +239,15 @@ export function KnowledgePanel({ open, onClose }: KnowledgePanelProps) {
 
 // ── Corpus Tab ────────────────────────────────────────────────────────────────
 
-function CorpusTab({ grouped }: { grouped: Record<string, CorpusDocument[]> }) {
+interface CorpusTabProps {
+  grouped: Record<string, CorpusDocument[]>;
+  appMode: string;
+  docSelection: DocSelectionState;
+}
+
+function CorpusTab({ grouped, appMode, docSelection }: CorpusTabProps) {
   const themes = Object.keys(grouped).sort();
+  const isGeneralist = appMode === 'generalist';
 
   if (!themes.length) {
     return (
@@ -241,34 +259,112 @@ function CorpusTab({ grouped }: { grouped: Record<string, CorpusDocument[]> }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Bulk selection bar — generalist only */}
+      {isGeneralist && (
+        <div
+          className="flex items-center justify-between gap-2 px-3 py-2 text-[10px] font-pixel"
+          style={{
+            background: 'var(--color-bg-card)',
+            border: '1px solid var(--color-neon-cyan)',
+          }}
+        >
+          <span style={{ color: 'var(--color-neon-cyan)' }}>
+            {docSelection.isAllSelected
+              ? 'ALL DOCS SELECTED'
+              : docSelection.activeDocIds
+                ? `${docSelection.activeDocIds.length} DOC${docSelection.activeDocIds.length !== 1 ? 'S' : ''} SELECTED`
+                : 'ALL DOCS SELECTED'}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={docSelection.selectAll}
+              className="px-2 py-1 transition-colors"
+              style={{ color: 'var(--color-neon-cyan)', border: '1px solid var(--color-neon-cyan)' }}
+              title="Select all documents"
+            >
+              ALL
+            </button>
+            <button
+              onClick={docSelection.deselectAll}
+              className="px-2 py-1 transition-colors"
+              style={{ color: 'var(--color-error)', border: '1px solid var(--color-error)' }}
+              title="Deselect all documents"
+            >
+              NONE
+            </button>
+          </div>
+        </div>
+      )}
+
       {themes.map(theme => (
-        <ThemeGroup key={theme} theme={theme} docs={grouped[theme]} />
+        <ThemeGroup
+          key={theme}
+          theme={theme}
+          docs={grouped[theme]}
+          isGeneralist={isGeneralist}
+          docSelection={docSelection}
+        />
       ))}
     </div>
   );
 }
 
-function ThemeGroup({ theme, docs }: { theme: string; docs: CorpusDocument[] }) {
+interface ThemeGroupProps {
+  theme: string;
+  docs: CorpusDocument[];
+  isGeneralist: boolean;
+  docSelection: DocSelectionState;
+}
+
+function ThemeGroup({ theme, docs, isGeneralist, docSelection }: ThemeGroupProps) {
   const themeColor = theme === 'ticker' ? 'var(--color-ticker-primary)' : 'var(--color-neon-cyan)';
+  const allSel = docSelection.isThemeAllSelected(theme);
+  const partial = docSelection.isThemePartiallySelected(theme);
 
   return (
     <div>
       <div
-        className="text-xs font-pixel tracking-widest mb-2 pb-1"
+        className="flex items-center justify-between text-xs font-pixel tracking-widest mb-2 pb-1"
         style={{ color: themeColor, borderBottom: `1px solid ${themeColor}` }}
       >
-        ▸ {theme.toUpperCase()} ({docs.length})
+        <span>▸ {theme.toUpperCase()} ({docs.length})</span>
+        {isGeneralist && (
+          <button
+            onClick={() => docSelection.toggleTheme(theme)}
+            className="text-[9px] px-2 py-0.5 transition-colors"
+            style={{
+              color: themeColor,
+              border: `1px solid ${themeColor}`,
+              opacity: 0.85,
+            }}
+            title={allSel ? `Deselect all ${theme} docs` : `Select all ${theme} docs`}
+          >
+            {allSel ? '☑ ALL' : partial ? '◐ SOME' : '☐ NONE'}
+          </button>
+        )}
       </div>
       <div className="flex flex-col gap-1">
         {docs.map(doc => (
-          <DocRow key={doc.id} doc={doc} />
+          <DocRow
+            key={doc.id}
+            doc={doc}
+            isGeneralist={isGeneralist}
+            docSelection={docSelection}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function DocRow({ doc }: { doc: CorpusDocument }) {
+interface DocRowProps {
+  doc: CorpusDocument;
+  isGeneralist: boolean;
+  docSelection: DocSelectionState;
+}
+
+function DocRow({ doc, isGeneralist, docSelection }: DocRowProps) {
+  const selected = docSelection.isSelected(doc.id);
   const sourceColor =
     doc.source === 'wikipedia'
       ? 'rgba(0,255,159,0.5)'
@@ -280,17 +376,33 @@ function DocRow({ doc }: { doc: CorpusDocument }) {
     <div
       className="flex items-center justify-between gap-2 px-2 py-1 text-xs font-pixel"
       style={{
-        background: 'var(--color-bg-card)',
-        border: '1px solid rgba(0,255,159,0.15)',
+        background: isGeneralist && !selected ? 'rgba(10,14,39,0.6)' : 'var(--color-bg-card)',
+        border: `1px solid ${isGeneralist && !selected ? 'rgba(0,255,159,0.06)' : 'rgba(0,255,159,0.15)'}`,
+        opacity: isGeneralist && !selected ? 0.5 : 1,
+        transition: 'opacity 0.15s, background 0.15s',
       }}
     >
-      <div className="flex items-center gap-2 min-w-0">
+      {/* Checkbox — generalist only */}
+      {isGeneralist && (
+        <button
+          onClick={() => docSelection.toggle(doc.id)}
+          className="shrink-0 w-4 h-4 flex items-center justify-center text-[10px]"
+          style={{
+            border: `1px solid ${selected ? 'var(--color-neon-cyan)' : 'rgba(0,255,159,0.3)'}`,
+            background: selected ? 'var(--color-neon-cyan)' : 'transparent',
+            color: selected ? 'var(--color-bg-darker)' : 'transparent',
+          }}
+          aria-label={selected ? `Deselect ${doc.title}` : `Select ${doc.title}`}
+          title={selected ? 'Deselect' : 'Select'}
+        >
+          ✓
+        </button>
+      )}
+
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         <span
           className="shrink-0 px-1 text-[9px]"
-          style={{
-            color: sourceColor,
-            border: `1px solid ${sourceColor}`,
-          }}
+          style={{ color: sourceColor, border: `1px solid ${sourceColor}` }}
         >
           {doc.source.toUpperCase()}
         </span>
@@ -301,7 +413,7 @@ function DocRow({ doc }: { doc: CorpusDocument }) {
             rel="noopener noreferrer"
             className="truncate hover:underline"
             style={{
-              color: 'rgba(0,255,159,0.85)',
+              color: selected || !isGeneralist ? 'rgba(0,255,159,0.85)' : 'rgba(0,255,159,0.45)',
               textDecoration: 'none',
               WebkitTapHighlightColor: 'transparent',
             }}
@@ -310,7 +422,11 @@ function DocRow({ doc }: { doc: CorpusDocument }) {
             {doc.title}
           </a>
         ) : (
-          <span className="truncate" style={{ color: 'rgba(0,255,159,0.85)' }} title={doc.title}>
+          <span
+            className="truncate"
+            style={{ color: selected || !isGeneralist ? 'rgba(0,255,159,0.85)' : 'rgba(0,255,159,0.45)' }}
+            title={doc.title}
+          >
             {doc.title}
           </span>
         )}
@@ -328,9 +444,12 @@ interface MySourcesTabProps {
   docs: CorpusDocument[];
   onDelete: (id: string) => void;
   onAdded: () => void;
+  appMode: string;
+  docSelection: DocSelectionState;
 }
 
-function MySourcesTab({ docs, onDelete, onAdded }: MySourcesTabProps) {
+function MySourcesTab({ docs, onDelete, onAdded, appMode, docSelection }: MySourcesTabProps) {
+  const isGeneralist = appMode === 'generalist';
   const [inputMode, setInputMode] = useState<'text' | 'url' | 'file'>('text');
 
   const MODES: { id: 'text' | 'url' | 'file'; label: string }[] = [
@@ -378,7 +497,13 @@ function MySourcesTab({ docs, onDelete, onAdded }: MySourcesTabProps) {
         ) : (
           <div className="flex flex-col gap-1">
             {docs.map(doc => (
-              <UserDocRow key={doc.id} doc={doc} onDelete={onDelete} />
+              <UserDocRow
+                key={doc.id}
+                doc={doc}
+                onDelete={onDelete}
+                isGeneralist={isGeneralist}
+                docSelection={docSelection}
+              />
             ))}
           </div>
         )}
@@ -596,25 +721,47 @@ function DocViewer({ docId, title, onClose }: { docId: string; title: string; on
 function UserDocRow({
   doc,
   onDelete,
+  isGeneralist,
+  docSelection,
 }: {
   doc: CorpusDocument;
   onDelete: (id: string) => void;
+  isGeneralist: boolean;
+  docSelection: DocSelectionState;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const selected = docSelection.isSelected(doc.id);
 
   return (
     <div>
     <div
       className="flex items-center justify-between gap-2 px-2 py-1 text-xs font-pixel"
       style={{
-        background: 'var(--color-bg-card)',
-        border: '1px solid rgba(255,0,255,0.2)',
+        background: isGeneralist && !selected ? 'rgba(10,14,39,0.6)' : 'var(--color-bg-card)',
+        border: `1px solid ${isGeneralist && !selected ? 'rgba(255,0,255,0.06)' : 'rgba(255,0,255,0.2)'}`,
+        opacity: isGeneralist && !selected ? 0.5 : 1,
         cursor: 'pointer',
+        transition: 'opacity 0.15s, background 0.15s',
       }}
       onClick={() => !confirming && setViewOpen(v => !v)}
     >
       <div className="flex items-center gap-2 min-w-0">
+        {/* Checkbox — generalist only */}
+        {isGeneralist && (
+          <button
+            onClick={e => { e.stopPropagation(); docSelection.toggle(doc.id); }}
+            className="shrink-0 w-4 h-4 flex items-center justify-center text-[10px]"
+            style={{
+              border: `1px solid ${selected ? 'var(--color-neon-cyan)' : 'rgba(0,255,159,0.3)'}`,
+              background: selected ? 'var(--color-neon-cyan)' : 'transparent',
+              color: selected ? 'var(--color-bg-darker)' : 'transparent',
+            }}
+            aria-label={selected ? `Deselect ${doc.title}` : `Select ${doc.title}`}
+          >
+            ✓
+          </button>
+        )}
         <span
           className="shrink-0 px-1 text-[9px]"
           style={{ color: 'var(--color-neon-magenta)', border: '1px solid var(--color-neon-magenta)' }}

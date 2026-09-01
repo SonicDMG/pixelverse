@@ -6,24 +6,16 @@ import { AppSwitcher } from '@/components/AppSwitcher';
 import { UserStatus } from '@/components/UserStatus';
 import { LoadingStatus } from '@/types';
 import { KnowledgePanel } from '@/components/KnowledgePanel';
+import type { DocSelectionState } from '@/hooks/useDocSelection';
 
-/**
- * AppHeader Component
- * 
- * Main header content for the application containing:
- * - App mode switcher (TICKER/SPACE) - mobile only
- * - Application title and tagline
- * - Clear conversation button
- * 
- * On desktop, only renders center (title) and right (switcher + clear) columns.
- * The parent creates the grid and renders audio controls in the left column.
- */
 interface AppHeaderProps {
   appMode: string;
   theme: ThemeConfig;
   hasConversation: boolean;
   loadingStatus: LoadingStatus;
   onClearConversation: () => void;
+  docSelection: DocSelectionState;
+  onCorpusChange: () => void;
 }
 
 export function AppHeader({
@@ -32,12 +24,20 @@ export function AppHeader({
   hasConversation,
   loadingStatus,
   onClearConversation,
+  docSelection,
+  onCorpusChange,
 }: AppHeaderProps) {
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
 
   return (
     <>
-      <KnowledgePanel open={knowledgeOpen} onClose={() => setKnowledgeOpen(false)} />
+      <KnowledgePanel
+        open={knowledgeOpen}
+        onClose={() => setKnowledgeOpen(false)}
+        appMode={appMode}
+        docSelection={docSelection}
+        onCorpusChange={onCorpusChange}
+      />
       {/* Mobile Layout: Stacked vertically (below lg breakpoint) */}
       <div className="flex flex-col gap-4 lg:hidden">
         {/* App Switcher Buttons */}

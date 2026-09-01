@@ -78,4 +78,14 @@ export interface TextBlockSpec extends UIComponentSpec {
   };
 }
 
+export interface CodeBlockSpec extends UIComponentSpec {
+  type: 'code-block';
+  props: {
+    code: string;
+    language?: string;
+    title?: string;
+    showLineNumbers?: boolean;
+  };
+}
+
 // Made with Bob

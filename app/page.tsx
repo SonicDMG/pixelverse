@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useSession } from '@/hooks/useSession';
 import { useConversation } from '@/hooks/useConversation';
 import { useAudioControls } from '@/hooks/useAudioControls';
+import { useDocSelection } from '@/hooks/useDocSelection';
 import { ConversationContainer } from '@/components/conversation/ConversationContainer';
 import { AudioControlPanel } from '@/components/audio/AudioControlPanel';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -16,6 +17,21 @@ export default function Home() {
   const { appMode, theme } = useTheme();
   const { sessionId, resetSession } = useSession();
   const [question, setQuestion] = useState('');
+
+  // Corpus docs — fetched once and kept in page-level state so useDocSelection
+  // and KnowledgePanel can share the same list without double-fetching.
+  const [corpusDocs, setCorpusDocs] = useState<Array<{ id: string; theme: string }>>([]);
+  const fetchCorpusDocs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/corpus');
+      if (!res.ok) return;
+      const data = await res.json();
+      setCorpusDocs((data.documents ?? []).map((d: any) => ({ id: d.id, theme: d.theme })));
+    } catch { /* silently ignore — panel shows its own error */ }
+  }, []);
+
+  // Doc selection — only meaningful in generalist mode
+  const docSelection = useDocSelection(corpusDocs);
 
   // Conversation management
   const conversation = useConversation(sessionId, theme.apiEndpoint);
@@ -31,9 +47,12 @@ export default function Home() {
   // Handle question submission with voice announcements
   const handleQuestion = useCallback(async (questionText: string) => {
     const startTime = Date.now();
-    
+
+    // In generalist mode pass the active doc selection; other modes ignore it
+    const docIds = appMode === 'generalist' ? docSelection.activeDocIds : undefined;
+
     // Start API call immediately (don't wait for voice)
-    const apiPromise = conversation.submitQuestion(questionText);
+    const apiPromise = conversation.submitQuestion(questionText, docIds);
     
     // Queue voice announcement independently (fire and forget)
     audio.announceWithVoice(`Processing your request: ${questionText}`, 'info');
@@ -67,7 +86,7 @@ export default function Home() {
       // Announce error with voice
       audio.announceWithVoice('Request failed. Error occurred.', 'alert');
     }
-  }, [conversation, audio]);
+  }, [conversation, audio, appMode, docSelection]);
 
   const handleClearConversation = useCallback(() => {
     conversation.clearConversation();
@@ -88,6 +107,8 @@ export default function Home() {
                 hasConversation={conversation.conversationGroups.length > 0}
                 loadingStatus={conversation.loadingStatus}
                 onClearConversation={handleClearConversation}
+                docSelection={docSelection}
+                onCorpusChange={fetchCorpusDocs}
               />
               <AudioControlPanel
                 isMusicPlaying={audio.isMusicPlaying}
@@ -140,6 +161,8 @@ export default function Home() {
                 hasConversation={conversation.conversationGroups.length > 0}
                 loadingStatus={conversation.loadingStatus}
                 onClearConversation={handleClearConversation}
+                docSelection={docSelection}
+                onCorpusChange={fetchCorpusDocs}
               />
             </div>
           </div>

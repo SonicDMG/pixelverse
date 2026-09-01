@@ -52,8 +52,8 @@ const PROMPT_INJECTION_PATTERNS = [
   /\b(new\s+(instructions?|role|personality|character))/i,
   
   // Secret/credential extraction
-  /\b(reveal|show|display|tell|give|provide)\s+(me\s+)?(the\s+)?(secret|password|key|token|credential|api[_\s]?key)/i,
-  /\b(what\s+(is|are)\s+(your|the)\s+(secret|password|key|token|api[_\s]?key|credential))/i,
+  /\b(reveal|show|display|tell|give|provide)\s+(me\s+)?(the\s+)?(secret|password|token|credential|api[_\s]?key)/i,
+  /\b(what\s+(is|are)\s+(your|the)\s+(secret|password|token|api[_\s]?key|credential))/i,
   
   // Environment/system information extraction
   /\b(show|display|list|print)\s+(all\s+)?(environment|env|system)\s+(variable|setting|config)/i,
