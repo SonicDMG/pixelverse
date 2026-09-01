@@ -65,19 +65,29 @@ const PROMPT_INJECTION_PATTERNS = [
 ];
 
 /**
- * Command injection patterns to detect and block
+ * Command injection patterns to detect and block.
+ *
+ * We only block on STRUCTURAL shell syntax — characters and constructs that
+ * have no legitimate place in a natural-language question.  We do NOT block
+ * on command word names (format, curl, exec, sh, …) in isolation because
+ * those are common English/tech words that appear in legitimate questions
+ * (e.g. "what is the doclang format?", "how does curl work?").
+ *
  * Note: Removed 'g' flag to avoid regex state issues with test()
  */
 const COMMAND_INJECTION_PATTERNS = [
-  // Shell command separators
-  /[;&|`$()]/,
-  // Command substitution
+  // Shell command separators and operators — not valid in natural language
+  /[;&|`]/,
+  // Variable/command substitution syntax
   /\$\{[^}]*\}/,
   /\$\([^)]*\)/,
-  // Backticks
+  /\$[A-Za-z_][A-Za-z0-9_]*/,
+  // Backtick execution
   /`[^`]*`/,
-  // Common dangerous commands
-  /\b(rm|del|format|mkfs|dd|wget|curl|nc|netcat|bash|sh|cmd|powershell|eval|exec)\b/i,
+  // Path traversal
+  /\.\.[/\\]/,
+  // Null byte
+  /\x00/,
 ];
 
 /**

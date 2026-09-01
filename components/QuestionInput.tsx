@@ -9,6 +9,10 @@ interface QuestionInputProps {
   loadingStatus: LoadingStatus;
   question: string;
   setQuestion: (question: string) => void;
+  /** When provided, replaces the theme's static example questions */
+  suggestedQuestions?: string[];
+  /** True while LLM-generated questions are being fetched — chips shimmer */
+  suggestionsLoading?: boolean;
 }
 
 const MAX_LENGTH = 500;
@@ -22,9 +26,11 @@ const DANGEROUS_PATTERNS = [
   /\b(system\s*:?\s*(prompt|message|instruction))/i,
   /\b(reveal|show)\s+(me\s+)?(the\s+)?(secret|password|api[_\s]?key)/i,
   /\b(you\s+are\s+now|act\s+as)/i,
+  /[;&|`]/,
+  /\$\{[^}]*\}/,
 ];
 
-export function QuestionInput({ onSubmit, loadingStatus, question, setQuestion }: QuestionInputProps) {
+export function QuestionInput({ onSubmit, loadingStatus, question, setQuestion, suggestedQuestions, suggestionsLoading }: QuestionInputProps) {
   const { theme } = useTheme();
   const isLoading = loadingStatus !== null && loadingStatus !== 'done';
   const [validationError, setValidationError] = useState<string>('');
@@ -88,8 +94,9 @@ export function QuestionInput({ onSubmit, loadingStatus, question, setQuestion }
     }
   };
 
-  // Get example questions from theme, with fallback to empty array
-  const exampleQuestions = theme.exampleQuestions || [];
+  // Use dynamic suggestions when provided, otherwise fall back to static theme questions
+  const exampleQuestions = suggestedQuestions ?? theme.exampleQuestions ?? [];
+  const isCustomSuggestions = suggestedQuestions !== undefined;
   
   // Generate dynamic placeholder based on theme
   const placeholder = `Ask about ${theme.name.toLowerCase().replace('pixel', '')}...`;
@@ -100,17 +107,28 @@ export function QuestionInput({ onSubmit, loadingStatus, question, setQuestion }
 
   return (
     <div className="w-full space-y-4 pt-8">
-      {/* Example Questions */}
-      {exampleQuestions.length > 0 && (
+      {/* Example / Suggested Questions */}
+      {(exampleQuestions.length > 0 || suggestionsLoading) && (
         <div className="space-y-2">
-          <p className="text-[var(--color-accent)] text-xs font-pixel">Try these examples:</p>
+          <p className="text-[var(--color-accent)] text-xs font-pixel">
+            {isCustomSuggestions ? 'suggested for your selection:' : 'Try these examples:'}
+            {suggestionsLoading && (
+              <span className="ml-2 text-[var(--color-primary)]/50 animate-pulse">
+                ✦ generating…
+              </span>
+            )}
+          </p>
           <div className="flex flex-wrap gap-2">
             {exampleQuestions.map((example, index) => (
               <button
-                key={index}
+                key={`${example}-${index}`}
                 onClick={() => handleExampleClick(example)}
                 disabled={isLoading}
-                className="px-3 py-2 bg-[var(--color-bg-card)] border-2 border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-pixel hover:bg-[var(--color-primary)] hover:text-[var(--color-bg-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover"
+                className={`px-3 py-2 bg-[var(--color-bg-card)] border-2 text-xs font-pixel transition-colors disabled:opacity-50 disabled:cursor-not-allowed pixel-border pixel-shift-hover ${
+                  suggestionsLoading
+                    ? 'border-[var(--color-primary)]/40 text-[var(--color-primary)]/60 animate-pulse'
+                    : 'border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-bg-dark)]'
+                }`}
               >
                 {example}
               </button>

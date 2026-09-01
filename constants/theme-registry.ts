@@ -191,16 +191,11 @@ export const THEME_REGISTRY: Record<string, ThemeConfig> = {
       soundEffectsVolume: 0.125,
     },
     exampleQuestions: [
-      'Tell me about the most important person or entity in the document',
-      'Show me a timeline of key events in the document',
       'Explain the main concept like I\'m 5',
-      'What is the single most important metric or number?',
-      'Show me the key statistics and figures in a grid',
+      'Show me a timeline of key events',
       'Compare the two main approaches side by side',
-      'Show me all the data points in a structured table',
+      'Show me the key statistics and figures in a grid',
       'Are there any warnings or caveats I should know about?',
-      'Show me the overall system or structure as a visual map',
-      'Show me a raw markup example from the document',
     ],
   },
 };

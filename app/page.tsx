@@ -9,6 +9,7 @@ import { useSession } from '@/hooks/useSession';
 import { useConversation } from '@/hooks/useConversation';
 import { useAudioControls } from '@/hooks/useAudioControls';
 import { useDocSelection } from '@/hooks/useDocSelection';
+import { useSuggestedQuestions } from '@/hooks/useSuggestedQuestions';
 import { ConversationContainer } from '@/components/conversation/ConversationContainer';
 import { AudioControlPanel } from '@/components/audio/AudioControlPanel';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -20,24 +21,37 @@ export default function Home() {
 
   // Corpus docs — fetched once and kept in page-level state so useDocSelection
   // and KnowledgePanel can share the same list without double-fetching.
-  const [corpusDocs, setCorpusDocs] = useState<Array<{ id: string; theme: string }>>([]);
+  const [corpusDocs, setCorpusDocs] = useState<Array<{ id: string; theme: string; title: string }>>([]);
   const fetchCorpusDocs = useCallback(async () => {
     try {
       const res = await fetch('/api/corpus');
       if (!res.ok) return;
       const data = await res.json();
-      setCorpusDocs((data.documents ?? []).map((d: any) => ({ id: d.id, theme: d.theme })));
+      setCorpusDocs((data.documents ?? []).map((d: any) => ({ id: d.id, theme: d.theme, title: d.title ?? '' })));
     } catch { /* silently ignore — panel shows its own error */ }
   }, []);
 
   // Doc selection — only meaningful in generalist mode
   const docSelection = useDocSelection(corpusDocs);
 
+  // Suggested questions — dynamic in generalist mode, static otherwise
+  const { questions: suggestedQuestions, loading: suggestionsLoading } = useSuggestedQuestions(
+    appMode === 'generalist' ? docSelection.activeDocIds : undefined,
+    corpusDocs,
+    theme.exampleQuestions ?? []
+  );
+
   // Conversation management
   const conversation = useConversation(sessionId, theme.apiEndpoint);
 
   // Audio controls
   const audio = useAudioControls(appMode, theme);
+
+  // Fetch corpus docs on mount so doc selection + suggested questions work immediately
+  useEffect(() => {
+    fetchCorpusDocs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Clear conversation when switching modes
   useEffect(() => {
@@ -196,6 +210,8 @@ export default function Home() {
             loadingStatus={conversation.loadingStatus}
             question={question}
             setQuestion={setQuestion}
+            suggestedQuestions={appMode === 'generalist' ? suggestedQuestions : undefined}
+            suggestionsLoading={appMode === 'generalist' ? suggestionsLoading : undefined}
           />
         </div>
 
