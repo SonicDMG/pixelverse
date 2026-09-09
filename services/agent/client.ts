@@ -24,6 +24,7 @@ export type AgentTheme = 'space' | 'ticker' | 'generalist';
 // ── Provider detection ────────────────────────────────────────────────────
 
 const isStrata = () => process.env.LLM_PROVIDER === 'strata';
+const isCacheControlEnabled = () => process.env.ENABLE_CACHE_CONTROL === 'true';
 
 // ── Strata helpers — raw fetch to /v1/messages (Anthropic wire) ───────────
 
@@ -174,12 +175,25 @@ export async function queryAgent(
       // cache_control marks the boundary of what gets cached: the stable context
       // block is annotated so everything up to it is eligible for caching, while
       // the variable question block that follows is always re-evaluated.
+      const useCache = isCacheControlEnabled();
       const userBlocks = context
         ? [
-            { type: 'text', text: `Context:\n${context}`, cache_control: { type: 'ephemeral' } },
+            {
+              type: 'text',
+              text: `Context:\n${context}`,
+              ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+            },
             { type: 'text', text: `\n\nQuestion: ${question}` },
           ]
         : [{ type: 'text', text: `Question: ${question}` }];
+
+      const systemBlock = [
+        {
+          type: 'text',
+          text: systemPrompt,
+          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+        },
+      ];
 
       const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
         method: 'POST',
@@ -187,7 +201,7 @@ export async function queryAgent(
         body: JSON.stringify({
           model: LLM_MODEL(),
           max_tokens: 4096,
-          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+          system: systemBlock,
           messages: [{
             role: 'user',
             content: userBlocks,
@@ -247,12 +261,25 @@ export async function* streamAgent(
       // cache_control marks the boundary of what gets cached: the stable context
       // block is annotated so everything up to it is eligible for caching, while
       // the variable question block that follows is always re-evaluated.
+      const useCache = isCacheControlEnabled();
       const userBlocks = context
         ? [
-            { type: 'text', text: `Context:\n${context}`, cache_control: { type: 'ephemeral' } },
+            {
+              type: 'text',
+              text: `Context:\n${context}`,
+              ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+            },
             { type: 'text', text: `\n\nQuestion: ${question}` },
           ]
         : [{ type: 'text', text: `Question: ${question}` }];
+
+      const systemBlock = [
+        {
+          type: 'text',
+          text: systemPrompt,
+          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+        },
+      ];
 
       const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
         method: 'POST',
@@ -261,7 +288,7 @@ export async function* streamAgent(
           model: LLM_MODEL(),
           max_tokens: 4096,
           stream: true,
-          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+          system: systemBlock,
           messages: [{
             role: 'user',
             content: userBlocks,
