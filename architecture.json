@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "PixelVerse runtime architecture",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {"url":"https://github.com/SonicDMG/pixelverse","provider":"github","link_mode":"web","revision":"0abb28f03bd1f23f67d2f1a577809a6d6129dbbd"},
+    "viewBox": [1440, 900]
+  },
+  "layout": {"mode":"grid","origin":[80,80],"cols":4,"gapX":70,"gapY":50,"cellW":260,"cellH":150},
+  "components": [
+    {"id":"browser","type":"frontend","label":"Browser UI","row":1,"col":0,"size":[260,120],"sources":[{"path":"app/page.tsx"}]},
+    {"id":"next","type":"backend","label":"Next.js API","row":1,"col":1,"size":[260,120],"sources":[{"path":"app/api/stream-generalist/route.ts","line":7}]},
+    {"id":"agent","type":"backend","label":"Agent orchestration","row":1,"col":2,"size":[260,120],"sources":[{"path":"services/agent/client.ts","line":151}]},
+    {"id":"llm","type":"external","label":"LLM + embeddings","row":0,"col":3,"size":[260,120],"sources":[{"path":"services/agent/client.ts","line":43}]},
+    {"id":"rag","type":"backend","label":"RAG retrieval","row":2,"col":2,"size":[260,120],"sources":[{"path":"services/rag/search.ts","line":32}]},
+    {"id":"sqlite","type":"database","label":"SQLite corpus DB","row":2,"col":3,"size":[260,120],"sources":[{"path":"services/rag/db.ts"}]},
+    {"id":"sidecar","type":"backend","label":"Docling → DocLang sidecar","row":3,"col":1,"size":[260,120],"sources":[{"path":"sidecar/main.py","line":38}]},
+    {"id":"docling","type":"external","label":"Docling SaaS","row":3,"col":2,"size":[260,120],"sources":[{"path":"services/rag/docling.ts","line":67}]},
+    {"id":"auth","type":"security","label":"Session + rate limiting","row":0,"col":0,"size":[260,120],"sources":[{"path":"app/api/stream-generalist/route.ts","line":13}]},
+    {"id":"everart","type":"external","label":"EverArt image API","row":3,"col":3,"size":[260,120],"sources":[{"path":"services/image/everart-service.ts"}]}
+  ],
+  "connections": [
+    {"id":"c1","from":"browser","to":"next"},
+    {"id":"c4","from":"next","to":"agent"},
+    {"id":"c5","from":"agent","to":"rag"},
+    {"id":"c6","from":"rag","to":"sqlite"},
+    {"id":"c7","from":"agent","to":"llm"},
+    {"id":"c9","from":"next","to":"sidecar"},
+    {"id":"c10","from":"sidecar","to":"docling"}
+  ]
+}

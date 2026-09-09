@@ -118,6 +118,15 @@ Click **"GUEST ACCESS"** to enter the PixelVerse
 - **Charts**: Chart.js + react-chartjs-2
 - **Font**: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P)
 
+## 🏗️ Runtime Architecture
+
+The high-level runtime architecture shows the main request, retrieval, document-ingestion, and external-service paths:
+
+[![PixelVerse runtime architecture](architecture.visual-check.1440x900.dark.png)](architecture.html)
+
+- [Open the interactive architecture diagram](architecture.html)
+- [View the architecture specification](architecture.json)
+
 ## ⚙️ Configuration
 
 ### Environment Variables
@@ -212,6 +221,23 @@ The RAG corpus is built once after setup:
 ```bash
 npx tsx scripts/ingest-corpus.ts
 ```
+
+## ⚡ Prompt Caching & Pinned Documents
+
+PixelVerse optimizes LLM latency and token costs through prefix caching with LLM / Gateway providers.
+
+When pinning entire documents (`PIN` feature in the Corpus selector), the payload separates **static prefixes** from **dynamic question context**:
+
+### LLM Conversation Flow
+
+The sequence diagram shows how questions, RAG context, system and user messages, prompt-prefix caching, and streamed responses move through the LLM pipeline:
+
+[![LLM conversation payload and cache flow](conversation-sequence.visual-check.1440x900.dark.png)](conversation-sequence.html)
+
+- [Open the interactive LLM conversation diagram](conversation-sequence.html)
+- [View the diagram specification](conversation-sequence.json)
+
+---
 
 ## 🔐 Authentication
 

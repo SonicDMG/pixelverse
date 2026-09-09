@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "LLM conversation payload and cache flow",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "viewBox": [920, 520]
+  },
+  "participants": [
+    {"id":"app","label":"App","type":"backend"},
+    {"id":"rag","label":"RAG","type":"backend"},
+    {"id":"gateway","label":"LLM gateway","type":"external"},
+    {"id":"cache","label":"Prefix cache","type":"database"},
+    {"id":"model","label":"LLM model","type":"external"}
+  ],
+  "messages": [
+    {"from":"app","to":"rag","y":160,"label":"Retrieve sections for question"},
+    {"from":"rag","to":"app","y":195,"label":"Pinned + dynamic context"},
+    {"from":"app","to":"gateway","y":230,"label":"POST /v1/messages: system + messages","variant":"emphasis","note":"system: base prompt + pinned docs; user: RAG sections + question"},
+    {"from":"gateway","to":"cache","y":275,"label":"Lookup stable prefix"},
+    {"from":"cache","to":"gateway","y":310,"label":"Cache hit / miss","variant":"return"},
+    {"from":"gateway","to":"model","y":345,"label":"Evaluate prompt"},
+    {"from":"model","to":"gateway","y":380,"label":"Stream response tokens","variant":"return"},
+    {"from":"gateway","to":"app","y":395,"label":"SSE response","variant":"return","note":"Tokens become the structured UI response"}
+  ]
+}
