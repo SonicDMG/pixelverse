@@ -91,12 +91,18 @@ function formatReferences(sections: SectionResult[]): ReferenceSource[] {
   }));
 }
 
+interface RetrievedContextResult {
+  pinnedContext: string;
+  ragContext: string;
+  references: ReferenceSource[];
+}
+
 async function retrieveContext(
   question: string,
   theme: AgentTheme,
   docIds?: string[],
   cachedDocIds?: string[]
-): Promise<{ context: string; references: ReferenceSource[] }> {
+): Promise<RetrievedContextResult> {
   try {
     const db = getDb();
     const embedding = await embedQuery(question);
@@ -125,23 +131,18 @@ async function retrieveContext(
     const cachedIds = new Set(cachedSections.map(s => s.id));
     const dedupedRag = ragSections.filter(s => !cachedIds.has(s.id));
 
-    // Build context: cached docs first (full), then RAG hits
-    let context = '';
-    if (cachedSections.length > 0) {
-      context += `[FULL DOCUMENT CONTEXT]\n${buildContext(cachedSections)}\n\n`;
-    }
-    if (dedupedRag.length > 0) {
-      context += `[RETRIEVED SECTIONS]\n${buildContext(dedupedRag)}`;
-    }
+    const pinnedContext = cachedSections.length > 0 ? buildContext(cachedSections) : '';
+    const ragContext = dedupedRag.length > 0 ? buildContext(dedupedRag) : '';
 
     const allSections = [...cachedSections, ...dedupedRag];
     return {
-      context: context.trim(),
+      pinnedContext,
+      ragContext,
       references: formatReferences(allSections),
     };
   } catch (err) {
     console.warn('[Agent] RAG retrieval failed, proceeding without context:', err);
-    return { context: '', references: [] };
+    return { pinnedContext: '', ragContext: '', references: [] };
   }
 }
 
@@ -154,46 +155,49 @@ export async function queryAgent(
   docIds?: string[],
   cachedDocIds?: string[]
 ): Promise<StockQueryResult> {
-  const systemPrompt =
+  const baseSystemPrompt =
     theme === 'space'       ? SPACE_SYSTEM_PROMPT :
     theme === 'ticker'      ? TICKER_SYSTEM_PROMPT :
                               GENERALIST_SYSTEM_PROMPT;
 
   try {
-    const { context, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
-    const userContent = context
-      ? `Context:\n${context}\n\nQuestion: ${question}`
-      : `Question: ${question}`;
+    const { pinnedContext, ragContext, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
 
     let raw: string;
 
     if (isStrata()) {
-      // Split user message into two blocks so the gateway can place a cache
-      // breakpoint on the stable context without touching the variable question.
-      // Context block first — gateway annotates the LAST block, so the question
-      // must come after the context so only the stable context prefix is cached.
-      // cache_control marks the boundary of what gets cached: the stable context
-      // block is annotated so everything up to it is eligible for caching, while
-      // the variable question block that follows is always re-evaluated.
       const useCache = isCacheControlEnabled();
-      const userBlocks = context
-        ? [
-            {
-              type: 'text',
-              text: `Context:\n${context}`,
-              ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
-            },
-            { type: 'text', text: `\n\nQuestion: ${question}` },
-          ]
-        : [{ type: 'text', text: `Question: ${question}` }];
 
-      const systemBlock = [
+      // System array: Base prompt first, then pinned/cached document context as a separate block.
+      // This ensures the System Prompt + Pinned Context forms a stable, identical cache prefix.
+      const systemBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [
         {
           type: 'text',
-          text: systemPrompt,
-          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+          text: baseSystemPrompt,
+          ...(useCache && !pinnedContext ? { cache_control: { type: 'ephemeral' } } : {}),
         },
       ];
+
+      if (pinnedContext) {
+        systemBlocks.push({
+          type: 'text',
+          text: `\n\n[PINNED DOCUMENT CONTEXT]\nThe following documents are pinned as full context:\n\n${pinnedContext}`,
+          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+        });
+      }
+
+      // User message: Dynamic RAG sections (if any) followed by the question.
+      const userBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [];
+      if (ragContext) {
+        userBlocks.push({
+          type: 'text',
+          text: `[RETRIEVED SECTIONS]\n${ragContext}\n\n`,
+        });
+      }
+      userBlocks.push({
+        type: 'text',
+        text: `Question: ${question}`,
+      });
 
       const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
         method: 'POST',
@@ -201,7 +205,7 @@ export async function queryAgent(
         body: JSON.stringify({
           model: LLM_MODEL(),
           max_tokens: 4096,
-          system: systemBlock,
+          system: systemBlocks,
           messages: [{
             role: 'user',
             content: userBlocks,
@@ -212,10 +216,18 @@ export async function queryAgent(
       raw = json.content?.[0]?.type === 'text' ? json.content[0].text : '';
     } else {
       const openai = getOpenAI();
+      const combinedSystem = pinnedContext
+        ? `${baseSystemPrompt}\n\n[PINNED DOCUMENT CONTEXT]\n${pinnedContext}`
+        : baseSystemPrompt;
+
+      const userContent = ragContext
+        ? `[RETRIEVED SECTIONS]\n${ragContext}\n\nQuestion: ${question}`
+        : `Question: ${question}`;
+
       const completion = await openai.chat.completions.create({
         model: LLM_MODEL(),
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: combinedSystem },
           { role: 'user', content: userContent },
         ],
         temperature: 0.2,
@@ -243,43 +255,49 @@ export async function* streamAgent(
   docIds?: string[],
   cachedDocIds?: string[]
 ): AsyncGenerator<string> {
-  const systemPrompt =
+  const baseSystemPrompt =
     theme === 'space'       ? SPACE_SYSTEM_PROMPT :
     theme === 'ticker'      ? TICKER_SYSTEM_PROMPT :
                               GENERALIST_SYSTEM_PROMPT;
 
   try {
-    const { context, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
+    const { pinnedContext, ragContext, references } = await retrieveContext(question, theme, docIds, cachedDocIds);
 
     let accumulated = '';
 
     if (isStrata()) {
-      // Split user message into two blocks so the gateway can place a cache
-      // breakpoint on the stable context without touching the variable question.
-      // Context block first — gateway annotates the LAST block, so the question
-      // must come after the context so only the stable context prefix is cached.
-      // cache_control marks the boundary of what gets cached: the stable context
-      // block is annotated so everything up to it is eligible for caching, while
-      // the variable question block that follows is always re-evaluated.
       const useCache = isCacheControlEnabled();
-      const userBlocks = context
-        ? [
-            {
-              type: 'text',
-              text: `Context:\n${context}`,
-              ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
-            },
-            { type: 'text', text: `\n\nQuestion: ${question}` },
-          ]
-        : [{ type: 'text', text: `Question: ${question}` }];
 
-      const systemBlock = [
+      // System array: Base prompt first, then pinned/cached document context as a separate block.
+      // This ensures the System Prompt + Pinned Context forms a stable, identical cache prefix.
+      const systemBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [
         {
           type: 'text',
-          text: systemPrompt,
-          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+          text: baseSystemPrompt,
+          ...(useCache && !pinnedContext ? { cache_control: { type: 'ephemeral' } } : {}),
         },
       ];
+
+      if (pinnedContext) {
+        systemBlocks.push({
+          type: 'text',
+          text: `\n\n[PINNED DOCUMENT CONTEXT]\nThe following documents are pinned as full context:\n\n${pinnedContext}`,
+          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+        });
+      }
+
+      // User message: Dynamic RAG sections (if any) followed by the question.
+      const userBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [];
+      if (ragContext) {
+        userBlocks.push({
+          type: 'text',
+          text: `[RETRIEVED SECTIONS]\n${ragContext}\n\n`,
+        });
+      }
+      userBlocks.push({
+        type: 'text',
+        text: `Question: ${question}`,
+      });
 
       const res = await fetch(`${strataBaseUrl()}/v1/messages`, {
         method: 'POST',
@@ -288,7 +306,7 @@ export async function* streamAgent(
           model: LLM_MODEL(),
           max_tokens: 4096,
           stream: true,
-          system: systemBlock,
+          system: systemBlocks,
           messages: [{
             role: 'user',
             content: userBlocks,
@@ -322,11 +340,19 @@ export async function* streamAgent(
       }
     } else {
       const openai = getOpenAI();
+      const combinedSystem = pinnedContext
+        ? `${baseSystemPrompt}\n\n[PINNED DOCUMENT CONTEXT]\n${pinnedContext}`
+        : baseSystemPrompt;
+
+      const userContent = ragContext
+        ? `[RETRIEVED SECTIONS]\n${ragContext}\n\nQuestion: ${question}`
+        : `Question: ${question}`;
+
       const stream = await openai.chat.completions.create({
         model: LLM_MODEL(),
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: context ? `Context:\n${context}\n\nQuestion: ${question}` : `Question: ${question}` },
+          { role: 'system', content: combinedSystem },
+          { role: 'user', content: userContent },
         ],
         temperature: 0.2,
         stream: true,
