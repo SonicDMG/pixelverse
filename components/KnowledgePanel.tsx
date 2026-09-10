@@ -169,6 +169,15 @@ export function KnowledgePanel({ open, onClose, appMode, docSelection, onCorpusC
             >
               {docs.length} DOCS
             </span>
+            {process.env.NEXT_PUBLIC_ENABLE_CACHE_CONTROL === 'true' && (
+              <span
+                className="text-[10px] font-pixel px-1.5 py-0.5 border"
+                style={{ color: 'var(--color-neon-cyan)', borderColor: 'var(--color-neon-cyan)', opacity: 0.6 }}
+                title="Prompt caching enabled (TTL 1h)"
+              >
+                CACHE ON
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}

@@ -24,7 +24,7 @@ export type AgentTheme = 'space' | 'ticker' | 'generalist';
 // ── Provider detection ────────────────────────────────────────────────────
 
 const isStrata = () => process.env.LLM_PROVIDER === 'strata';
-const isCacheControlEnabled = () => process.env.ENABLE_CACHE_CONTROL === 'true';
+const isCacheControlEnabled = () => process.env.NEXT_PUBLIC_ENABLE_CACHE_CONTROL === 'true';
 
 // ── Strata helpers — raw fetch to /v1/messages (Anthropic wire) ───────────
 
@@ -170,11 +170,11 @@ export async function queryAgent(
 
       // System array: Base prompt first, then pinned/cached document context as a separate block.
       // This ensures the System Prompt + Pinned Context forms a stable, identical cache prefix.
-      const systemBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [
+      const systemBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral'; ttl?: number } }> = [
         {
           type: 'text',
           text: baseSystemPrompt,
-          ...(useCache && !pinnedContext ? { cache_control: { type: 'ephemeral' } } : {}),
+          ...(useCache && !pinnedContext ? { cache_control: { type: 'ephemeral', ttl: 3600 } } : {}),
         },
       ];
 
@@ -182,12 +182,12 @@ export async function queryAgent(
         systemBlocks.push({
           type: 'text',
           text: `\n\n[PINNED DOCUMENT CONTEXT]\nThe following documents are pinned as full context:\n\n${pinnedContext}`,
-          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+          ...(useCache ? { cache_control: { type: 'ephemeral', ttl: 3600 } } : {}),
         });
       }
 
       // User message: Dynamic RAG sections (if any) followed by the question.
-      const userBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [];
+      const userBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral'; ttl?: number } }> = [];
       if (ragContext) {
         userBlocks.push({
           type: 'text',
@@ -270,11 +270,11 @@ export async function* streamAgent(
 
       // System array: Base prompt first, then pinned/cached document context as a separate block.
       // This ensures the System Prompt + Pinned Context forms a stable, identical cache prefix.
-      const systemBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [
+      const systemBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral'; ttl?: number } }> = [
         {
           type: 'text',
           text: baseSystemPrompt,
-          ...(useCache && !pinnedContext ? { cache_control: { type: 'ephemeral' } } : {}),
+          ...(useCache && !pinnedContext ? { cache_control: { type: 'ephemeral', ttl: 3600 } } : {}),
         },
       ];
 
@@ -282,12 +282,12 @@ export async function* streamAgent(
         systemBlocks.push({
           type: 'text',
           text: `\n\n[PINNED DOCUMENT CONTEXT]\nThe following documents are pinned as full context:\n\n${pinnedContext}`,
-          ...(useCache ? { cache_control: { type: 'ephemeral' } } : {}),
+          ...(useCache ? { cache_control: { type: 'ephemeral', ttl: 3600 } } : {}),
         });
       }
 
       // User message: Dynamic RAG sections (if any) followed by the question.
-      const userBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [];
+      const userBlocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral'; ttl?: number } }> = [];
       if (ragContext) {
         userBlocks.push({
           type: 'text',
